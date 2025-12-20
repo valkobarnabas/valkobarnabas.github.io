@@ -166,7 +166,13 @@
 
         iframe { width: 100%; height: 152px; border: none; border-radius: 12px; }
 
-        #si-school { font-size: 2.2em; font-weight: 800; color: #fff; line-height: 1.1; }
+        #si-school { 
+            font-size: 2.2em; 
+            font-weight: 800; 
+            color: #fff; 
+            line-height: 1.1; 
+            text-shadow: 0 0 10px var(--highlight), 0 0 20px var(--highlight); /* Added Glow */
+        }
         #si-conf { font-size: 0.9em; color: #666; font-style: italic; font-weight: 400; margin-left: 10px;}
         #si-title { font-size: 1.3em; color: var(--accent); margin: 5px 0 10px 0; font-style: italic; }
         
@@ -685,7 +691,8 @@ const drawViz4 = () => {
         .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
         .on("mouseover", (e, d) => {
              d3.select(e.currentTarget).raise(); // Bring to front
-             d3.select("#tooltip").style("opacity", 1).html(`<b>${d.school}</b><br>Tropes: ${d.trope_count}`)
+             // UPDATED TOOLTIP: Shows Year instead of Trope Count
+             d3.select("#tooltip").style("opacity", 1).html(`<b>${d.school}</b><br>Year: ${d.year}`)
                 .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
         })
         .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
@@ -697,9 +704,10 @@ const drawViz4 = () => {
         .attr("data-school", d => d.school);
 
     nodeG.append("text")
-        .text(d => d.year === "Unknown" ? "?" : d.year)
+        // UPDATED LABEL: Shows Trope Count instead of Year
+        .text(d => d.trope_count)
         .attr("text-anchor", "middle").attr("dy", ".3em")
-        .style("font-size", (radius * 0.7) + "px") // Text scales with radius
+        .style("font-size", (radius * 0.7) + "px") 
         .style("fill", "#fff").style("font-weight", "bold").style("pointer-events", "none")
         .style("text-shadow", "0 0 2px black");
 
@@ -729,8 +737,8 @@ const drawViz4 = () => {
     legG.append("text").text("NODE LABELS").attr("y", sectionYearY).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
     const sampleG = legG.append("g").attr("transform", `translate(15, ${sectionYearY + 25})`);
     sampleG.append("circle").attr("r", 12).attr("fill", "#004400").attr("stroke", "#fff");
-    sampleG.append("text").text("19XX").attr("text-anchor", "middle").attr("dy", 3).attr("fill", "#fff").style("font-size", "8px").style("font-weight","bold");
-    legG.append("text").text("Year Created").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", "10px");
+    sampleG.append("text").text("N").attr("text-anchor", "middle").attr("dy", 3).attr("fill", "#fff").style("font-size", "8px").style("font-weight","bold");
+    legG.append("text").text("# of Tropes").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", "10px");
 
     // Legend: Connections
     const sectionConnY = 105;
@@ -947,3 +955,4 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
