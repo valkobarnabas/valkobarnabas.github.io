@@ -393,7 +393,7 @@
     let showTopologyTooltip = null; // Global reference
 
     d3.csv("fight-songs.csv").then(data => {
-        
+        data = data.filter(d => d.school && d.school.trim() !== "");
         data.forEach(d => {
             for(let key in d) { if(typeof d[key] === 'string') d[key] = d[key].trim(); }
             d.bpm = +d.bpm;
@@ -1014,6 +1014,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
