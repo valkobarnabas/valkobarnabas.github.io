@@ -107,17 +107,19 @@
         
         .about-link {
             font-size: 0.7em;
-            background: var(--accent); /* CHANGED: Matches Origin Story icons (Pink) */
+            background: #d100d1; /* CHANGED: Dimmer Pink */
             padding: 2px 8px;
             border-radius: 10px;
             cursor: pointer;
-            color: #ffffff; /* CHANGED: White text for contrast */
+            color: #ffffff; 
             text-decoration: none;
             transition: all 0.2s;
-            font-weight: 700; /* Added bold to make text clear on bright bg */
-            border: 1px solid var(--accent); /* Optional: blends edges */
+            font-weight: 700;
         }
-        .about-link:hover { background: var(--highlight); color: #000; }
+        .about-link:hover { 
+            background: var(--highlight); /* Cyan on hover */
+            color: #000; 
+        }
 
         #strip-right {
             display: flex;
@@ -1037,6 +1039,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
