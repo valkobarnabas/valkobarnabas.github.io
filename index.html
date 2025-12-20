@@ -404,7 +404,7 @@
                 d3.select("#active-content").style("display", "none");
                 d3.select("#si-logo").style("display", "none");
                 d3.select("#spotify-panel").html("");
-                d3.select("#trope-dashboard").html('<div style="color:#666; font-style:italic;">Select a team<br>to view ingredients</div>');
+                d3.select("#trope-dashboard").html('<div style="color:#666; font-style:italic;">Select a school fight song<br>from the menu at left <br>to view its tropes</div>');
                 
                 // Hide Persistent Tooltip
                 if(showTopologyTooltip) showTopologyTooltip(null);
@@ -723,7 +723,7 @@
                 .attr("width", legW - 20).attr("height", 100)
                 .append("xhtml:div")
                 .style("font-size", "10px").style("color", "#ccc").style("line-height", "1.2")
-                .html("Lines connect schools with >75% lyrical similarity.<br><br><span style='color:#666'>*Michigan, TN, and BC are linked manually (0 tropes).</span>");
+                .html("Lines connect schools with >75% trope similarity (by Jaccard Index).");
 
             // Background Click Reset
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
@@ -931,6 +931,7 @@
 </script>
 </body>
 </html>
+
 
 
 
