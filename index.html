@@ -13,8 +13,8 @@
             --bg-color: #050b14; 
             --card-bg: #0b1626;
             --text-color: #ffffff;
-            --highlight: #00f2ff; /* Cyan for UI elements */
-            --accent: #ff00ff; /* Hot Pink for Selection */
+            --highlight: #00f2ff; /* Cyan */
+            --accent: #ff00ff; /* Pink */
             --dim: #4a5d75;
             --border: 1px solid rgba(0, 242, 255, 0.2);
             --grey-dim: #3a3a3a;
@@ -36,14 +36,14 @@
         }
 
         /* --- Grid Areas --- */
-        #viz1 { grid-column: 1 / 2; grid-row: 1 / 2; } /* Top Left */
-        #viz4 { grid-column: 2 / 3; grid-row: 1 / 2; } /* Top Right */
+        #viz1 { grid-column: 1 / 2; grid-row: 1 / 2; } 
+        #viz4 { grid-column: 2 / 3; grid-row: 1 / 2; } 
         
         #middle-strip {
             grid-column: 1 / 3;
             grid-row: 2 / 3;
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: 350px 1fr;
             background: #08101c;
             border-top: 2px solid var(--highlight);
             border-bottom: 2px solid var(--highlight);
@@ -51,8 +51,8 @@
             min-height: 0; 
         }
 
-        #viz3 { grid-column: 1 / 2; grid-row: 3 / 4; } /* Bottom Left */
-        #viz2 { grid-column: 2 / 3; grid-row: 3 / 4; } /* Bottom Right */
+        #viz3 { grid-column: 1 / 2; grid-row: 3 / 4; } 
+        #viz2 { grid-column: 2 / 3; grid-row: 3 / 4; } 
 
         /* --- Containers --- */
         .viz-container {
@@ -64,6 +64,7 @@
             flex-direction: column;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             min-height: 0;
+            overflow: hidden; /* Prevent overflow */
         }
 
         h3 { 
@@ -93,7 +94,7 @@
         .sub-top { font-size: 0.8em; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
         
         .main-title { 
-            font-size: clamp(1.5rem, 2.5vw, 2.2em); 
+            font-size: clamp(1.2rem, 2.5vw, 2.2em); 
             color: var(--highlight); 
             font-weight: 800; 
             line-height: 1.0; 
@@ -117,7 +118,6 @@
         }
         .about-link:hover { background: var(--highlight); color: #000; }
 
-        /* Right Panel */
         #strip-right {
             display: flex;
             height: 100%;
@@ -168,7 +168,7 @@
         iframe { width: 100%; height: 152px; border: none; border-radius: 12px; }
 
         #si-school-row { font-size: 2em; font-weight: 800; color: #fff; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: flex; align-items: center; gap: 15px; }
-        #si-logo { height: 50px; width: auto; display: none; filter: drop-shadow(0 0 5px var(--highlight)); }
+        #si-logo { height: 80px; width: auto; display: none; filter: drop-shadow(0 0 5px var(--highlight)); max-width: 120px; object-fit: contain; }
         
         #si-title { font-size: 1.3em; color: var(--accent); margin: 5px 0 10px 0; font-style: italic; }
         
@@ -176,26 +176,27 @@
         .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #ccc; display: flex; align-items: center; gap: 5px; }
         .badge i { color: var(--highlight); }
 
-        .stats-row { display: flex; gap: 20px; font-size: 0.9em; color: #aaa; justify-content: flex-start; }
+        .stats-row { display: flex; gap: 20px; font-size: 0.9em; color: #aaa; justify-content: flex-start; margin-top: 5px;}
         .stats-row b { color: #fff; }
+        .extra-stats { color: var(--highlight); font-weight: bold; }
 
         /* --- Viz Elements --- */
         .node circle { stroke: #fff; stroke-width: 1px; cursor: pointer; transition: all 0.2s; }
-        .node circle:hover { stroke: var(--highlight); stroke-width: 4px; filter: drop-shadow(0 0 8px var(--highlight)); }
         
         /* Highlight States */
-        .dimmed { fill: var(--grey-dim) !important; opacity: 0.6 !important; stroke: #222 !important; }
+        .dimmed { fill: var(--grey-dim) !important; opacity: 0.4 !important; stroke: #222 !important; }
+        
+        /* Topology Highlight: Bright Pink */
         .highlighted { 
             fill: var(--accent) !important; 
             stroke: #fff !important; 
             stroke-width: 3px !important; 
             opacity: 1 !important; 
             filter: drop-shadow(0 0 8px var(--accent)) !important;
-            r: 8px !important; 
         }
         
         /* Logo Visibility */
-        .logo-dimmed { opacity: 0.4; filter: grayscale(100%); } 
+        .logo-dimmed { opacity: 0.3; filter: grayscale(100%); } 
         .logo-highlighted { filter: drop-shadow(0 0 8px var(--highlight)); transform: scale(1.1); opacity: 1; z-index: 10; }
 
         /* Rect Highlight */
@@ -205,12 +206,18 @@
 
         /* Logos */
         .school-logo { cursor: pointer; transition: transform 0.2s; }
-        .school-logo:hover { transform: scale(1.4); z-index: 100; filter: drop-shadow(0 0 5px white); }
+        .school-logo:hover { transform: scale(1.2); z-index: 100; filter: drop-shadow(0 0 5px white); }
 
         /* UpSet Dots */
         .upset-dot { fill: #333; }
-        .upset-dot.active { fill: #888; stroke: none; } /* Default Active is Grey */
+        .upset-dot.active { fill: #888; stroke: none; }
         .upset-dot.dimmed { fill: #222 !important; } 
+
+        /* Network Text */
+        .node-text { 
+            fill: #fff; font-size: 8px; font-weight: bold; 
+            text-shadow: 0 0 2px #000; pointer-events: none; text-anchor: middle; alignment-baseline: middle;
+        }
 
         /* Tooltips */
         .tooltip {
@@ -229,7 +236,7 @@
             max-width: 250px;
         }
         
-        /* About Modal */
+        /* Modal */
         #about-modal {
             display: none;
             position: fixed;
@@ -258,7 +265,7 @@
 <body>
 
     <div id="viz1" class="viz-container">
-        <h3>Lyrical Ingredients <span style="font-size:0.7em; color:#666;">Select Logo to Reveal Tropes</span></h3>
+        <h3>Lyrical Ingredients <span style="font-size:0.7em; color:#666;">Select Logo</span></h3>
         <div class="chart-area" id="lyrical-panel" style="display:flex; height: 100%;">
             <div id="logo-grid" style="flex: 0 0 55%; overflow: hidden; padding-right: 10px;"></div>
             <div id="trope-dashboard" style="flex: 1; border-left: 1px solid #333; padding-left: 10px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
@@ -268,16 +275,16 @@
     </div>
 
     <div id="viz4" class="viz-container">
-        <h3>Trope Network <span style="font-size:0.7em; color:#666;">Linked by Content</span></h3>
+        <h3>Trope Network <span style="font-size:0.7em; color:#666;">Grouped by Conference</span></h3>
         <div class="chart-area" id="jaccard-web"></div>
     </div>
 
     <div id="middle-strip">
         <div id="strip-left">
-            <div class="sub-top">Bucky's Data Viz Challenge 2026</div>
-            <div class="main-title">The Geometry of School Fight Songs</div>
+            <div class="sub-top">Bucky's Data Viz Challenge</div>
+            <div class="main-title">The Geometry of Fight Songs</div>
             <div class="sub-bot">
-                Barnabás Valkó, UW-Madison 
+                Barnabás Valkó 
                 <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">About This Page</span>
             </div>
         </div>
@@ -297,6 +304,11 @@
                     
                     <div class="stats-row">
                         <span>Year: <b id="si-year"></b></span>
+                        <span class="extra-stats">BPM: <b id="si-bpm"></b></span>
+                        <span class="extra-stats">Duration: <b id="si-dur"></b></span>
+                        <span class="extra-stats">Fights: <b id="si-fights"></b></span>
+                    </div>
+                    <div class="stats-row">
                         <span>Writers: <b id="si-writers"></b></span>
                     </div>
                 </div>
@@ -324,9 +336,9 @@
             <h2 style="color:var(--highlight); margin-top:0;">About This Dashboard</h2>
             <p>This visualization explores the hidden structure of college fight songs using data from FiveThirtyEight.</p>
             <ul>
-                <li><strong>Lyrical Ingredients:</strong> Select a school logo to see which tropes (words like "Fight", "Victory", "Rah") appear in its lyrics.</li>
-                <li><strong>Trope Network:</strong> A graph where schools are connected if their lyrics are >75% similar. Nodes cluster by content.</li>
-                <li><strong>Song Topology:</strong> A map of song speed (BPM) vs length. Color represents the total number of tropes used.</li>
+                <li><strong>Lyrical Ingredients:</strong> Select a school logo to see which tropes appear in its lyrics.</li>
+                <li><strong>Trope Network:</strong> Schools are grouped by conference. Node size represents the song's age (Year). Color represents number of clichés.</li>
+                <li><strong>Song Topology:</strong> A map of song speed (BPM) vs length. Color intensity represents the number of times "Fight" is sung.</li>
                 <li><strong>Origin Story:</strong> Shows how the songs were born—whether by students, contests, or official decree.</li>
             </ul>
             <p style="font-size:0.9em; color:#888;">Built with D3.js by Barnabás Valkó.</p>
@@ -355,10 +367,17 @@
     const row1 = ['fight', 'victory', 'win_won', 'rah'];
     const row2 = ['nonsense', 'colors', 'men', 'opponents', 'spelling'];
 
-    // Deep Blue -> Light Blue
+    // --- COLOR SCALES ---
+    // 1. Topology: Number of Fights (Red -> Yellow)
+    const fightColorScale = d3.scaleLinear()
+        .domain([0, 5, 10])
+        .range(["#8B0000", "#FF4500", "#FFFF00"])
+        .clamp(true);
+
+    // 2. Network: Trope Count (Blue -> Green)
     const tropeColorScale = d3.scaleLinear()
         .domain([0, 8])
-        .range(["#000055", "#00BFFF"]); 
+        .range(["#000055", "#00ff00"]);
 
     const confColors = d3.scaleOrdinal()
         .domain(['Big 12', 'Big Ten', 'ACC', 'SEC', 'Pac-12', 'Independent'])
@@ -392,8 +411,6 @@
                 d3.selectAll(".logo-dimmed").classed("logo-dimmed", false);
                 d3.selectAll(".logo-highlighted").classed("logo-highlighted", false);
                 d3.selectAll("rect").classed("highlighted", false).classed("dimmed", false).attr("fill", "#444");
-                
-                // Reset UpSet Dots to Grey
                 d3.selectAll(".upset-dot").classed("dimmed", false).style("fill", function() { return d3.select(this).classed("active") ? "#888" : "#333"; });
 
                 // Reset Panels
@@ -407,53 +424,42 @@
 
             const d = data.find(r => r.school === schoolName);
 
-            // 1. Visual States (Dim Everything first)
+            // 1. Visual States
             d3.selectAll("circle").classed("dimmed", true).classed("highlighted", false);
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
             d3.selectAll("rect").classed("dimmed", true).classed("highlighted", false);
 
             // 2. Highlight Specifics
-            
-            // Nodes (Topology & Network) - Raise to Front!
-            d3.selectAll(`circle[data-school="${schoolName}"]`)
-              .classed("dimmed", false)
-              .classed("highlighted", true)
-              .raise();
-            
-            // Logo
+            d3.selectAll(`circle[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true).raise(); // Raise to front!
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
 
             // Origin Bars
             d3.selectAll("#upset-origin rect").each(function() {
                 const schools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
                 if (schools.includes(schoolName)) {
-                    d3.select(this)
-                        .classed("dimmed", false)
-                        .classed("highlighted", true); 
-                    
-                    // Highlight Active Dots for this bar only
-                    d3.select(this.parentNode).selectAll(".upset-dot.active")
-                        .classed("dimmed", false)
-                        .style("fill", "#ff00ff");
+                    d3.select(this).classed("dimmed", false).classed("highlighted", true); 
+                    d3.select(this.parentNode).selectAll(".upset-dot.active").classed("dimmed", false).style("fill", "#ff00ff");
                 }
             });
             d3.selectAll("rect.dimmed").each(function() {
                  d3.select(this.parentNode).selectAll(".upset-dot").classed("dimmed", true);
             });
 
-
             // 3. Middle Strip Info
             d3.select("#placeholder-msg").style("display", "none");
             d3.select("#active-content").style("display", "flex");
 
-            // Update Logo
             d3.select("#si-logo").attr("src", `logos/${getSlug(d.school)}.png`).style("display", "block");
-
             d3.select("#si-school").text(d.school);
             d3.select("#si-conf").text(`(${d.conference})`);
             d3.select("#si-title").text(d.song_name);
             d3.select("#si-year").text(d.year);
             d3.select("#si-writers").text(d.writers.length > 30 ? "Multiple" : d.writers);
+            
+            // New Stats
+            d3.select("#si-bpm").text(d.bpm);
+            d3.select("#si-dur").text(d.sec_duration + "s");
+            d3.select("#si-fights").text(d.number_fights);
 
             let badgesHTML = "";
             if(d.student_writer === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-graduation-cap"></i> Student</div>`;
@@ -472,22 +478,21 @@
             drawTropeDashboard(d);
         }
 
-        // --- VIZ 1: Grid (11x6, No Scroll) ---
+        // --- VIZ 1: Grid (11x6) ---
         function initViz1() {
             const gridDiv = d3.select("#logo-grid");
             
-            // Use CSS Grid for 11 columns, 6 rows
             const container = gridDiv.append("div")
                 .style("display", "grid")
                 .style("grid-template-columns", "repeat(11, 1fr)")
                 .style("grid-template-rows", "repeat(6, 1fr)")
                 .style("width", "100%")
                 .style("height", "100%")
-                .style("gap", "4px"); // Small gap
+                .style("gap", "2px");
 
             const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
 
-            container.selectAll("div") // Wrap imgs in div for cleaner fit
+            container.selectAll("div")
                 .data(sortedData)
                 .enter().append("div")
                 .style("display", "flex")
@@ -510,16 +515,11 @@
             container.html(""); 
 
             const wrapper = container.append("div")
-                .style("display", "flex")
-                .style("flex-direction", "column")
-                .style("gap", "20px")
-                .style("width", "100%");
+                .style("display", "flex").style("flex-direction", "column").style("gap", "20px").style("width", "100%");
 
             const createRow = (keys) => {
                 const rowDiv = wrapper.append("div")
-                    .style("display", "flex")
-                    .style("justify-content", "space-around")
-                    .style("width", "100%");
+                    .style("display", "flex").style("justify-content", "space-around").style("width", "100%");
                 
                 keys.forEach(key => {
                     const hasTrope = d[key] === 'Yes';
@@ -527,38 +527,30 @@
                         .style("display", "flex").style("flex-direction", "column").style("align-items", "center")
                         .style("opacity", hasTrope ? 1 : 0.2);
 
-                    // Icon
                     cell.append("div")
                         .style("font-family", "FontAwesome").style("font-size", "22px").style("color", "#00f2ff").style("margin-bottom", "5px")
                         .text(icons[key]);
                     
-                    // Label
                     cell.append("div")
                         .style("font-size", "9px").style("color", "#aaa").style("margin-bottom", "5px")
                         .text(iconLabels[key]);
 
-                    // Circle
                     const circle = cell.append("div")
-                        .style("width", "20px").style("height", "20px")
-                        .style("border-radius", "50%")
+                        .style("width", "20px").style("height", "20px").style("border-radius", "50%")
                         .style("border", "2px solid " + (hasTrope ? "#00f2ff" : "#444"))
                         .style("background", hasTrope ? "rgba(0, 242, 255, 0.2)" : "transparent")
                         .style("display", "flex").style("align-items", "center").style("justify-content", "center")
                         .style("font-size", "10px").style("color", "#fff").style("font-weight", "bold");
 
-                    if (key === 'fight' && hasTrope) {
-                        circle.text(d.number_fights);
-                    }
+                    if (key === 'fight' && hasTrope) circle.text(d.number_fights);
                 });
             };
-
-            createRow(row1); // 4 items
-            createRow(row2); // 5 items
+            createRow(row1); createRow(row2); 
         }
         initViz1();
 
 
-        // --- VIZ 4: Trope Network ---
+        // --- VIZ 4: Trope Network (Grouped by Conference, Year Overlays) ---
         const drawViz4 = () => {
             const container = document.getElementById('jaccard-web');
             const w = container.clientWidth;
@@ -568,46 +560,70 @@
             const graphW = w * 0.8; 
             const legendX = w * 0.82; 
 
+            // Calculate Conference Centers
+            const conferences = ['Big 12', 'Big Ten', 'ACC', 'SEC', 'Pac-12', 'Independent'];
+            const centers = {};
+            const radius = Math.min(graphW, h) * 0.35;
+            conferences.forEach((c, i) => {
+                const angle = (i / 6) * 2 * Math.PI - Math.PI/2; // Start top
+                centers[c] = { x: graphW/2 + radius * Math.cos(angle), y: h/2 + radius * Math.sin(angle) };
+            });
+
             const nodes = data.map(d => ({...d}));
             const links = [];
+            // Still using Jaccard links for structure? User said "Group by Conference".
+            // So we primarily use conference gravity, links are secondary decoration.
             const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
             for(let i=0; i<nodes.length; i++) {
                 for(let j=i+1; j<nodes.length; j++) {
                     let u=0, inter=0;
-                    t.forEach(k => {
-                        const a = nodes[i][k]==='Yes'; const b = nodes[j][k]==='Yes';
-                        if(a||b) u++; if(a&&b) inter++;
-                    });
+                    t.forEach(k => { if(nodes[i][k]==='Yes' || nodes[j][k]==='Yes') u++; if(nodes[i][k]==='Yes' && nodes[j][k]==='Yes') inter++; });
                     if(u>0 && (inter/u) > 0.75) links.push({source:nodes[i].id, target:nodes[j].id});
                 }
             }
 
             const g = svg.append("g");
             g.selectAll("line").data(links).enter().append("line")
-                .attr("stroke", "#ffffff").attr("stroke-width", 1).attr("opacity", 0.3); // White Lines
+                .attr("stroke", "#ffffff").attr("stroke-width", 1).attr("opacity", 0.1); 
 
-            const node = g.selectAll("circle").data(nodes).enter().append("circle")
-                .attr("r", 5) 
-                .attr("fill", d => confColors(d.conference))
-                .attr("stroke", "#000")
-                .attr("data-school", d => d.school)
+            // Nodes are groups now (Circle + Text)
+            const nodeG = g.selectAll(".node-group").data(nodes).enter().append("g")
+                .attr("class", "node-group")
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                     d3.select(e.currentTarget).raise(); // Bring to front on hover
+                     d3.select(e.currentTarget).select("circle").raise(); 
                      tooltip.style("opacity", 1).html(`${d.school}<br>${d.conference}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
+            nodeG.append("circle")
+                .attr("r", 14) // Bigger for Year
+                .attr("fill", d => tropeColorScale(d.trope_count))
+                .attr("stroke", "#fff")
+                .attr("data-school", d => d.school);
+
+            nodeG.append("text")
+                .text(d => d.year === "Unknown" ? "?" : d.year)
+                .attr("text-anchor", "middle")
+                .attr("dy", ".3em")
+                .style("font-size", "9px")
+                .style("fill", "#fff")
+                .style("pointer-events", "none")
+                .style("text-shadow", "0 0 2px black");
+
             const simulation = d3.forceSimulation(nodes)
-                .force("link", d3.forceLink(links).id(d=>d.id).strength(0.5))
-                .force("charge", d3.forceManyBody().strength(-30))
-                .force("center", d3.forceCenter(graphW/2, h/2))
-                .force("collide", d3.forceCollide().radius(8));
+                .force("charge", d3.forceManyBody().strength(-5))
+                .force("collide", d3.forceCollide().radius(16))
+                .force("x", d3.forceX(d => centers[d.conference] ? centers[d.conference].x : graphW/2).strength(0.8))
+                .force("y", d3.forceY(d => centers[d.conference] ? centers[d.conference].y : h/2).strength(0.8));
 
             simulation.on("tick", () => {
-                node.attr("cx", d => d.x = Math.max(10, Math.min(graphW - 10, d.x)))
-                    .attr("cy", d => d.y = Math.max(10, Math.min(h - 10, d.y)));
+                nodeG.attr("transform", d => {
+                    d.x = Math.max(15, Math.min(graphW - 15, d.x));
+                    d.y = Math.max(15, Math.min(h - 15, d.y));
+                    return `translate(${d.x},${d.y})`;
+                });
                 g.selectAll("line")
                     .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
                     .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
@@ -615,20 +631,27 @@
 
             // Legend
             const legend = svg.append("g").attr("transform", `translate(${legendX}, 20)`);
-            legend.append("text").text("CONFERENCE").attr("font-weight","bold").attr("fill","#fff").attr("y", -10);
-            confColors.domain().forEach((c, i) => {
-                const lg = legend.append("g").attr("transform", `translate(0, ${i*18})`);
-                lg.append("circle").attr("r", 5).attr("fill", confColors(c)).attr("stroke", "#000");
-                lg.append("text").attr("x", 12).attr("y", 4).text(c).style("font-size", "10px").style("fill", "#ccc");
+            legend.append("text").text("CONFERENCES").attr("font-weight","bold").attr("fill","#fff").attr("y", -10);
+            
+            // Just labels since positioning is spatial now, color is tropes
+            conferences.forEach((c, i) => {
+                legend.append("text").attr("x", 0).attr("y", i*15 + 10).text(c).style("font-size", "10px").style("fill", "#ccc");
             });
             
-            // BG Click Reset
+            // Color Key
+            const grad = svg.append("defs").append("linearGradient").attr("id", "gradNet");
+            grad.append("stop").attr("offset", "0%").style("stop-color", "#000055");
+            grad.append("stop").attr("offset", "100%").style("stop-color", "#00ff00");
+            
+            legend.append("text").text("Trope Count").attr("y", 120).style("fill", "#00ff00").style("font-size", "9px");
+            legend.append("rect").attr("y", 130).attr("width", 50).attr("height", 8).style("fill", "url(#gradNet)");
+            
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
         };
         drawViz4();
 
 
-        // --- VIZ 3: Topology ---
+        // --- VIZ 3: Topology (Fight Count Color) ---
         const drawViz3 = () => {
             const container = document.getElementById('topology-map');
             const w = container.clientWidth;
@@ -650,28 +673,27 @@
             g.append("g").selectAll("path").data(contours).enter().append("path")
                 .attr("d", d3.geoPath()).attr("fill", "#00f2ff").attr("opacity", 0.08);
 
-            // Axes
             g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5));
             g.append("g").call(d3.axisLeft(y).ticks(5));
             g.selectAll(".domain, .tick line").attr("stroke", "#444");
             g.append("text").attr("class", "axis-label").attr("x", iw).attr("y", ih - 5).attr("text-anchor", "end").text("Duration (sec)");
             g.append("text").attr("class", "axis-label").attr("x", 10).attr("y", 15).text("BPM");
 
-            // Dots 
+            // Dots (Uniform Size, Fight Count Color)
             g.selectAll("circle").data(data).enter().append("circle")
                 .attr("cx", d => x(d.sec_duration))
                 .attr("cy", d => y(d.bpm))
-                .attr("r", 5) 
-                .attr("fill", d => tropeColorScale(d.trope_count))
+                .attr("r", 6) 
+                .attr("fill", d => fightColorScale(d.number_fights))
                 .attr("stroke", "#000")
                 .attr("data-school", d => d.school)
                 .on("mouseover", (e, d) => {
-                     d3.select(e.currentTarget).raise(); // Raise to front!
+                     d3.select(e.currentTarget).raise();
                      tooltip.style("opacity", 1).html(
                          `<b>${d.school}</b><br>
                           BPM: ${d.bpm}<br>
                           Duration: ${d.sec_duration}s<br>
-                          Tropes: ${d.trope_count}`
+                          Fights: ${d.number_fights}`
                      ).style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0))
@@ -681,15 +703,17 @@
             const leg = svg.append("g").attr("transform", `translate(${w - 100}, 20)`);
             leg.append("text").text("KEY").attr("fill","#fff").attr("font-weight","bold").attr("y", -5);
             
-            leg.append("text").text("Trope Count").attr("y", 15).style("font-size","9px").style("fill","#00f2ff");
+            leg.append("text").text("# of 'Fights'").attr("y", 15).style("font-size","9px").style("fill","#FF4500");
             
-            const grad = svg.append("defs").append("linearGradient").attr("id", "gradTrope");
-            grad.append("stop").attr("offset", "0%").style("stop-color", "#000055");
-            grad.append("stop").attr("offset", "100%").style("stop-color", "#00BFFF");
+            const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
+            grad.append("stop").attr("offset", "0%").style("stop-color", "#8B0000");
+            grad.append("stop").attr("offset", "50%").style("stop-color", "#FF4500");
+            grad.append("stop").attr("offset", "100%").style("stop-color", "#FFFF00");
             
-            leg.append("rect").attr("y", 25).attr("width", 70).attr("height", 8).style("fill", "url(#gradTrope)");
+            leg.append("rect").attr("y", 25).attr("width", 70).attr("height", 8).style("fill", "url(#gradFight)");
             leg.append("text").text("0").attr("y", 45).attr("x", 0);
-            leg.append("text").text("8+").attr("y", 45).attr("x", 65);
+            leg.append("text").text("5").attr("y", 45).attr("x", 32);
+            leg.append("text").text("10+").attr("y", 45).attr("x", 65);
             
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
         };
@@ -726,14 +750,13 @@
             g.append("text").attr("x", barAreaWidth - 10).attr("y", -30).attr("text-anchor", "end")
              .style("fill", "#888").style("font-size", "10px").text("Number of Songs");
 
-            // Headers (Icons + Labels)
+            // Headers
             const headerG = svg.append("g").attr("transform", `translate(${margin.left + barAreaWidth}, ${margin.top - 10})`);
             const colW = matrixWidth / meta.length;
             meta.forEach((m, i) => {
                 const x = i * colW + colW/2;
                 headerG.append("text").attr("x", x).attr("y", -20).attr("text-anchor", "middle")
                     .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
-                // Labels
                 const labelWords = iconLabels[m].split(" ");
                 labelWords.forEach((word, idx) => {
                     headerG.append("text").attr("x", x).attr("y", -8 + (idx*9)).attr("text-anchor", "middle")
@@ -744,10 +767,8 @@
             sorted.forEach((d, i) => {
                 const y = i * rowH;
                 const centerY = y + rowH/2;
-                
                 const rowG = g.append("g").attr("class", "upset-row");
 
-                // Bar
                 rowG.append("rect")
                     .attr("x", barAreaWidth - barScale(d.count) - 10)
                     .attr("y", centerY - 8).attr("width", barScale(d.count)).attr("height", 16)
@@ -769,10 +790,9 @@
                 
                 meta.forEach((m, k) => {
                     const active = d.sig[k] === '1';
-                    // Active Dots start Grey (#888)
                     rowG.append("circle").attr("cx", barAreaWidth + (k * colW) + colW/2).attr("cy", centerY).attr("r", active ? 5 : 2)
                      .attr("class", active ? "upset-dot active" : "upset-dot")
-                     .style("fill", active ? "#888" : "#333"); // GREY default
+                     .style("fill", active ? "#888" : "#333");
                 });
             });
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
@@ -783,9 +803,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
