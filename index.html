@@ -532,9 +532,12 @@
         initViz1();
 
 
-        // --- VIZ 4: Trope Network (Rectangle Regions) ---
+        // --- VIZ 4: Trope Network (Bounded & Resizable) ---
         const drawViz4 = () => {
             const container = document.getElementById('jaccard-web');
+            // Clear previous SVG to allow resizing
+            d3.select("#jaccard-web").html("");
+            
             const w = container.clientWidth;
             const h = container.clientHeight;
             const svg = d3.select("#jaccard-web").append("svg").attr("width", w).attr("height", h);
@@ -548,71 +551,110 @@
             const cellW = graphW / cols;
             const cellH = h / rows;
             
-            // Map conference to grid index (row, col)
+            // Dynamic Radius: shrinks if screen is small
+            const nodeRadius = Math.max(3, Math.min(cellW, cellH) / 20);
+            
             const mapConf = {
                 'ACC': {r:0, c:0}, 'Big 12': {r:0, c:1}, 'Big Ten': {r:0, c:2},
                 'Pac-12': {r:1, c:0}, 'SEC': {r:1, c:1}, 'Independent': {r:1, c:2}
             };
 
-            // Draw Rects
+            // Draw Background Rects
             const rectG = svg.append("g");
             Object.keys(mapConf).forEach(conf => {
                 const pos = mapConf[conf];
                 const x = pos.c * cellW;
                 const y = pos.r * cellH;
                 
-                // Box
                 rectG.append("rect")
                     .attr("x", x + 5).attr("y", y + 5)
                     .attr("width", cellW - 10).attr("height", cellH - 10)
                     .attr("fill", "#222").attr("stroke", "#444").attr("rx", 5);
                 
-                // Label (Top Left)
                 rectG.append("text")
                     .attr("x", x + 15).attr("y", y + 25)
                     .text(conf)
-                    .style("fill", "#fff").style("font-weight", "bold").style("font-size", "12px");
+                    .style("fill", "#fff")
+                    .style("font-weight", "bold")
+                    .style("font-size", "12px");
             });
 
             const nodes = data.map(d => ({...d}));
             const g = svg.append("g");
 
-            const simulation = d3.forceSimulation(nodes)
-                .force("x", d3.forceX(d => {
-                    const pos = mapConf[d.conference];
-                    return (pos.c * cellW) + cellW/2;
-                }).strength(0.8))
-                .force("y", d3.forceY(d => {
-                    const pos = mapConf[d.conference];
-                    return (pos.r * cellH) + cellH/2;
-                }).strength(0.8))
-                .force("collide", d3.forceCollide(14))
-                .stop();
+            // Links (Visual only)
+            const links = [];
+            const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
+            for(let i=0; i<nodes.length; i++) {
+                for(let j=i+1; j<nodes.length; j++) {
+                    let u=0, inter=0;
+                    t.forEach(k => { if(nodes[i][k]==='Yes' || nodes[j][k]==='Yes') u++; if(nodes[i][k]==='Yes' && nodes[j][k]==='Yes') inter++; });
+                    if(u>0 && (inter/u) > 0.75) links.push({source:nodes[i], target:nodes[j]});
+                }
+            }
+            g.selectAll("line").data(links).enter().append("line")
+                .attr("stroke", "#ffffff").attr("stroke-width", 1).attr("opacity", 0.1); 
 
-            // Run layout
-            for (let i = 0; i < 300; ++i) simulation.tick();
-
-            const nodeG = g.selectAll(".node-g").data(nodes).enter().append("g")
+            // Nodes
+            const nodeG = g.selectAll(".node-group").data(nodes).enter().append("g")
                 .attr("class", "node-group")
-                .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                     d3.select(e.currentTarget).raise(); // Raise group!
+                     d3.select(e.currentTarget).raise(); 
                      tooltip.style("opacity", 1).html(`${d.school}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
             nodeG.append("circle")
-                .attr("r", 10) 
+                .attr("r", nodeRadius) 
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#fff")
                 .attr("data-school", d => d.school);
 
-            nodeG.append("text")
-                .text(d => d.year === "Unknown" ? "?" : d.year)
-                .attr("text-anchor", "middle").attr("dy", ".3em")
-                .style("font-size", "8px").style("fill", "#fff").style("pointer-events", "none");
+            // Show Year only if node is big enough
+            if (nodeRadius > 6) {
+                nodeG.append("text")
+                    .text(d => d.year === "Unknown" ? "?" : d.year)
+                    .attr("text-anchor", "middle").attr("dy", ".3em")
+                    .style("font-size", (nodeRadius * 0.8) + "px") // Scale font
+                    .style("fill", "#fff").style("pointer-events", "none");
+            }
+
+            const simulation = d3.forceSimulation(nodes)
+                .force("charge", d3.forceManyBody().strength(-2))
+                .force("collide", d3.forceCollide(nodeRadius + 1))
+                .force("x", d3.forceX(d => {
+                    const pos = mapConf[d.conference];
+                    return (pos.c * cellW) + cellW/2;
+                }).strength(0.5))
+                .force("y", d3.forceY(d => {
+                    const pos = mapConf[d.conference];
+                    return (pos.r * cellH) + cellH/2;
+                }).strength(0.5));
+
+            simulation.on("tick", () => {
+                nodeG.attr("transform", d => {
+                    const pos = mapConf[d.conference];
+                    const minX = pos.c * cellW + 5 + nodeRadius;
+                    const maxX = (pos.c + 1) * cellW - 5 - nodeRadius;
+                    
+                    // Y Boundary: Add space for Title (30px) at top
+                    const minY = pos.r * cellH + 30 + nodeRadius; 
+                    const maxY = (pos.r + 1) * cellH - 5 - nodeRadius;
+
+                    // Clamp
+                    d.x = Math.max(minX, Math.min(maxX, d.x));
+                    d.y = Math.max(minY, Math.min(maxY, d.y));
+                    
+                    return `translate(${d.x},${d.y})`;
+                });
+                
+                // Update lines
+                g.selectAll("line")
+                    .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+            });
 
             // Legend
             const legend = svg.append("g").attr("transform", `translate(${legendX}, 20)`);
@@ -785,7 +827,18 @@
         drawViz2();
 
     });
+
+// --- Window Resize Handler ---
+    window.addEventListener("resize", () => {
+        // Redraw all visualizations to fit new window size
+        drawViz1(); // Lyrical Ingredients
+        drawViz2(); // Origin Story
+        drawViz3(); // Topology
+        drawViz4(); // Trope Network
+    });
+    
 </script>
 </body>
 </html>
+
 
