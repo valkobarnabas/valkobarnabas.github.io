@@ -475,7 +475,25 @@
             drawTropeDashboard(d);
             if(showTopologyTooltip) showTopologyTooltip(d);
         }
+    
+        // --- GLOBAL RESET HANDLER ---
+        d3.select("body").on("click", function(e) {
+            // 1. Ignore clicks inside the "About" Modal
+            if (e.target.closest(".modal-content")) return;
+            
+            // 2. Ignore clicks on the "About" link button
+            if (e.target.closest(".about-link")) return;
 
+            // 3. Ignore clicks on the Zoom/Spotify controls (if any)
+            if (e.target.closest("iframe")) return;
+
+            // 4. Since your interactive elements (Logos, Dots) have 
+            //    e.stopPropagation() in their specific handlers, they 
+            //    won't reach this body listener.
+            //    Therefore, anything that reaches here is a "background" click.
+            updateSelection(null);
+        });
+        
         // --- VIZ 1: Grid (11x6) ---
         function initViz1() {
             const gridDiv = d3.select("#logo-grid");
@@ -843,6 +861,7 @@
 </script>
 </body>
 </html>
+
 
 
 
