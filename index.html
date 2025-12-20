@@ -253,6 +253,21 @@
 
         text { fill: #aaa; font-size: 11px; }
         .axis-label { font-size: 12px; font-weight: bold; fill: #fff; }
+
+        #lyrical-panel {
+    overflow: visible !important; 
+}
+
+/* Ensure the grid and its children don't clip content */
+#logo-grid, #logo-grid > div {
+    overflow: visible !important; 
+    z-index: 10; /* Keep logos above other elements */
+}
+
+/* Ensure tooltips or large nodes don't get cut off in the Network viz */
+#jaccard-web {
+    overflow: visible !important;
+}
     </style>
 </head>
 <body>
@@ -938,6 +953,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
