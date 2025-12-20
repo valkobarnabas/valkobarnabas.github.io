@@ -833,7 +833,7 @@ const drawViz4 = () => {
         .attr("width", legW - 10).attr("height", 100)
         .append("xhtml:div")
         .style("font-size", "10px").style("color", "#ccc").style("line-height", "1.2")
-        .html("Lines connect schools with >75% trope similarity by Jaccard index.");
+        .html("Lines connect schools with >75% trope similarity by Jaccard Index.");
 
     svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
     legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
@@ -1039,6 +1039,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
