@@ -627,8 +627,7 @@ const drawViz4 = () => {
 
     let nodes = data.map(d => ({...d}));
 
-    // --- NEW: CLUSTER SORTING ---
-    // 1. Calculate a similarity matrix
+    // --- UPDATED: CLUSTER SORTING (High Tropes Top-Left + Smart Restart) ---
     const tKeys = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
     const getJaccard = (a, b) => {
         let union = 0, intersect = 0;
@@ -639,47 +638,61 @@ const drawViz4 = () => {
         return union === 0 ? 0 : intersect / union;
     };
 
-    // 2. Greedy sort: Pick a node, find its most similar neighbor, add to list, repeat.
     const sortedNodes = [];
     const pool = [...nodes];
     
-    // Start with the node that has the most tropes (often a good anchor)
+    // 1. Start with the "heaviest" node (highest trope count) at Top-Left
     pool.sort((a,b) => b.trope_count - a.trope_count);
     sortedNodes.push(pool.shift());
 
     while(pool.length > 0) {
-        // Compare the last added node to everyone left in the pool
         const lastNode = sortedNodes[sortedNodes.length - 1];
         let bestMatchIndex = -1;
-        let maxSim = -1;
+        let bestScore = -1; // Use a score to weigh options
 
         for(let i = 0; i < pool.length; i++) {
             const sim = getJaccard(lastNode, pool[i]);
-            // Tie-breaker: if similarity is equal, pick the one with higher trope count
-            if(sim > maxSim || (sim === maxSim && pool[i].trope_count > pool[bestMatchIndex]?.trope_count)) {
-                maxSim = sim;
+            
+            // Heuristic: If similarity is 0, score is -1 (don't link).
+            // If similarity > 0, score = similarity.
+            // Tie-breaker: If scores are close, prefer higher trope_count to keep heavy nodes early.
+            let score = -1;
+            
+            if (sim > 0) {
+                 // Weight similarity heavily, but add a tiny fraction of trope count 
+                 // to break ties towards "heavier" nodes.
+                 score = sim + (pool[i].trope_count * 0.001);
+            }
+
+            if(score > bestScore) {
+                bestScore = score;
                 bestMatchIndex = i;
             }
         }
         
-        // Add best match to sorted list
+        // 2. LOGIC FIX: 
+        // If bestScore is still -1, it means NO remaining node has any similarity.
+        // Instead of picking a random one, "Restart" by picking the heaviest remaining node.
+        if (bestScore === -1) {
+            // Re-sort pool by trope count just to be safe, pick the biggest one
+            pool.sort((a,b) => b.trope_count - a.trope_count);
+            bestMatchIndex = 0; 
+        }
+        
         sortedNodes.push(pool[bestMatchIndex]);
         pool.splice(bestMatchIndex, 1);
     }
     
-    nodes = sortedNodes; // Apply the new order
-    // -----------------------------
+    nodes = sortedNodes; 
 
+    // --- GRID MAPPING (Snake Pattern) ---
     const nodeMap = {}; 
-
     nodes.forEach((d, i) => {
-        // Snake Layout: zig-zag through rows to keep neighbors close
-        // (Left->Right, then Right->Left, etc.)
         const row = Math.floor(i / cols);
         const colRaw = i % cols;
+        // Snake: Even rows L->R, Odd rows R->L
         const col = (row % 2 === 0) ? colRaw : (cols - 1 - colRaw);
         
-        // Calculate center of the cell
         d.x = (col * cellW) + cellW/2;
         d.y = (row * cellH) + cellH/2;
         nodeMap[d.id] = d;
@@ -1001,6 +1014,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
