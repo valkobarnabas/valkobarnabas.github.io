@@ -835,7 +835,7 @@ const drawViz4 = () => {
 
             // Key
             const leg = svg.append("g").attr("transform", `translate(${w - 100}, 20)`);
-            leg.append("text").text("# of 'Fight's").attr("y", 1).style("font-size","9px").style("fill","#FF4500");
+            leg.append("text").text("# of 'Fight's").attr("y", 15).style("font-size","9px").style("fill","#FF4500");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
             grad.append("stop").attr("offset", "0%").style("stop-color", "#8B0000");
@@ -947,6 +947,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
