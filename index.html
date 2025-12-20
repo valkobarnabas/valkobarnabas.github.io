@@ -107,13 +107,15 @@
         
         .about-link {
             font-size: 0.7em;
-            background: var(--dim);
+            background: var(--accent); /* CHANGED: Matches Origin Story icons (Pink) */
             padding: 2px 8px;
             border-radius: 10px;
             cursor: pointer;
-            color: #ccc;
+            color: #ffffff; /* CHANGED: White text for contrast */
             text-decoration: none;
             transition: all 0.2s;
+            font-weight: 700; /* Added bold to make text clear on bright bg */
+            border: 1px solid var(--accent); /* Optional: blends edges */
         }
         .about-link:hover { background: var(--highlight); color: #000; }
 
@@ -1035,6 +1037,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
