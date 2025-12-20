@@ -882,7 +882,7 @@ const drawViz4 = () => {
 
             const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
             
-            g.append("text").attr("x", barAreaWidth - 10).attr("y", -30).attr("text-anchor", "end")
+            g.append("text").attr("x", barAreaWidth - 10).attr("y", -10).attr("text-anchor", "end")
              .style("fill", "#888").style("font-size", "10px").text("Number of Songs");
 
             const headerG = svg.append("g").attr("transform", `translate(${margin.left + barAreaWidth}, ${margin.top - 10})`);
@@ -947,6 +947,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
