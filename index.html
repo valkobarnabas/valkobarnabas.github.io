@@ -262,7 +262,7 @@
         <div class="chart-area" id="lyrical-panel" style="display:flex; height: 100%;">
             <div id="logo-grid" style="flex: 0 0 55%; overflow: hidden; padding-right: 10px;"></div>
             <div id="trope-dashboard" style="flex: 1; border-left: 1px solid #333; padding-left: 10px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                <div style="color:#666; font-style:italic;">Select a school fight song<br>to view its tropes</div>
+                <div style="color:#666; font-style:italic;">Select a school fight song<br>from the menu at left<br>to view its tropes</div>
             </div>
         </div>
     </div>
@@ -402,6 +402,7 @@
                 // Reset Panels
                 d3.select("#placeholder-msg").style("display", "flex");
                 d3.select("#active-content").style("display", "none");
+                d3.select("#si-logo").style("display", "none");
                 d3.select("#spotify-panel").html("");
                 d3.select("#trope-dashboard").html('<div style="color:#666; font-style:italic;">Select a team<br>to view ingredients</div>');
                 
@@ -413,16 +414,29 @@
 
             const d = data.find(r => r.school === schoolName);
 
-            // 1. Visual States
+            // 1. Visual States (Dim Everything)
             d3.selectAll("circle").classed("dimmed", true).classed("highlighted", false);
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
             d3.selectAll("rect").classed("dimmed", true).classed("highlighted", false);
 
-            // Highlight Nodes
-            d3.selectAll(`circle[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true).raise(); 
+            // 2. Highlight Specific Nodes
+            d3.selectAll(`circle[data-school="${schoolName}"]`).each(function() {
+                const circle = d3.select(this);
+                circle.classed("dimmed", false).classed("highlighted", true);
+                
+                // FIX: If this is a Network node (inside a Group), raise the GROUP, not the circle.
+                if (this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group") {
+                    d3.select(this.parentNode).raise();
+                } else {
+                    // Topology node: Raise the circle
+                    circle.raise();
+                }
+            });
+
+            // Highlight Logo
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
 
-            // Origin Bars
+            // Highlight Origin Bars
             d3.selectAll("#upset-origin rect").each(function() {
                 const schools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
                 if (schools.includes(schoolName)) {
@@ -434,10 +448,11 @@
                  d3.select(this.parentNode).selectAll(".upset-dot").classed("dimmed", true);
             });
 
-            // 2. Middle Strip
+            // 3. Middle Strip Info
             d3.select("#placeholder-msg").style("display", "none");
             d3.select("#active-content").style("display", "flex");
 
+            d3.select("#si-logo").attr("src", `logos/${getSlug(d.school)}.png`).style("display", "block");
             d3.select("#si-school").text(d.school);
             d3.select("#si-conf").text(`(${d.conference})`);
             d3.select("#si-title").text(d.song_name);
@@ -457,10 +472,7 @@
                 d3.select("#spotify-panel").html(`<div style="color:#444;">No Audio</div>`);
             }
 
-            // 3. Update Trope Dashboard
             drawTropeDashboard(d);
-            
-            // 4. Trigger Persistent Topology Tooltip
             if(showTopologyTooltip) showTopologyTooltip(d);
         }
 
@@ -818,9 +830,20 @@
         drawViz2();
 
     });
+
+// --- Window Resize Handler ---
+    window.addEventListener("resize", () => {
+        // Redraw all visualizations to fit new window size
+        initViz1(); // Lyrical (Re-runs logo grid)
+        drawViz2(); // Origin
+        drawViz3(); // Topology
+        drawViz4(); // Network
+    });
+    
 </script>
 </body>
 </html>
+
 
 
 
