@@ -10,12 +10,14 @@
     
     <style>
         :root {
-            --bg-color: #001f3f; /* Dark Blue */
-            --card-bg: #003366;
-            --text-color: #e0e0e0;
-            --highlight: #7FDBFF;
-            --accent: #FF851B;
+            --bg-color: #001220; /* Darker Navy */
+            --card-bg: #002b4d;
+            --text-color: #ffffff;
+            --highlight: #00ffcc; /* Neon Cyan */
+            --accent: #ff00ff; /* Neon Magenta */
+            --secondary: #ffff00; /* Neon Yellow */
             --dim: #3a506b;
+            --border: 1px solid rgba(0, 255, 204, 0.3);
         }
 
         body {
@@ -23,461 +25,520 @@
             color: var(--text-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             height: 100vh;
             box-sizing: border-box;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 20px;
-            overflow: hidden; /* Prevent scrolling for dashboard feel */
+            /* Ratio: 3.5 (Top) : 2 (Strip) : 3.5 (Bottom) */
+            grid-template-rows: 3.5fr 2fr 3.5fr; 
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            overflow: hidden; 
         }
 
-        /* Layout Grid Areas */
-        #viz1 { grid-column: 1 / 2; grid-row: 1 / 2; } /* Top Left: Horz UpSet */
-        #viz4 { grid-column: 3 / 4; grid-row: 1 / 2; } /* Top Right: Jaccard */
-        #viz3 { grid-column: 1 / 2; grid-row: 2 / 3; } /* Bottom Left: Topology */
-        #viz2 { grid-column: 3 / 4; grid-row: 2 / 3; } /* Bottom Right: Vert UpSet */
+        /* --- Grid Areas --- */
+        #viz1 { grid-column: 1 / 2; grid-row: 1 / 2; } /* Top Left */
+        #viz4 { grid-column: 2 / 3; grid-row: 1 / 2; } /* Top Right */
         
-        /* The Center Panel */
-        #center-panel {
-            grid-column: 2 / 3;
-            grid-row: 1 / 3;
+        /* The Middle Strip */
+        #middle-strip {
+            grid-column: 1 / 3;
+            grid-row: 2 / 3;
             display: flex;
-            flex-direction: column;
+            background: rgba(0, 20, 40, 0.8);
+            border-top: 2px solid var(--highlight);
+            border-bottom: 2px solid var(--highlight);
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            border: 2px solid var(--highlight);
-            border-radius: 15px;
-            padding: 20px;
-            background: rgba(0, 31, 63, 0.9);
-            box-shadow: 0 0 20px rgba(127, 219, 255, 0.2);
-            z-index: 10;
         }
 
+        #viz3 { grid-column: 1 / 2; grid-row: 3 / 4; } /* Bottom Left */
+        #viz2 { grid-column: 2 / 3; grid-row: 3 / 4; } /* Bottom Right */
+
+        /* --- Containers --- */
         .viz-container {
             background: var(--card-bg);
             border-radius: 8px;
             padding: 10px;
             position: relative;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border: var(--border);
+            display: flex;
+            flex-direction: column;
         }
 
-        h2, h3 { margin: 0 0 10px 0; color: var(--highlight); font-weight: 300; }
+        h3 { 
+            margin: 0 0 5px 0; 
+            color: var(--highlight); 
+            font-weight: 400; 
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--dim);
+            padding-bottom: 5px;
+        }
         
-        /* Tooltip-like styling for SVG elements */
-        .node circle { stroke: #fff; stroke-width: 1px; cursor: pointer; transition: all 0.3s; }
-        .node circle:hover { stroke: var(--highlight); stroke-width: 3px; }
-        .dimmed { opacity: 0.1; }
-        .highlighted { stroke: var(--highlight); stroke-width: 3px; opacity: 1 !important; }
+        .chart-area { flex-grow: 1; position: relative; overflow: hidden; }
 
-        /* Center Panel Content */
-        #school-name { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; color: #fff; }
-        #song-name { font-size: 1.5em; color: var(--accent); margin-bottom: 20px; font-style: italic; }
-        .stat-row { display: flex; justify-content: space-around; width: 100%; margin: 10px 0; font-size: 0.9em; }
-        .stat-item { display: flex; flex-direction: column; }
-        .stat-label { font-size: 0.8em; color: #aaa; }
-        .stat-value { font-size: 1.1em; font-weight: bold; }
+        /* --- Middle Strip Sections --- */
+        /* Left: Title (2 parts) */
+        #strip-title {
+            flex: 2;
+            padding: 0 20px;
+            border-right: 1px solid var(--dim);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        #strip-title h1 { margin: 0; font-size: 1.8em; color: var(--highlight); line-height: 1; }
+        #strip-title span { font-size: 0.9em; color: #aaa; letter-spacing: 2px; }
 
-        /* Spotify Iframe */
-        #spotify-player { width: 100%; height: 152px; border: none; margin-top: 20px; border-radius: 12px; }
-
-        /* Axis and text styling */
-        text { fill: #ccc; font-size: 10px; }
-        .domain, .tick line { stroke: #555; }
+        /* Middle: Song Info (10 parts) */
+        #strip-info {
+            flex: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            position: relative;
+        }
+        #info-school { font-size: 2.2em; font-weight: bold; color: #fff; margin: 0; text-shadow: 0 0 10px var(--highlight); }
+        #info-song { font-size: 1.4em; color: var(--accent); font-style: italic; margin: 5px 0 10px 0; }
+        .info-stats { display: flex; gap: 30px; font-size: 0.9em; color: #ccc; }
+        .info-stats span b { color: var(--highlight); }
         
-        /* UpSet Matrix dots */
+        /* Right: Spotify (2 parts) */
+        #strip-player {
+            flex: 2;
+            height: 100%;
+            border-left: 1px solid var(--dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            background: #000;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* --- Viz Styling --- */
+        .node circle { stroke: #fff; stroke-width: 1.5px; cursor: pointer; transition: all 0.2s; }
+        .node circle:hover { stroke: var(--highlight); stroke-width: 3px; filter: drop-shadow(0 0 5px var(--highlight)); }
+        
+        .dimmed { opacity: 0.15; filter: grayscale(100%); }
+        .highlighted { stroke: var(--highlight) !important; opacity: 1 !important; filter: none !important; }
+
+        /* UpSet Matrix */
         .upset-dot { fill: #555; }
         .upset-dot.active { fill: var(--highlight); }
-        .upset-line { stroke: #555; stroke-width: 2px; }
+        
+        /* Logos in Viz 1 */
+        .school-logo {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .school-logo:hover { transform: scale(1.5); z-index: 100; }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            border: 1px solid var(--highlight);
+        }
+
+        text { fill: #ccc; font-family: sans-serif; }
     </style>
 </head>
 <body>
 
     <div id="viz1" class="viz-container">
-        <h3><i class="fas fa-music"></i> Lyrical Ingredients</h3>
-        <div id="upset-horizontal"></div>
-    </div>
-
-    <div id="center-panel">
-        <div style="font-size: 5em; opacity: 0.2; margin-bottom: -40px;"><i class="fas fa-university"></i></div>
-        <div id="school-name">Select a School</div>
-        <div id="song-name">Click any node to explore</div>
-        
-        <div class="stat-row" id="stats-1" style="opacity: 0;">
-            <div class="stat-item"><span class="stat-value" id="val-year"></span><span class="stat-label">Year</span></div>
-            <div class="stat-item"><span class="stat-value" id="val-writers"></span><span class="stat-label">Writers</span></div>
-        </div>
-
-        <div class="stat-row" id="stats-2" style="opacity: 0;">
-            <div class="stat-item"><span class="stat-value" id="val-student"></span><span class="stat-label">Student Written?</span></div>
-            <div class="stat-item"><span class="stat-value" id="val-contest"></span><span class="stat-label">Contest Winner?</span></div>
-        </div>
-
-        <div id="spotify-container"></div>
+        <h3>Lyrical Ingredients <span style="font-size:0.6em; float:right; color:#888;">Hover logos to see school</span></h3>
+        <div class="chart-area" id="upset-horizontal"></div>
     </div>
 
     <div id="viz4" class="viz-container">
-        <h3><i class="fas fa-project-diagram"></i> The Similarity Web</h3>
-        <div id="jaccard-web"></div>
+        <h3>Jaccard Similarity Web</h3>
+        <div class="chart-area" id="jaccard-web"></div>
+    </div>
+
+    <div id="middle-strip">
+        <div id="strip-title">
+            <span>DATA VIZ</span>
+            <h1>FIGHT<br>SONGS</h1>
+        </div>
+        <div id="strip-info">
+            <div id="info-school">SELECT A SCHOOL</div>
+            <div id="info-song">Click dots or logos to explore</div>
+            <div class="info-stats" id="info-details" style="opacity: 0;">
+                <span>Year: <b id="d-year"></b></span>
+                <span>Writers: <b id="d-writer"></b></span>
+                <span>Student Written: <b id="d-student"></b></span>
+                <span>Contest: <b id="d-contest"></b></span>
+            </div>
+        </div>
+        <div id="strip-player">
+            <div style="color: #444; font-size: 0.8em; text-align: center;">Spotify<br>Player</div>
+        </div>
     </div>
 
     <div id="viz3" class="viz-container">
-        <h3><i class="fas fa-globe-americas"></i> Song Topology (BPM vs Duration)</h3>
-        <div id="topology-map"></div>
+        <h3>Song Topology</h3>
+        <div class="chart-area" id="topology-map"></div>
     </div>
 
     <div id="viz2" class="viz-container">
-        <h3><i class="fas fa-file-contract"></i> Origin Story</h3>
-        <div id="upset-vertical"></div>
+        <h3>Origin Story <span style="font-size:0.6em; color:#888;">(Centered)</span></h3>
+        <div class="chart-area" id="upset-vertical" style="display:flex; justify-content:center;"></div>
     </div>
 
+    <div id="tooltip" class="tooltip"></div>
+
 <script>
-    // --- Configuration ---
-    const width = document.getElementById('viz1').clientWidth;
-    const height = document.getElementById('viz1').clientHeight - 40; // minus header
-    const colors = d3.scaleOrdinal(d3.schemeTableau10);
+    // --- Utils ---
+    const getSlug = (name) => name.toLowerCase().replace(/ /g, "_").replace(/[^a-z0-9_]/g, "");
     
-    // Icon mapping for UpSet
+    // --- Config ---
+    // Brighter Neon Palette
+    const confColors = d3.scaleOrdinal()
+        .range(["#FF00FF", "#00FF00", "#00FFFF", "#FFFF00", "#FF9900", "#FF0099"]);
+    
     const icons = {
-        'fight': '\uf6de', // Fist
-        'victory': '\uf091', // Trophy
-        'win_won': '\uf005', // Star
-        'victory_win_won': '\uf091',
-        'rah': '\uf0a1', // Bullhorn
-        'nonsense': '\uf118', // Laugh
-        'colors': '\uf53f', // Palette
-        'men': '\uf183', // Male
-        'opponents': '\uf21e', // Heartbeat/Opponent
-        'spelling': '\uf15d', // File Alt
-        'student_writer': '\uf19d', // Grad Cap
-        'official_song': '\uf058', // Check Circle
-        'contest': '\uf091' // Trophy
+        'fight': '\uf6de', 'victory': '\uf091', 'win_won': '\uf005', 
+        'victory_win_won': '\uf091', 'rah': '\uf0a1', 'nonsense': '\uf118', 
+        'colors': '\uf53f', 'men': '\uf183', 'opponents': '\uf21e', 
+        'spelling': '\uf15d', 'student_writer': '\uf19d', 'official_song': '\uf058', 
+        'contest': '\uf091'
     };
 
-    // Load Data
     d3.csv("fight-songs.csv").then(data => {
         
-        // --- Data Pre-processing ---
+        // Data Cleanup
         data.forEach(d => {
             d.bpm = +d.bpm;
             d.sec_duration = +d.sec_duration;
             d.number_fights = +d.number_fights;
             d.trope_count = +d.trope_count;
-            d.id = d.school; // Unique ID
+            d.id = d.school;
         });
 
-        // Global State
-        let selectedSchool = null;
+        const tooltip = d3.select("#tooltip");
 
-        // --- Helper: Jaccard Similarity ---
-        const tropes = ['fight', 'victory', 'win_won', 'rah', 'nonsense', 'colors', 'men', 'opponents', 'spelling'];
-        const metadata_cols = ['student_writer', 'official_song', 'contest'];
-
-        function getJaccard(a, b) {
-            let intersection = 0;
-            let union = 0;
-            tropes.forEach(t => {
-                const valA = a[t] === 'Yes' ? 1 : 0;
-                const valB = b[t] === 'Yes' ? 1 : 0;
-                if (valA || valB) union++;
-                if (valA && valB) intersection++;
-            });
-            return union === 0 ? 0 : intersection / union;
-        }
-
-        // --- Helper: Reset/Highlight Logic ---
+        // --- GLOBAL INTERACTION ---
         function updateSelection(schoolName) {
-            selectedSchool = schoolName;
-
-            // 1. Reset everything if null
+            // Reset if null
             if (!schoolName) {
-                d3.selectAll("circle").classed("dimmed", false).classed("highlighted", false);
-                d3.selectAll("rect").classed("dimmed", false);
-                
-                // Reset Center Panel
-                d3.select("#school-name").text("Select a School");
-                d3.select("#song-name").text("Click any node to explore");
-                d3.select("#stats-1").style("opacity", 0);
-                d3.select("#stats-2").style("opacity", 0);
-                d3.select("#spotify-container").html("");
+                d3.selectAll(".dimmed").classed("dimmed", false);
+                d3.selectAll(".highlighted").classed("highlighted", false);
+                d3.select("#info-school").text("SELECT A SCHOOL");
+                d3.select("#info-song").text("Click dots or logos to explore");
+                d3.select("#info-details").style("opacity", 0);
+                d3.select("#strip-player").html('<div style="color: #444; font-size: 0.8em; text-align: center;">Spotify<br>Player</div>');
                 return;
             }
 
-            // 2. Highlight Logic
-            const target = data.find(d => d.school === schoolName);
+            const d = data.find(r => r.school === schoolName);
             
-            // Dim everyone
-            d3.selectAll("circle").classed("dimmed", true).classed("highlighted", false);
-            d3.selectAll("rect").classed("dimmed", true); // For bars
+            // Visual Feedback
+            d3.selectAll("circle, .school-logo").classed("dimmed", true).classed("highlighted", false);
+            d3.selectAll(`[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true);
 
-            // Highlight specific node in all viz
-            // We use a custom attribute 'data-school' on all elements to find them easily
-            d3.selectAll(`[data-school="${schoolName}"]`)
-              .classed("dimmed", false)
-              .classed("highlighted", true);
-
-            // 3. Update Center Panel
-            d3.select("#school-name").text(target.school);
-            d3.select("#song-name").text(target.song_name);
-            d3.select("#val-year").text(target.year);
-            d3.select("#val-writers").text(target.writers.length > 30 ? "Various" : target.writers);
-            d3.select("#val-student").text(target.student_writer);
-            d3.select("#val-contest").text(target.contest);
-            d3.select("#stats-1").style("opacity", 1);
-            d3.select("#stats-2").style("opacity", 1);
+            // Update Middle Strip
+            d3.select("#info-school").text(d.school);
+            d3.select("#info-song").text(d.song_name);
+            d3.select("#info-details").style("opacity", 1);
+            d3.select("#d-year").text(d.year);
+            d3.select("#d-writer").text(d.writers.length > 20 ? "Various" : d.writers);
+            d3.select("#d-student").text(d.student_writer);
+            d3.select("#d-contest").text(d.contest);
 
             // Spotify
-            if (target.spotify_id) {
-                const iframe = `<iframe id="spotify-player" src="https://open.spotify.com/embed/track/${target.spotify_id}?utm_source=generator&theme=0" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
-                d3.select("#spotify-container").html(iframe);
+            if (d.spotify_id) {
+                // Using embed format
+                const url = `https://open.spotify.com/embed/track/${d.spotify_id}?utm_source=generator&theme=0`;
+                d3.select("#strip-player").html(`<iframe src="${url}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`);
             }
         }
 
-        // --- VIZ 1: Horizontal UpSet (Tropes) ---
-        function drawHorizontalUpSet() {
-            const svg = d3.select("#upset-horizontal").append("svg")
-                .attr("width", "100%").attr("height", "100%")
-                .attr("viewBox", `0 0 ${width} ${height}`);
+        // --- VIZ 1: Horizontal UpSet with LOGOS ---
+        const drawViz1 = () => {
+            const container = document.getElementById('upset-horizontal');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            const svg = d3.select("#upset-horizontal").append("svg").attr("width", w).attr("height", h);
+
+            const tropes = ['fight', 'victory', 'win_won', 'rah', 'nonsense', 'colors', 'men', 'opponents', 'spelling'];
             
-            // Calculate combinations
+            // Aggregate
             const combos = {};
             data.forEach(d => {
-                // specific tropes for this viz
                 const sig = tropes.map(t => d[t] === 'Yes' ? '1' : '0').join("");
-                if (!combos[sig]) combos[sig] = { count: 0, schools: [], sig: sig };
-                combos[sig].count++;
+                if (!combos[sig]) combos[sig] = { schools: [], sig: sig };
                 combos[sig].schools.push(d.school);
             });
+            // Top 8 combos to fit vertically
+            const sorted = Object.values(combos).sort((a,b) => b.schools.length - a.schools.length).slice(0, 8);
             
-            const sortedCombos = Object.values(combos).sort((a,b) => b.count - a.count).slice(0, 12); // Top 12
-            
-            const margin = {top: 20, right: 20, bottom: 100, left: 100};
-            const innerW = width - margin.left - margin.right;
-            const innerH = height - margin.top - margin.bottom;
+            const margin = {top: 10, right: 10, bottom: 80, left: 100}; // Left for Matrix labels
+            const innerH = h - margin.top - margin.bottom;
+            const rowH = innerH / sorted.length;
 
-            const x = d3.scaleLinear().domain([0, d3.max(sortedCombos, d=>d.count)]).range([0, innerW]);
-            const y = d3.scaleBand().domain(sortedCombos.map(d=>d.sig)).range([0, innerH]).padding(0.2);
+            const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
-            // Bars
-            g.selectAll("rect").data(sortedCombos).enter().append("rect")
-                .attr("y", d => y(d.sig))
-                .attr("width", d => x(d.count))
-                .attr("height", y.bandwidth())
-                .attr("fill", "#7FDBFF")
-                .on("click", (e, d) => {
-                     // Click bar -> select first school in that group? Or just highlight logic?
-                     // Let's just log for now, or maybe select random
+            sorted.forEach((combo, i) => {
+                const y = i * rowH;
+                const centerY = y + rowH/2;
+                
+                // Draw Logos
+                combo.schools.forEach((school, j) => {
+                    // Logo size logic
+                    const logoSize = Math.min(rowH - 4, 30);
+                    g.append("image")
+                        .attr("xlink:href", `logos/${getSlug(school)}.png`)
+                        .attr("x", j * (logoSize + 5))
+                        .attr("y", centerY - logoSize/2)
+                        .attr("width", logoSize)
+                        .attr("height", logoSize)
+                        .attr("class", "school-logo")
+                        .attr("data-school", school)
+                        // Fallback color square if image missing (using error handler in real img, hard in SVG)
+                        .on("error", function() { d3.select(this).style("display", "none"); }) 
+                        .on("mouseover", (e) => {
+                            tooltip.style("opacity", 1).html(school)
+                                .style("left", (e.pageX + 10) + "px").style("top", (e.pageY - 10) + "px");
+                        })
+                        .on("mouseout", () => tooltip.style("opacity", 0))
+                        .on("click", (e) => { e.stopPropagation(); updateSelection(school); });
                 });
 
-            // Matrix (Bottom Axis area)
-            const matrixG = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top + innerH + 10})`);
-            const colScale = d3.scalePoint().domain(tropes).range([0, innerW/2]); // Squeeze matrix width
+                // Matrix Dots (Left Side)
+                tropes.forEach((t, k) => {
+                    const active = combo.sig[k] === '1';
+                    // Text Labels (Only draw once)
+                    if (i === sorted.length - 1) {
+                         svg.append("text")
+                            .attr("x", margin.left - 5 + (k*25) - (tropes.length*25)) // Position left of margin
+                            .attr("y", h - 5)
+                            .attr("transform", `rotate(-45, ${margin.left + (k*20) - 200}, ${h-10})`) // Simplified rotation
+                            // Actually, let's put matrix below like before, simpler for text
+                    }
+                });
+            });
 
-            // Matrix Rows (Tropes) vs Columns (Combos)? 
-            // Standard UpSet: Columns are combos. 
-            // Here: Rows are combos (Horizontal bars). So matrix needs columns = tropes.
+            // Re-doing Matrix to be below the rows, aligned with nothing? 
+            // The user wanted horizontal upset. Matrix usually on Left for horizontal bars.
+            // Let's put Matrix on the LEFT of the logos.
             
-            // Draw labels
-            tropes.forEach((t, i) => {
+            const matrixG = svg.append("g").attr("transform", `translate(10, ${margin.top})`);
+            tropes.forEach((t, k) => {
+                // Column Header (Rotated)
                 matrixG.append("text")
-                    .attr("x", i * 25)
-                    .attr("y", 10)
-                    .attr("transform", `rotate(-45, ${i*25}, 10)`)
-                    .style("text-anchor", "end")
+                    .attr("x", k * 10)
+                    .attr("y", -5)
                     .style("font-family", "FontAwesome")
-                    .text(icons[t] + " " + t);
-            });
-
-            sortedCombos.forEach((combo, i) => {
-                const yPos = y(combo.sig) + y.bandwidth()/2 - innerH - 10; // offset back to relative
-                // Draw dots for this row
-                tropes.forEach((t, j) => {
-                    const active = combo.sig[j] === '1';
+                    .style("font-size", "10px")
+                    .text(icons[t])
+                    .append("title").text(t); // Tooltip for icon
+                
+                // Dots
+                sorted.forEach((combo, i) => {
+                    const active = combo.sig[k] === '1';
                     matrixG.append("circle")
-                        .attr("cx", j * 25)
-                        .attr("cy", yPos + innerH + 10) // Absolute Y relative to Matrix G
-                        .attr("r", active ? 4 : 2)
-                        .attr("fill", active ? "#7FDBFF" : "#333");
+                        .attr("cx", k * 10 + 5)
+                        .attr("cy", i * rowH + rowH/2)
+                        .attr("r", active ? 3 : 1)
+                        .attr("class", active ? "upset-dot active" : "upset-dot");
                 });
             });
-        }
-        drawHorizontalUpSet();
-
-
-        // --- VIZ 4: Jaccard Web (Force Directed) ---
-        function drawJaccardWeb() {
-            const svg = d3.select("#jaccard-web").append("svg")
-                .attr("width", "100%").attr("height", "100%")
-                .attr("viewBox", `0 0 ${width} ${height}`)
-                .call(d3.zoom().on("zoom", (event) => g.attr("transform", event.transform)))
-                .append("g");
             
-            const g = svg.append("g");
+            // Interaction to clear
+            svg.on("click", () => updateSelection(null));
+        };
+        drawViz1();
 
-            // Build Graph
+        // --- VIZ 4: Similarity Web (Bounded) ---
+        const drawViz4 = () => {
+            const container = document.getElementById('jaccard-web');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            const svg = d3.select("#jaccard-web").append("svg").attr("width", w).attr("height", h);
+
             const nodes = data.map(d => ({...d}));
             const links = [];
+            // Recalculate links
+            const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
             for(let i=0; i<nodes.length; i++) {
                 for(let j=i+1; j<nodes.length; j++) {
-                    const sim = getJaccard(nodes[i], nodes[j]);
-                    if(sim > 0.75) { // Threshold
-                        links.push({source: nodes[i].id, target: nodes[j].id, value: sim});
-                    }
+                    let u=0, inter=0;
+                    t.forEach(k => {
+                        const a = nodes[i][k]==='Yes'; const b = nodes[j][k]==='Yes';
+                        if(a||b) u++; if(a&&b) inter++;
+                    });
+                    if(u>0 && (inter/u)>0.75) links.push({source:nodes[i].id, target:nodes[j].id});
                 }
             }
 
-            const simulation = d3.forceSimulation(nodes)
-                .force("link", d3.forceLink(links).id(d => d.id).distance(50))
-                .force("charge", d3.forceManyBody().strength(-100))
-                .force("center", d3.forceCenter(width / 2, height / 2));
+            const sim = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d=>d.id).distance(30))
+                .force("charge", d3.forceManyBody().strength(-50))
+                .force("center", d3.forceCenter(w/2, h/2))
+                .force("collide", d3.forceCollide().radius(d => 4 + d.trope_count * 1.5));
 
-            const link = g.append("g").selectAll("line")
-                .data(links).enter().append("line")
-                .attr("stroke", "#555").attr("stroke-opacity", 0.4);
-
-            const node = g.append("g").selectAll("circle")
-                .data(nodes).enter().append("circle")
+            const link = svg.append("g").selectAll("line").data(links).enter().append("line")
+                .attr("stroke", "#333").attr("stroke-width", 1);
+            
+            const node = svg.append("g").selectAll("circle").data(nodes).enter().append("circle")
                 .attr("r", d => 3 + d.trope_count * 1.5)
-                .attr("fill", d => colors(d.conference))
+                .attr("fill", d => confColors(d.conference))
                 .attr("data-school", d => d.school)
-                .on("click", (event, d) => {
-                    event.stopPropagation();
-                    updateSelection(d.school);
-                });
+                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
+                .on("mouseover", (e, d) => {
+                     tooltip.style("opacity", 1).html(`${d.school}<br>Tropes: ${d.trope_count}`)
+                        .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                })
+                .on("mouseout", () => tooltip.style("opacity", 0));
 
-            // Add text labels for nodes with high trope count
-            const labels = g.append("g").selectAll("text")
-                .data(nodes.filter(d => d.trope_count > 4)).enter().append("text")
-                .attr("dy", -10)
-                .attr("text-anchor", "middle")
-                .text(d => d.trope_count)
-                .style("font-size", "8px");
+            sim.on("tick", () => {
+                // Bounding Box Logic
+                node
+                    .attr("cx", d => d.x = Math.max(10, Math.min(w - 10, d.x)))
+                    .attr("cy", d => d.y = Math.max(10, Math.min(h - 10, d.y)));
 
-            simulation.on("tick", () => {
-                link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                link
+                    .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
                     .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-                node.attr("cx", d => d.x).attr("cy", d => d.y);
-                labels.attr("x", d => d.x).attr("y", d => d.y);
             });
-            
-            // Click empty space to reset
-            d3.select("#jaccard-web svg").on("click", () => updateSelection(null));
-        }
-        drawJaccardWeb();
+        };
+        drawViz4();
 
-        // --- VIZ 3: Topology (Scatter + Density) ---
-        function drawTopology() {
-            const svg = d3.select("#topology-map").append("svg")
-                .attr("width", "100%").attr("height", "100%")
-                .attr("viewBox", `0 0 ${width} ${height}`);
+        // --- VIZ 3: Topology (With Key) ---
+        const drawViz3 = () => {
+            const container = document.getElementById('topology-map');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            const svg = d3.select("#topology-map").append("svg").attr("width", w).attr("height", h);
             
-            const margin = {top: 20, right: 20, bottom: 30, left: 40};
-            const innerW = width - margin.left - margin.right;
-            const innerH = height - margin.top - margin.bottom;
+            const margin = {top: 10, right: 80, bottom: 20, left: 30}; // Right space for Legend
+            const iw = w - margin.left - margin.right;
+            const ih = h - margin.top - margin.bottom;
 
-            const x = d3.scaleLinear().domain([0, 180]).range([0, innerW]); // Duration
-            const y = d3.scaleLinear().domain([60, 190]).range([innerH, 0]); // BPM
+            const x = d3.scaleLinear().domain([0, 180]).range([0, iw]);
+            const y = d3.scaleLinear().domain([60, 190]).range([ih, 0]);
 
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Density Contours
-            const contours = d3.contourDensity()
-                .x(d => x(d.sec_duration))
-                .y(d => y(d.bpm))
-                .size([innerW, innerH])
-                .bandwidth(20)
-                (data);
-
-            g.append("g").selectAll("path")
-                .data(contours).enter().append("path")
+            // Density
+            const contours = d3.contourDensity().x(d=>x(d.sec_duration)).y(d=>y(d.bpm))
+                .size([iw, ih]).bandwidth(15)(data);
+            
+            g.append("g").selectAll("path").data(contours).enter().append("path")
                 .attr("d", d3.geoPath())
-                .attr("fill", "#fff")
-                .attr("opacity", 0.05); // "Grey zones"
+                .attr("fill", "#00ffcc").attr("opacity", 0.05);
 
             // Axes
-            g.append("g").attr("transform", `translate(0,${innerH})`).call(d3.axisBottom(x).ticks(5));
-            g.append("g").call(d3.axisLeft(y).ticks(5));
-
-            // Labels
-            g.append("text").attr("x", innerW).attr("y", innerH - 5).text("Duration (sec)").attr("text-anchor", "end");
-            g.append("text").attr("x", 5).attr("y", 5).text("BPM");
+            g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5).tickSize(-ih).tickFormat(""));
+            g.append("g").call(d3.axisLeft(y).ticks(5).tickSize(-iw).tickFormat(""));
+            
+            // Clean axis lines
+            g.selectAll(".tick line").attr("stroke", "#333").attr("stroke-dasharray", "2,2");
+            g.selectAll(".domain").remove();
 
             // Dots
             g.selectAll("circle").data(data).enter().append("circle")
                 .attr("cx", d => x(d.sec_duration))
                 .attr("cy", d => y(d.bpm))
-                .attr("r", d => (d.number_fights + 1) * 3) // Size by fights
-                .attr("fill", d => d3.interpolateViridis(d.trope_count / 8)) // Color by tropes
+                .attr("r", d => (d.number_fights + 1) * 2.5)
+                .attr("fill", d => d3.interpolateViridis(d.trope_count / 8))
                 .attr("stroke", "#000")
                 .attr("data-school", d => d.school)
-                .on("click", (event, d) => {
-                    event.stopPropagation();
-                    updateSelection(d.school);
-                });
-            
-             // Click empty space to reset
-             d3.select("#topology-map svg").on("click", () => updateSelection(null));
-        }
-        drawTopology();
+                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
 
-        // --- VIZ 2: Vertical UpSet (Metadata) ---
-        function drawVerticalUpSet() {
-            const svg = d3.select("#upset-vertical").append("svg")
-                .attr("width", "100%").attr("height", "100%")
-                .attr("viewBox", `0 0 ${width} ${height}`);
+            // Legend/Key (Right Side)
+            const leg = svg.append("g").attr("transform", `translate(${w - 70}, 20)`);
+            leg.append("text").text("KEY").attr("font-weight","bold").attr("fill","#fff").attr("y", -5);
             
-            // Combos
+            // Size Key
+            leg.append("circle").attr("r", 3).attr("cy", 10).attr("fill", "#888");
+            leg.append("text").text("0 Fights").attr("x", 10).attr("y", 13).style("font-size", "9px");
+            leg.append("circle").attr("r", 10).attr("cy", 30).attr("fill", "#888");
+            leg.append("text").text("High Fights").attr("x", 15).attr("y", 33).style("font-size", "9px");
+
+            // Color Key (Gradient)
+            const grad = svg.append("defs").append("linearGradient").attr("id", "grad1");
+            grad.append("stop").attr("offset", "0%").style("stop-color", d3.interpolateViridis(0));
+            grad.append("stop").attr("offset", "100%").style("stop-color", d3.interpolateViridis(1));
+            
+            leg.append("rect").attr("y", 50).attr("width", 50).attr("height", 6).style("fill", "url(#grad1)");
+            leg.append("text").text("Few Tropes").attr("y", 48).style("font-size", "8px");
+            leg.append("text").text("Many").attr("y", 48).attr("x", 30).style("font-size", "8px");
+        };
+        drawViz3();
+
+        // --- VIZ 2: Vertical UpSet (Centered Origin) ---
+        const drawViz2 = () => {
+            const container = document.getElementById('upset-vertical');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            const svg = d3.select("#upset-vertical").append("svg").attr("width", w).attr("height", h);
+
+            const meta = ['student_writer', 'official_song', 'contest'];
             const combos = {};
             data.forEach(d => {
-                const sig = metadata_cols.map(t => d[t] === 'Yes' ? '1' : '0').join("");
+                const sig = meta.map(t => d[t] === 'Yes' ? '1' : '0').join("");
                 if (!combos[sig]) combos[sig] = { count: 0, sig: sig };
                 combos[sig].count++;
             });
             const sorted = Object.values(combos).sort((a,b) => b.count - a.count);
 
-            const margin = {top: 20, right: 20, bottom: 20, left: 20};
-            // Simple Vertical Bar chart for now to save space
-            const barScale = d3.scaleLinear().domain([0, d3.max(sorted, d=>d.count)]).range([0, height-100]);
+            // Centering math
+            const barW = 30;
+            const totalW = sorted.length * barW;
+            const startX = (w - totalW) / 2;
+            const bottomSpace = 80;
             
-            const g = svg.append("g").attr("transform", `translate(50, 20)`);
-            
-            // Draw Bars (Vertical)
+            const maxVal = d3.max(sorted, d=>d.count);
+            const scale = d3.scaleLinear().domain([0, maxVal]).range([0, h - bottomSpace - 20]);
+
+            const g = svg.append("g").attr("transform", `translate(${startX}, 10)`);
+
             sorted.forEach((d, i) => {
+                // Bar
                 g.append("rect")
-                    .attr("x", i * 30)
-                    .attr("y", height - 100 - barScale(d.count))
-                    .attr("width", 20)
-                    .attr("height", barScale(d.count))
-                    .attr("fill", "#2ECC40");
+                    .attr("x", i * barW)
+                    .attr("y", h - bottomSpace - scale(d.count))
+                    .attr("width", barW - 5)
+                    .attr("height", scale(d.count))
+                    .attr("fill", "#FF0099");
                 
-                // Draw Matrix dots below
-                metadata_cols.forEach((col, j) => {
+                // Matrix
+                meta.forEach((m, j) => {
                     const active = d.sig[j] === '1';
                     g.append("text")
-                        .attr("x", i * 30 + 10)
-                        .attr("y", height - 80 + (j*25))
+                        .attr("x", i * barW + (barW-5)/2)
+                        .attr("y", h - bottomSpace + 20 + (j*20))
                         .attr("text-anchor", "middle")
                         .style("font-family", "FontAwesome")
-                        .style("fill", active ? "#2ECC40" : "#333")
-                        .text(active ? icons[col] : ".");
+                        .style("fill", active ? "#00ffcc" : "#333")
+                        .text(active ? icons[m] : ".");
                 });
             });
 
-            // Labels for matrix rows
-            metadata_cols.forEach((col, j) => {
-                g.append("text")
-                    .attr("x", -10)
-                    .attr("y", height - 80 + (j*25))
+            // Labels on left of the centered block
+            meta.forEach((m, j) => {
+                svg.append("text")
+                    .attr("x", startX - 10)
+                    .attr("y", 10 + h - bottomSpace + 20 + (j*20))
                     .attr("text-anchor", "end")
-                    .style("font-size", "10px")
-                    .text(col.replace("_", " "));
+                    .text(m.replace("_", " "))
+                    .style("font-size", "10px");
             });
-        }
-        drawVerticalUpSet();
+        };
+        drawViz2();
 
     });
 </script>
