@@ -693,7 +693,7 @@
             const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
 
             // 1. Trope Count
-            legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
+            legG.append("text").text("KEY:<br>TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
             legG.append("rect").attr("y", 10).attr("width", legW - 30).attr("height", 12)
                 .style("fill", "url(#trope-gradient)").style("stroke", "#444");
             legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", "9px");
@@ -931,6 +931,7 @@
 </script>
 </body>
 </html>
+
 
 
 
