@@ -487,7 +487,20 @@
             d3.select("#si-conf").text(`(${d.conference})`);
             d3.select("#si-title").text(d.song_name);
             d3.select("#si-year").text(d.year);
-            d3.select("#si-writers").text(d.writers.length > 45 ? "Multiple" : d.writers);
+
+            const wSpan = d3.select("#si-writers");
+            wSpan.text(d.writers).style("font-size", "1em"); // 1. Set full text & reset size
+            
+            const rowNode = wSpan.node().closest(".stats-row");
+            const panelNode = document.getElementById("song-info-panel");
+            
+            let fs = 1.0;
+            // 2. Loop: While the row is wider than the panel (minus padding), shrink text
+            // We limit it to 0.5em so it doesn't become microscopic
+            while (rowNode.scrollWidth > (panelNode.clientWidth - 40) && fs > 0.5) {
+                fs -= 0.05;
+                wSpan.style("font-size", `${fs}em`);
+            }
             
             let badgesHTML = "";
             if(d.student_writer === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-graduation-cap"></i> Student</div>`;
@@ -1022,6 +1035,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
