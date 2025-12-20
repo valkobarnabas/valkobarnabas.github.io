@@ -42,12 +42,12 @@
             grid-column: 1 / 3;
             grid-row: 2 / 3;
             display: grid;
-            grid-template-columns: 4fr 12fr; /* More space for player */
+            grid-template-columns: 4fr 12fr; 
             background: #08101c;
             border-top: 2px solid var(--highlight);
             border-bottom: 2px solid var(--highlight);
             overflow: hidden;
-            min-height: 0; /* Prevent overflow issues */
+            min-height: 0; 
         }
 
         #viz3 { grid-column: 1 / 2; grid-row: 3 / 4; } /* Bottom Left */
@@ -106,7 +106,7 @@
         }
         .about-link:hover { background: var(--highlight); color: #000; }
 
-        /* Right Panel (Flex for better responsiveness) */
+        /* Right Panel */
         #strip-right {
             display: flex;
             height: 100%;
@@ -128,23 +128,35 @@
             display: none;
             width: 100%;
             height: 100%;
-            display: flex; /* Flex instead of Grid */
+            display: flex; 
         }
 
         #song-info-panel {
-            flex: 1; /* Takes remaining space */
+            flex: 1; 
             padding: 10px 30px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-width: 0; /* Allow shrinking */
+            min-width: 0; 
         }
 
         #spotify-panel {
-            flex: 0 0 450px; /* Fixed larger width for player */
+            flex: 0 0 400px; /* Fixed width */
             background: #000;
             border-left: 1px solid var(--dim);
             height: 100%;
+            display: flex;              /* CENTERING FIX */
+            align-items: center;        /* Vertically Center */
+            justify-content: center;    /* Horizontally Center */
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        iframe { 
+            width: 100%; 
+            height: 152px; /* Standard Spotify height */
+            border: none; 
+            border-radius: 12px;
         }
 
         #si-school { font-size: 2.2em; font-weight: 800; color: #fff; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -163,20 +175,21 @@
         .node circle:hover { stroke: var(--highlight); stroke-width: 4px; filter: drop-shadow(0 0 8px var(--highlight)); }
         
         /* Highlight States */
-        .dimmed { opacity: 0.1; filter: grayscale(100%); }
+        .dimmed { opacity: 0.15; filter: grayscale(100%); }
         .highlighted { stroke: var(--highlight) !important; stroke-width: 3px !important; opacity: 1 !important; filter: none !important; }
         
         /* Bar Highlight */
+        rect { transition: fill 0.2s; }
         rect.highlighted { stroke: var(--highlight); stroke-width: 2px; fill: var(--highlight) !important; opacity: 1 !important; }
 
         /* Logos */
         .school-logo { cursor: pointer; transition: transform 0.2s; }
         .school-logo:hover { transform: scale(1.4); z-index: 100; filter: drop-shadow(0 0 5px white); }
-        .school-logo.highlighted { filter: drop-shadow(0 0 8px var(--highlight)); transform: scale(1.2); }
+        .school-logo.highlighted { filter: drop-shadow(0 0 8px var(--highlight)); transform: scale(1.2); opacity: 1; }
 
-        /* Matrix Dots */
-        .upset-dot { fill: #333; }
-        .upset-dot.active { fill: var(--highlight); stroke: none; }
+        /* Matrix Lines */
+        .upset-line-mark { stroke: #444; stroke-width: 2px; }
+        .upset-line-mark.active { stroke: var(--highlight); stroke-width: 3px; }
 
         /* Modals & Tooltips */
         .tooltip {
@@ -192,9 +205,9 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
             font-size: 0.9em;
             color: #fff;
+            max-width: 200px;
         }
 
-        /* Modal */
         #about-modal {
             display: none;
             position: fixed;
@@ -224,7 +237,7 @@
 
     <div id="viz1" class="viz-container">
         <h3>Lyrical Ingredients <span style="font-size:0.7em; color:#666;">Every Combination</span></h3>
-        <div class="chart-area" id="upset-horizontal"></div>
+        <div class="chart-area" id="upset-horizontal" style="overflow-y: auto;"></div>
     </div>
 
     <div id="viz4" class="viz-container">
@@ -238,14 +251,14 @@
             <div class="main-title">The Geometry of<br>Fight Songs</div>
             <div class="sub-bot">
                 Barnabás Valkó 
-                <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'">About This Page</span>
+                <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">About This Page</span>
             </div>
         </div>
 
         <div id="strip-right">
             <div id="placeholder-msg">Select a school to analyze</div>
             
-            <div id="active-content" style="display:none;">
+            <div id="active-content">
                 <div id="song-info-panel">
                     <div>
                         <span id="si-school"></span>
@@ -280,7 +293,7 @@
     
     <div id="about-modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="document.getElementById('about-modal').style.display='none'">&times;</span>
+            <span class="close-btn" onclick="document.getElementById('about-modal').style.display='none'">×</span>
             <h2 style="color:var(--highlight); margin-top:0;">About This Dashboard</h2>
             <p>This visualization explores the hidden structure of college fight songs using data from FiveThirtyEight.</p>
             <ul>
@@ -297,7 +310,7 @@
     // --- Utils ---
     const getSlug = (name) => name.toLowerCase().replace(/ /g, "_").replace(/[^a-z0-9_]/g, "");
 
-    // --- Icons & Labels ---
+    // --- Config ---
     const icons = {
         'fight': '\uf6de', 'victory': '\uf091', 'win_won': '\uf005', 
         'victory_win_won': '\uf091', 'rah': '\uf0a1', 'nonsense': '\uf118', 
@@ -314,14 +327,13 @@
         'student_writer': 'Student', 'official_song': 'Official', 'contest': 'Contest'
     };
 
-    // --- Colors ---
     const confColors = d3.scaleOrdinal()
         .domain(['Big 12', 'Big Ten', 'ACC', 'SEC', 'Pac-12', 'Independent'])
         .range(["#FF00FF", "#00FFFF", "#FFFF00", "#FF4400", "#00FF00", "#FFFFFF"]);
 
     d3.csv("fight-songs.csv").then(data => {
         
-        // Clean Data
+        // --- Data Cleanup ---
         data.forEach(d => {
             for(let key in d) { if(typeof d[key] === 'string') d[key] = d[key].trim(); }
             d.bpm = +d.bpm;
@@ -336,7 +348,7 @@
         // --- GLOBAL INTERACTION ---
         function updateSelection(schoolName) {
             if (!schoolName) {
-                // Reset
+                // Global Reset
                 d3.selectAll(".dimmed").classed("dimmed", false);
                 d3.selectAll(".highlighted").classed("highlighted", false);
                 d3.select("#placeholder-msg").style("display", "flex");
@@ -347,14 +359,17 @@
 
             const d = data.find(r => r.school === schoolName);
 
-            // Highlight Logic
-            d3.selectAll("circle, .school-logo, rect").classed("dimmed", true).classed("highlighted", false);
+            // 1. Visual States (Dim All)
+            d3.selectAll("circle, .school-logo, rect, .upset-line-mark").classed("dimmed", true).classed("highlighted", false);
             
-            // 1. Highlight Nodes
-            d3.selectAll(`[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true);
+            // 2. Highlight Specific Nodes (Topology & Web)
+            d3.selectAll(`circle[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true);
             
-            // 2. Highlight UpSet Bars (Origin)
-            // We tagged rects with data-schools array. We check if schoolName is in it.
+            // 3. Highlight Lyrical Logos
+            d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true);
+
+            // 4. Highlight Origin Bars
+            // Find bars that contain this school
             d3.selectAll("#upset-origin rect").each(function() {
                 const schools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
                 if (schools.includes(schoolName)) {
@@ -362,7 +377,7 @@
                 }
             });
 
-            // Update Strip
+            // 5. Update Middle Strip
             d3.select("#placeholder-msg").style("display", "none");
             d3.select("#active-content").style("display", "flex");
 
@@ -382,107 +397,140 @@
                 const url = `https://open.spotify.com/embed/track/${d.spotify_id}?utm_source=generator&theme=0`;
                 d3.select("#spotify-panel").html(`<iframe src="${url}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`);
             } else {
-                d3.select("#spotify-panel").html(`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#444;">No Audio Available</div>`);
+                d3.select("#spotify-panel").html(`<div style="color:#444;">No Audio</div>`);
             }
         }
 
-        // --- VIZ 1: Lyrical Ingredients (ALL Combinations) ---
+        // Global Click Handler (Reset)
+        document.body.addEventListener('click', (e) => {
+            // If clicking inside a chart or modal, do nothing
+            if(e.target.closest('svg') || e.target.closest('.school-logo') || e.target.closest('.modal-content') || e.target.closest('#active-content')) return;
+            updateSelection(null);
+        });
+
+        // --- VIZ 1: Lyrical Ingredients (Dynamic Height & Lines) ---
         const drawViz1 = () => {
             const container = document.getElementById('upset-horizontal');
             const w = container.clientWidth;
-            const h = container.clientHeight;
-            const svg = d3.select("#upset-horizontal").append("svg").attr("width", w).attr("height", h);
-
-            const tropes = ['fight', 'victory', 'win_won', 'rah', 'nonsense', 'colors', 'men', 'opponents', 'spelling'];
+            // Use total height of container, but make SVG tall enough to scroll if needed
             
+            const tropes = ['fight', 'victory', 'win_won', 'rah', 'nonsense', 'colors', 'men', 'opponents', 'spelling'];
             const combos = {};
             data.forEach(d => {
                 const sig = tropes.map(t => d[t] === 'Yes' ? '1' : '0').join("");
                 if (!combos[sig]) combos[sig] = { schools: [], sig: sig };
                 combos[sig].schools.push(d.school);
             });
-            // Show ALL combinations
             const sorted = Object.values(combos).sort((a,b) => b.schools.length - a.schools.length);
             
-            const margin = {top: 45, right: 10, bottom: 5, left: 10};
-            // Dynamic row height to fit all, or scroll. Let's fit all.
-            const rowH = Math.min(35, (h - margin.top - margin.bottom) / sorted.length);
-            
-            const matrixWidth = w * 0.45;
+            // Calculate dynamic height based on logos
             const logoAreaWidth = w * 0.55;
+            const logoBaseSize = 30;
+            const padding = 5;
+            let currentY = 45; // Start Y (Margin Top)
+            const rowData = [];
 
-            const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
+            sorted.forEach(c => {
+                // How many rows of logos?
+                const maxPerRow = Math.floor(logoAreaWidth / (logoBaseSize + padding));
+                const numLogoRows = Math.ceil(c.schools.length / maxPerRow);
+                const rowHeight = Math.max(35, numLogoRows * (logoBaseSize + padding));
+                
+                rowData.push({
+                    ...c,
+                    y: currentY,
+                    h: rowHeight,
+                    logoRows: numLogoRows
+                });
+                currentY += rowHeight + 10; // 10px spacing
+            });
 
-            // Headers (Icons + Text)
-            const headerG = svg.append("g").attr("transform", `translate(${margin.left + logoAreaWidth}, ${margin.top - 10})`);
+            const totalH = Math.max(container.clientHeight, currentY + 20);
+            
+            // Create SVG
+            d3.select(container).html(""); // Clear
+            const svg = d3.select(container).append("svg").attr("width", w).attr("height", totalH);
+
+            // Headers (Fixed at top? No, let's just place them at top of SVG)
+            const matrixWidth = w * 0.45;
+            const matrixX = logoAreaWidth + 10;
             const colW = matrixWidth / tropes.length;
+            
+            const headerG = svg.append("g").attr("transform", `translate(${matrixX}, 20)`);
             tropes.forEach((t, i) => {
                 const x = i * colW + colW/2;
-                headerG.append("text")
-                    .attr("x", x).attr("y", -15)
-                    .attr("text-anchor", "middle")
-                    .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#00f2ff")
-                    .text(icons[t]);
-                
-                headerG.append("text")
-                    .attr("x", x).attr("y", -2)
-                    .attr("text-anchor", "middle")
-                    .style("font-size", "9px").style("fill", "#888")
-                    .text(iconLabels[t]);
+                headerG.append("text").attr("x", x).attr("y", -5).attr("text-anchor", "middle")
+                    .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#00f2ff").text(icons[t]);
+                headerG.append("text").attr("x", x).attr("y", 8).attr("text-anchor", "middle")
+                    .style("font-size", "9px").style("fill", "#888").text(iconLabels[t]);
             });
 
-            sorted.forEach((combo, i) => {
-                const y = i * rowH;
-                const centerY = y + rowH/2;
+            // Draw Rows
+            rowData.forEach(row => {
+                const g = svg.append("g").attr("transform", `translate(0, ${row.y})`);
+                const centerY = row.h / 2;
 
                 // Logos
-                const logoSize = Math.min(rowH - 2, 28);
-                combo.schools.forEach((school, j) => {
-                    // Logic to stack simply
-                    const maxPerRow = Math.floor(logoAreaWidth / (logoSize + 2));
-                    const r = Math.floor(j / maxPerRow);
-                    const c = j % maxPerRow;
-                    // Limit stack to avoid clutter if too many
-                    if (r < 1 || (r < 2 && rowH > 20)) {
-                         g.append("image")
-                            .attr("xlink:href", `logos/${getSlug(school)}.png`)
-                            .attr("x", c * (logoSize + 2))
-                            .attr("y", centerY - logoSize/2)
-                            .attr("width", logoSize).attr("height", logoSize)
-                            .attr("class", "school-logo")
-                            .attr("data-school", school)
-                            .on("error", function() { d3.select(this).style("display","none"); })
-                            .on("click", (e) => { e.stopPropagation(); updateSelection(school); })
-                            .on("mouseover", (e) => {
-                                tooltip.style("opacity", 1).html(school)
-                                    .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
-                            })
-                            .on("mouseout", () => tooltip.style("opacity", 0));
+                row.schools.forEach((school, i) => {
+                    const maxPerRow = Math.floor(logoAreaWidth / (logoBaseSize + padding));
+                    const r = Math.floor(i / maxPerRow);
+                    const c = i % maxPerRow;
+                    g.append("image")
+                        .attr("xlink:href", `logos/${getSlug(school)}.png`)
+                        .attr("x", c * (logoBaseSize + padding) + 10)
+                        .attr("y", r * (logoBaseSize + padding))
+                        .attr("width", logoBaseSize).attr("height", logoBaseSize)
+                        .attr("class", "school-logo")
+                        .attr("data-school", school)
+                        .on("error", function() { d3.select(this).style("display","none"); })
+                        .on("click", (e) => { e.stopPropagation(); updateSelection(school); })
+                        .on("mouseover", (e) => {
+                            tooltip.style("opacity", 1).html(school)
+                                .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                        })
+                        .on("mouseout", () => tooltip.style("opacity", 0));
+                });
+
+                // Connector Line from logos to matrix
+                g.append("line")
+                    .attr("x1", logoAreaWidth)
+                    .attr("x2", w)
+                    .attr("y1", centerY).attr("y2", centerY)
+                    .attr("stroke", "#222");
+
+                // Matrix "Lines" (Ticks)
+                tropes.forEach((t, k) => {
+                    const active = row.sig[k] === '1';
+                    if (active) {
+                        g.append("line")
+                            .attr("x1", matrixX + (k * colW) + colW/2)
+                            .attr("x2", matrixX + (k * colW) + colW/2)
+                            .attr("y1", centerY - 8)
+                            .attr("y2", centerY + 8)
+                            .attr("class", "upset-line-mark active");
+                    } else {
+                        // Inactive dot (faint)
+                        g.append("circle")
+                            .attr("cx", matrixX + (k * colW) + colW/2)
+                            .attr("cy", centerY)
+                            .attr("r", 1)
+                            .attr("fill", "#333");
                     }
                 });
-
-                // Matrix Line
-                g.append("line").attr("x1", logoAreaWidth).attr("x2", w).attr("y1", centerY).attr("y2", centerY).attr("stroke", "#222");
-
-                tropes.forEach((t, k) => {
-                    const active = combo.sig[k] === '1';
-                    g.append("circle")
-                        .attr("cx", logoAreaWidth + (k * colW) + colW/2)
-                        .attr("cy", centerY)
-                        .attr("r", active ? 3.5 : 1)
-                        .attr("class", active ? "upset-dot active" : "upset-dot");
-                });
             });
-            svg.on("click", () => updateSelection(null));
         };
-        drawViz1();
+        drawViz1(); // Call immediately
 
-        // --- VIZ 4: Trope Network (Fixed positions + Legend) ---
+        // --- VIZ 4: Trope Network (Strict 80/20 Bounds) ---
         const drawViz4 = () => {
             const container = document.getElementById('jaccard-web');
             const w = container.clientWidth;
             const h = container.clientHeight;
             const svg = d3.select("#jaccard-web").append("svg").attr("width", w).attr("height", h);
+
+            // Bounds
+            const graphW = w * 0.8; // 80% for graph
+            const legendX = w * 0.82; 
 
             const nodes = data.map(d => ({...d}));
             const links = [];
@@ -514,42 +562,40 @@
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
-            // High Decay = "Freezes" quickly
             const simulation = d3.forceSimulation(nodes)
-                .alphaDecay(0.05) 
-                .force("link", d3.forceLink(links).id(d=>d.id).strength(0.8))
-                .force("charge", d3.forceManyBody().strength(-40))
-                .force("center", d3.forceCenter(w/2, h/2))
+                .force("link", d3.forceLink(links).id(d=>d.id).strength(0.5))
+                .force("charge", d3.forceManyBody().strength(-30))
+                .force("center", d3.forceCenter(graphW/2, h/2))
                 .force("collide", d3.forceCollide().radius(d => 6 + d.trope_count));
 
             simulation.on("tick", () => {
-                node.attr("cx", d => d.x = Math.max(10, Math.min(w - 10, d.x)))
+                // Strict Bounding Box (0 to graphW)
+                node.attr("cx", d => d.x = Math.max(10, Math.min(graphW - 10, d.x)))
                     .attr("cy", d => d.y = Math.max(10, Math.min(h - 10, d.y)));
                 link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
                     .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
             });
 
-            // --- Conference Legend ---
-            const legend = svg.append("g").attr("transform", `translate(${w - 90}, 10)`);
+            // Legend
+            const legend = svg.append("g").attr("transform", `translate(${legendX}, 20)`);
+            legend.append("text").text("CONFERENCE").attr("font-weight","bold").attr("fill","#fff").attr("y", -10);
             const confs = confColors.domain();
             confs.forEach((c, i) => {
-                const lg = legend.append("g").attr("transform", `translate(0, ${i*14})`);
-                lg.append("circle").attr("r", 4).attr("fill", confColors(c)).attr("stroke", "#000");
-                lg.append("text").attr("x", 8).attr("y", 3).text(c).style("font-size", "9px").style("fill", "#ccc");
+                const lg = legend.append("g").attr("transform", `translate(0, ${i*18})`);
+                lg.append("circle").attr("r", 5).attr("fill", confColors(c)).attr("stroke", "#000");
+                lg.append("text").attr("x", 12).attr("y", 4).text(c).style("font-size", "10px").style("fill", "#ccc");
             });
-
-            svg.on("click", () => updateSelection(null));
         };
         drawViz4();
 
-        // --- VIZ 3: Topology (Fixed Key) ---
+        // --- VIZ 3: Topology (Fixed) ---
         const drawViz3 = () => {
             const container = document.getElementById('topology-map');
             const w = container.clientWidth;
             const h = container.clientHeight;
             const svg = d3.select("#topology-map").append("svg").attr("width", w).attr("height", h);
             
-            const margin = {top: 10, right: 100, bottom: 30, left: 40};
+            const margin = {top: 10, right: 110, bottom: 30, left: 40};
             const iw = w - margin.left - margin.right;
             const ih = h - margin.top - margin.bottom;
 
@@ -565,11 +611,10 @@
                 .attr("d", d3.geoPath()).attr("fill", "#00f2ff").attr("opacity", 0.08);
 
             // Axes
-            const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5));
-            const yAxis = g.append("g").call(d3.axisLeft(y).ticks(5));
+            g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5));
+            g.append("g").call(d3.axisLeft(y).ticks(5));
             g.selectAll(".domain, .tick line").attr("stroke", "#444");
             
-            // Axis Labels (Pinned)
             g.append("text").attr("class", "axis-label").attr("x", iw).attr("y", ih - 5).attr("text-anchor", "end").text("Duration (sec)");
             g.append("text").attr("class", "axis-label").attr("x", 10).attr("y", 15).text("BPM");
 
@@ -583,24 +628,22 @@
                 .attr("data-school", d => d.school)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
 
-            // --- REVISED KEY ---
-            const leg = svg.append("g").attr("transform", `translate(${w - 95}, 20)`);
+            // Legend
+            const leg = svg.append("g").attr("transform", `translate(${w - 100}, 20)`);
             leg.append("text").text("KEY").attr("fill","#fff").attr("font-weight","bold").attr("y", -5);
             
-            // Size (Horizontal 0 3 6 9)
-            leg.append("text").text("Fight Count (Size)").attr("y", 15).style("font-size","9px").style("fill","#00f2ff");
+            leg.append("text").text("Fight Count").attr("y", 15).style("font-size","9px").style("fill","#00f2ff");
             const sizes = [0, 3, 6, 9];
             sizes.forEach((s, i) => {
                 leg.append("circle")
-                   .attr("cx", i * 20 + 5)
+                   .attr("cx", i * 18 + 5)
                    .attr("cy", 30)
-                   .attr("r", (s+1)*0.6) // scaled down slightly for legend
+                   .attr("r", (s+1)*0.6)
                    .attr("fill", "#666");
-                leg.append("text").text(s).attr("x", i * 20 + 5).attr("y", 45).attr("text-anchor", "middle").style("font-size","9px");
+                leg.append("text").text(s).attr("x", i * 18 + 5).attr("y", 45).attr("text-anchor", "middle").style("font-size","8px");
             });
 
-            // Color (Viridis)
-            leg.append("text").text("Tropes (Color)").attr("y", 65).style("font-size","9px").style("fill","#00f2ff");
+            leg.append("text").text("Trope Count").attr("y", 65).style("font-size","9px").style("fill","#00f2ff");
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradViridis");
             grad.append("stop").attr("offset", "0%").style("stop-color", d3.interpolateViridis(0));
             grad.append("stop").attr("offset", "100%").style("stop-color", d3.interpolateViridis(1));
@@ -610,7 +653,7 @@
         };
         drawViz3();
 
-        // --- VIZ 2: Origin Story (Horizontal + Labels) ---
+        // --- VIZ 2: Origin Story (Hover Tooltips + Labels) ---
         const drawViz2 = () => {
             const container = document.getElementById('upset-origin');
             const w = container.clientWidth;
@@ -642,12 +685,10 @@
             const colW = matrixWidth / meta.length;
             meta.forEach((m, i) => {
                 const x = i * colW + colW/2;
-                headerG.append("text").attr("x", x).attr("y", -15)
-                    .attr("text-anchor", "middle").style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff")
-                    .text(icons[m]);
-                headerG.append("text").attr("x", x).attr("y", -2)
-                    .attr("text-anchor", "middle").style("font-size", "9px").style("fill", "#888")
-                    .text(iconLabels[m]);
+                headerG.append("text").attr("x", x).attr("y", -15).attr("text-anchor", "middle")
+                    .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
+                headerG.append("text").attr("x", x).attr("y", -2).attr("text-anchor", "middle")
+                    .style("font-size", "9px").style("fill", "#888").text(iconLabels[m]);
             });
 
             sorted.forEach((d, i) => {
@@ -661,9 +702,18 @@
                     .attr("width", barScale(d.count))
                     .attr("height", 16)
                     .attr("fill", "#444")
-                    .attr("data-schools", JSON.stringify(d.schools))
-                    .on("mouseover", function() { d3.select(this).attr("fill", "#ff00ff"); })
-                    .on("mouseout", function() { if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); });
+                    .attr("data-schools", JSON.stringify(d.schools)) // Store for interaction
+                    .on("mouseover", function(e) { 
+                        if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#ff00ff"); 
+                        // Show schools in tooltip
+                        const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
+                        tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
+                               .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                    })
+                    .on("mouseout", function() { 
+                        if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
+                        tooltip.style("opacity", 0);
+                    });
 
                 g.append("text")
                     .attr("x", barAreaWidth - barScale(d.count) - 15)
@@ -682,7 +732,6 @@
                         .attr("class", active ? "upset-dot active" : "upset-dot");
                 });
             });
-            svg.on("click", () => updateSelection(null));
         };
         drawViz2();
 
