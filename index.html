@@ -70,10 +70,10 @@
         
         .chart-area { flex-grow: 1; position: relative; overflow: hidden; width: 100%; height: 100%; }
 
-        /* --- Middle Strip (UPDATED RATIO) --- */
+        /* --- Middle Strip --- */
         #middle-strip {
             display: grid;
-            grid-template-columns: 1fr 2fr; /* UPDATED to 1:2 */
+            grid-template-columns: 350px 1fr;
             background: #08101c;
             border-top: 2px solid var(--highlight);
             border-bottom: 2px solid var(--highlight);
@@ -285,7 +285,7 @@
         <div id="strip-right">
             <div id="placeholder-msg">Select a school to analyze</div>
             
-            <div id="active-content">
+            <div id="active-content" style="display: none;">
                 <div id="song-info-panel">
                     <div>
                         <span id="si-school"></span><span id="si-conf"></span>
@@ -418,11 +418,8 @@
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
             d3.selectAll("rect").classed("dimmed", true).classed("highlighted", false);
 
-            // Highlight Nodes (Circles)
+            // Highlight Nodes
             d3.selectAll(`circle[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true).raise(); 
-            // Raise Group in Network so text shows
-            d3.selectAll(`.node-group`).filter(n => n.school === schoolName).raise();
-
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
 
             // Origin Bars
@@ -470,15 +467,20 @@
         // --- VIZ 1: Grid (11x6) ---
         function initViz1() {
             const gridDiv = d3.select("#logo-grid");
+            
             const container = gridDiv.append("div")
                 .style("display", "grid")
                 .style("grid-template-columns", "repeat(11, 1fr)")
                 .style("grid-template-rows", "repeat(6, 1fr)")
-                .style("width", "100%").style("height", "100%").style("gap", "2px");
+                .style("width", "100%")
+                .style("height", "100%")
+                .style("gap", "2px");
 
             const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
 
-            container.selectAll("div").data(sortedData).enter().append("div")
+            container.selectAll("div")
+                .data(sortedData)
+                .enter().append("div")
                 .style("display", "flex").style("align-items", "center").style("justify-content", "center")
                 .append("img")
                 .attr("src", d => `logos/${getSlug(d.school)}.png`)
@@ -493,6 +495,7 @@
         function drawTropeDashboard(d) {
             const container = d3.select("#trope-dashboard");
             container.html(""); 
+
             const wrapper = container.append("div")
                 .style("display", "flex").style("flex-direction", "column").style("gap", "20px").style("width", "100%");
 
@@ -509,9 +512,11 @@
                     cell.append("div")
                         .style("font-family", "FontAwesome").style("font-size", "22px").style("color", "#00f2ff").style("margin-bottom", "5px")
                         .text(icons[key]);
+                    
                     cell.append("div")
                         .style("font-size", "9px").style("color", "#aaa").style("margin-bottom", "5px")
                         .text(iconLabels[key]);
+
                     const circle = cell.append("div")
                         .style("width", "20px").style("height", "20px").style("border-radius", "50%")
                         .style("border", "2px solid " + (hasTrope ? "#00f2ff" : "#444"))
@@ -527,7 +532,7 @@
         initViz1();
 
 
-        // --- VIZ 4: Trope Network (Hardcoded 4x4 Grids) ---
+        // --- VIZ 4: Trope Network (Rectangle Regions) ---
         const drawViz4 = () => {
             const container = document.getElementById('jaccard-web');
             const w = container.clientWidth;
@@ -537,12 +542,13 @@
             const graphW = w * 0.8; 
             const legendX = w * 0.82; 
 
-            // 3 cols, 2 rows for Conferences
+            // 3 cols, 2 rows
             const cols = 3;
             const rows = 2;
             const cellW = graphW / cols;
             const cellH = h / rows;
             
+            // Map conference to grid index (row, col)
             const mapConf = {
                 'ACC': {r:0, c:0}, 'Big 12': {r:0, c:1}, 'Big Ten': {r:0, c:2},
                 'Pac-12': {r:1, c:0}, 'SEC': {r:1, c:1}, 'Independent': {r:1, c:2}
@@ -554,73 +560,51 @@
                 const pos = mapConf[conf];
                 const x = pos.c * cellW;
                 const y = pos.r * cellH;
-                rectG.append("rect").attr("x", x + 5).attr("y", y + 5).attr("width", cellW - 10).attr("height", cellH - 10)
+                
+                // Box
+                rectG.append("rect")
+                    .attr("x", x + 5).attr("y", y + 5)
+                    .attr("width", cellW - 10).attr("height", cellH - 10)
                     .attr("fill", "#222").attr("stroke", "#444").attr("rx", 5);
-                rectG.append("text").attr("x", x + 15).attr("y", y + 25).text(conf)
+                
+                // Label (Top Left)
+                rectG.append("text")
+                    .attr("x", x + 15).attr("y", y + 25)
+                    .text(conf)
                     .style("fill", "#fff").style("font-weight", "bold").style("font-size", "12px");
             });
 
-            // Group Data
-            const grouped = d3.group(data, d => d.conference);
-            const nodes = [];
-            
-            // Calculate FIXED grid positions (4x4)
-            grouped.forEach((schools, conf) => {
-                // Sort by name for consistency
-                schools.sort((a,b) => d3.ascending(a.school, b.school));
-                
-                const pos = mapConf[conf];
-                const startX = pos.c * cellW + 15; // padding
-                const startY = pos.r * cellH + 35; // padding for title
-                
-                const innerW = cellW - 30;
-                const innerH = cellH - 45;
-                const stepX = innerW / 4;
-                const stepY = innerH / 4;
-
-                schools.forEach((d, i) => {
-                    const r = Math.floor(i / 4);
-                    const c = i % 4;
-                    nodes.push({
-                        ...d,
-                        x: startX + c * stepX + stepX/2,
-                        y: startY + r * stepY + stepY/2
-                    });
-                });
-            });
-
+            const nodes = data.map(d => ({...d}));
             const g = svg.append("g");
 
-            // No Links (Just Clusters)
-            // Or draw links but they might be messy? User said "Hardcode the positions".
-            // Let's keep links faint
-            const links = [];
-            const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
-            for(let i=0; i<nodes.length; i++) {
-                for(let j=i+1; j<nodes.length; j++) {
-                    let u=0, inter=0;
-                    t.forEach(k => { if(nodes[i][k]==='Yes' || nodes[j][k]==='Yes') u++; if(nodes[i][k]==='Yes' && nodes[j][k]==='Yes') inter++; });
-                    if(u>0 && (inter/u) > 0.75) links.push({source:nodes[i], target:nodes[j]});
-                }
-            }
-            g.selectAll("line").data(links).enter().append("line")
-                .attr("x1", d=>d.source.x).attr("y1", d=>d.source.y)
-                .attr("x2", d=>d.target.x).attr("y2", d=>d.target.y)
-                .attr("stroke", "#ffffff").attr("stroke-width", 1).attr("opacity", 0.1); 
+            const simulation = d3.forceSimulation(nodes)
+                .force("x", d3.forceX(d => {
+                    const pos = mapConf[d.conference];
+                    return (pos.c * cellW) + cellW/2;
+                }).strength(0.8))
+                .force("y", d3.forceY(d => {
+                    const pos = mapConf[d.conference];
+                    return (pos.r * cellH) + cellH/2;
+                }).strength(0.8))
+                .force("collide", d3.forceCollide(14))
+                .stop();
 
-            const nodeG = g.selectAll(".node-group").data(nodes).enter().append("g")
+            // Run layout
+            for (let i = 0; i < 300; ++i) simulation.tick();
+
+            const nodeG = g.selectAll(".node-g").data(nodes).enter().append("g")
                 .attr("class", "node-group")
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                     d3.select(e.currentTarget).raise(); // Bring group to front
+                     d3.select(e.currentTarget).raise(); // Raise group!
                      tooltip.style("opacity", 1).html(`${d.school}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
             nodeG.append("circle")
-                .attr("r", 9) 
+                .attr("r", 10) 
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#fff")
                 .attr("data-school", d => d.school);
@@ -628,7 +612,7 @@
             nodeG.append("text")
                 .text(d => d.year === "Unknown" ? "?" : d.year)
                 .attr("text-anchor", "middle").attr("dy", ".3em")
-                .style("font-size", "7px").style("fill", "#fff").style("pointer-events", "none");
+                .style("font-size", "8px").style("fill", "#fff").style("pointer-events", "none");
 
             // Legend
             const legend = svg.append("g").attr("transform", `translate(${legendX}, 20)`);
