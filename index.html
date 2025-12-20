@@ -479,7 +479,7 @@
             d3.select("#si-conf").text(`(${d.conference})`);
             d3.select("#si-title").text(d.song_name);
             d3.select("#si-year").text(d.year);
-            d3.select("#si-writers").text(d.writers);
+            d3.select("#si-writers").text(d.writers.length > 45 ? "Multiple" : d.writers);
             
             let badgesHTML = "";
             if(d.student_writer === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-graduation-cap"></i> Student</div>`;
@@ -1014,6 +1014,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
