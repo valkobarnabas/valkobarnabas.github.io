@@ -565,7 +565,7 @@
             let nodes = data.map(d => ({...d}));
             nodes.sort((a, b) => b.trope_count - a.trope_count);
 
-            // 2. Prepare Links: Jaccard > 0.66 (2/3)
+            // 2. Prepare Links: Jaccard > 0.75)
             const links = [];
             const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
             
@@ -581,7 +581,7 @@
                 nodeMap[d.id] = d;
             });
 
-            // Calculate Links based on new Threshold (0.66)
+            // Calculate Links based on new Threshold
             for(let i=0; i<data.length; i++) {
                 for(let j=i+1; j<data.length; j++) {
                     const n1 = data[i];
@@ -592,7 +592,7 @@
                         if(a||b) union++; if(a&&b) intersect++; 
                     });
                     
-                    if(union > 0 && (intersect/union) > 0.66) {
+                    if(union > 0 && (intersect/union) > 0.75) {
                         // Use the coordinates from our sorted grid layout
                         const source = nodeMap[n1.id];
                         const target = nodeMap[n2.id];
@@ -843,6 +843,7 @@
 </script>
 </body>
 </html>
+
 
 
 
