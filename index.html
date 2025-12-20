@@ -273,7 +273,7 @@
 <body>
 
     <div id="viz1" class="viz-container">
-        <h3>Tropes <span style="font-size:0.7em; color:#666;">Cliché make-up</span></h3>
+        <h3>Clichés <span style="font-size:0.7em; color:#666;">Trope make-up</span></h3>
         <div class="chart-area" id="lyrical-panel" style="display:flex; height: 100%;">
             <div id="logo-grid" style="flex: 0 0 55%; overflow: hidden; padding-right: 10px;"></div>
             <div id="trope-dashboard" style="flex: 1; border-left: 1px solid #333; padding-left: 10px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
@@ -293,7 +293,7 @@
             <div class="main-title">The Geometry of School Fight Songs</div>
             <div class="sub-bot">
                 Barnabás Valkó (University of Wisconsin-Madison)
-                <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">ABOUT</span>
+                <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">ABOUT THIS PAGE</span>
             </div>
         </div>
 
@@ -338,12 +338,12 @@
             <h2 style="color:var(--highlight); margin-top:0;">ABOUT THIS DASHBOARD:</h2>
             <p>Explore the hidden structure of college fight songs.</p>
             <ul>
-                <li><strong>Song Make-up:</strong> Does the song say "fight," "victory," "win/won," "rah," or nonsense syllables? <br> Does it mention colors, a group of men, any opponents, or does it spell any words?</li>
-                <li><strong>Trope Network:</strong> Schools grouped by conference. Node color = Trope Count.</li>
-                <li><strong>Song Topology:</strong> Speed (BPM) vs Length. Color intensity = Number of "Fights" in lyrics.</li>
-                <li><strong>Origin Story:</strong> How the song was created.</li>
+                <li><strong>Clichés:</strong> Does the song say "fight," "victory," "win/won," "rah," or nonsense syllables? Does it mention colors, a group of men, any opponents, or does it spell any words?</li>
+                <li><strong>Trope Network:</strong> Which songs have the most similar tropes by Jaccard Index?</li>
+                <li><strong>Song Topology:</strong> What is the topology of the tempo and duration of songs? How many times is the word "fight" actually said?</li>
+                <li><strong>Origin Story:</strong> A powerset depicting how the song was created.</li>
             </ul>
-            <p style="font-size:0.9em; color:#888;">Built with D3.js by Barnabás Valkó.</p>
+            <p style="font-size:0.9em; color:#888;">Built with D3.js by Barnabás Valkó (UW-Madison Math/Stats 2027).</p>
         </div>
     </div>
 
@@ -947,6 +947,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
