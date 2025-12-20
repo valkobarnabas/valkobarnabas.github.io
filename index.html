@@ -273,7 +273,7 @@
 <body>
 
     <div id="viz1" class="viz-container">
-        <h3>Song Make-up <span style="font-size:0.7em; color:#666;">Select Logo</span></h3>
+        <h3>Tropes <span style="font-size:0.7em; color:#666;">Cliché make-up</span></h3>
         <div class="chart-area" id="lyrical-panel" style="display:flex; height: 100%;">
             <div id="logo-grid" style="flex: 0 0 55%; overflow: hidden; padding-right: 10px;"></div>
             <div id="trope-dashboard" style="flex: 1; border-left: 1px solid #333; padding-left: 10px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
@@ -293,7 +293,7 @@
             <div class="main-title">The Geometry of School Fight Songs</div>
             <div class="sub-bot">
                 Barnabás Valkó (University of Wisconsin-Madison)
-                <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">About This Page</span>
+                <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">ABOUT</span>
             </div>
         </div>
 
@@ -335,10 +335,10 @@
     <div id="about-modal">
         <div class="modal-content">
             <span class="close-btn" onclick="document.getElementById('about-modal').style.display='none'">×</span>
-            <h2 style="color:var(--highlight); margin-top:0;">About This Dashboard</h2>
+            <h2 style="color:var(--highlight); margin-top:0;">About this Dashboard</h2>
             <p>Explore the hidden structure of college fight songs.</p>
             <ul>
-                <li><strong>Lyrical Ingredients:</strong> Which clichés (Tropes) appear in the lyrics?</li>
+                <li><strong>Song Make-up:</strong> Does the song say "fight," "victory," "win/won," "rah," or nonsense syllables? <br> Does it mention colors, a group of men, any opponents, or does it spell any words?</li>
                 <li><strong>Trope Network:</strong> Schools grouped by conference. Node color = Trope Count.</li>
                 <li><strong>Song Topology:</strong> Speed (BPM) vs Length. Color intensity = Number of "Fights" in lyrics.</li>
                 <li><strong>Origin Story:</strong> How the song was created.</li>
@@ -947,6 +947,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
