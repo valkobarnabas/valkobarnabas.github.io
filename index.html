@@ -578,18 +578,17 @@
         initViz1();
 
 
-       // --- VIZ 4: Trope Network (Responsive Grid) ---
+       // --- VIZ 4: Trope Network (Fixed 13x5 Grid) ---
 const drawViz4 = () => {
     const container = d3.select("#jaccard-web");
-    container.html(""); // Clear previous render
+    container.html(""); // 1. Clear previous render (Critical for resizing)
 
-    // 1. Create Layout (Flexbox: 4 parts Chart, 1 part Legend)
+    // 2. Setup Container Layout
     container.style("display", "flex").style("height", "100%").style("width", "100%");
 
     const chartDiv = container.append("div")
         .style("flex", "4")
         .style("position", "relative")
-        // REMOVED overflow: hidden here so tooltips/hover effects aren't clipped if near edge
         .style("height", "100%");
 
     const legendDiv = container.append("div")
@@ -598,28 +597,25 @@ const drawViz4 = () => {
         .style("border-left", "1px solid #333")
         .style("height", "100%");
 
-    // --- DRAW CHART (Left Side) ---
+    // 3. Get Dynamic Dimensions
     const rect = chartDiv.node().getBoundingClientRect();
     const w = rect.width;
     const h = rect.height;
     
-    const svg = chartDiv.append("svg").attr("width", w).attr("height", h);
+    const svg = chartDiv.append("svg")
+        .attr("width", w)
+        .attr("height", h)
+        .style("overflow", "visible"); // Ensure edge nodes aren't clipped
 
-    // --- DYNAMIC GRID CALCULATION ---
-    // Calculate best fit based on Aspect Ratio (Width / Height)
-    const nodeCount = data.length;
-    const aspectRatio = w / h;
+    // --- GRID CALCULATION (Fixed 13x5) ---
+    const cols = 13;
+    const rows = 5;
     
-    // Heuristic: Columns ~= sqrt(N * AspectRatio)
-    let cols = Math.ceil(Math.sqrt(nodeCount * aspectRatio));
-    // Clamp columns to ensure we don't have too few rows
-    cols = Math.max(cols, 5); 
-    const rows = Math.ceil(nodeCount / cols);
-
+    // Dynamic cell size based on current window
     const cellW = w / cols;
     const cellH = h / rows;
     
-    // Radius scales with whichever dimension is limiting
+    // Radius scales with whichever dimension is smaller
     const radius = Math.min(cellW, cellH) * 0.4; 
 
     let nodes = data.map(d => ({...d}));
@@ -629,16 +625,14 @@ const drawViz4 = () => {
     nodes.forEach((d, i) => {
         const col = i % cols;
         const row = Math.floor(i / cols);
-        // Center the grid in the available space if there's leftover room
-        const xOffset = (w - (cols * cellW)) / 2;
-        const yOffset = (h - (rows * cellH)) / 2;
         
-        d.x = (col * cellW) + cellW/2 + xOffset;
-        d.y = (row * cellH) + cellH/2 + yOffset;
+        // Calculate center of the cell
+        d.x = (col * cellW) + cellW/2;
+        d.y = (row * cellH) + cellH/2;
         nodeMap[d.id] = d;
     });
 
-    // Calculate Links
+    // --- LINKS ---
     const links = [];
     const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
     
@@ -660,17 +654,20 @@ const drawViz4 = () => {
         }
     }
 
-    // MANUAL LINKS
-    const zeros = ["Michigan", "Tennessee", "Boston College"];
-    if(nodeMap["Michigan"] && nodeMap["Tennessee"]) {
-         links.push({ x1: nodeMap["Michigan"].x, y1: nodeMap["Michigan"].y, x2: nodeMap["Tennessee"].x, y2: nodeMap["Tennessee"].y });
-    }
-    if(nodeMap["Tennessee"] && nodeMap["Boston College"]) {
-         links.push({ x1: nodeMap["Tennessee"].x, y1: nodeMap["Tennessee"].y, x2: nodeMap["Boston College"].x, y2: nodeMap["Boston College"].y });
-    }
-    if(nodeMap["Boston College"] && nodeMap["Michigan"]) {
-         links.push({ x1: nodeMap["Boston College"].x, y1: nodeMap["Boston College"].y, x2: nodeMap["Michigan"].x, y2: nodeMap["Michigan"].y });
-    }
+    // Manual Links (Triangle)
+    const manualLinks = [
+        ["Michigan", "Tennessee"], 
+        ["Tennessee", "Boston College"], 
+        ["Boston College", "Michigan"]
+    ];
+    manualLinks.forEach(pair => {
+        if(nodeMap[pair[0]] && nodeMap[pair[1]]) {
+            links.push({ 
+                x1: nodeMap[pair[0]].x, y1: nodeMap[pair[0]].y, 
+                x2: nodeMap[pair[1]].x, y2: nodeMap[pair[1]].y 
+            });
+        }
+    });
 
     const g = svg.append("g");
     
@@ -686,7 +683,7 @@ const drawViz4 = () => {
         .attr("transform", d => `translate(${d.x},${d.y})`)
         .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
         .on("mouseover", (e, d) => {
-             d3.select(e.currentTarget).raise(); 
+             d3.select(e.currentTarget).raise(); // Bring to front
              d3.select("#tooltip").style("opacity", 1).html(`<b>${d.school}</b><br>Tropes: ${d.trope_count}`)
                 .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
         })
@@ -701,11 +698,12 @@ const drawViz4 = () => {
     nodeG.append("text")
         .text(d => d.year === "Unknown" ? "?" : d.year)
         .attr("text-anchor", "middle").attr("dy", ".3em")
-        .style("font-size", (radius * 0.7) + "px") // Font scales with radius
+        .style("font-size", (radius * 0.7) + "px") // Text scales with radius
         .style("fill", "#fff").style("font-weight", "bold").style("pointer-events", "none")
         .style("text-shadow", "0 0 2px black");
 
-    // --- DRAW LEGEND (Right Side) - Unchanged ---
+    // --- LEGEND (Right Side) ---
+    // (This part remains mostly static but adapts to height)
     const lRect = legendDiv.node().getBoundingClientRect();
     const legW = lRect.width;
     const legH = lRect.height;
@@ -718,35 +716,31 @@ const drawViz4 = () => {
 
     const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
 
+    // Legend: Trope Count
     legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
     legG.append("rect").attr("y", 10).attr("width", legW - 30).attr("height", 12)
         .style("fill", "url(#trope-gradient)").style("stroke", "#444");
     legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", "9px");
     legG.append("text").text("8").attr("y", 35).attr("x", legW - 30).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", "9px");
 
+    // Legend: Year Labels
     const sectionYearY = 55;
     legG.append("text").text("NODE LABELS").attr("y", sectionYearY).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
-    
     const sampleG = legG.append("g").attr("transform", `translate(15, ${sectionYearY + 25})`);
     sampleG.append("circle").attr("r", 12).attr("fill", "#004400").attr("stroke", "#fff");
     sampleG.append("text").text("19XX").attr("text-anchor", "middle").attr("dy", 3).attr("fill", "#fff").style("font-size", "8px").style("font-weight","bold");
-    
     legG.append("text").text("Year Created").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", "10px");
 
+    // Legend: Connections
     const sectionConnY = 105;
     legG.append("text").text("CONNECTIONS").attr("y", sectionConnY).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
     
-    const linkG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
-    linkG.append("line").attr("x1", 10).attr("y1", 0).attr("x2", 50).attr("y2", 0).attr("stroke", "white").attr("stroke-width", 1).attr("opacity", 0.5);
-    linkG.append("circle").attr("cx", 10).attr("cy", 0).attr("r", 3).attr("fill", "#444").attr("stroke", "#fff");
-    linkG.append("circle").attr("cx", 50).attr("cy", 0).attr("r", 3).attr("fill", "#444").attr("stroke", "#fff");
-    
     legG.append("foreignObject")
-        .attr("x", 0).attr("y", sectionConnY + 30)
-        .attr("width", legW - 20).attr("height", 100)
+        .attr("x", 0).attr("y", sectionConnY + 10)
+        .attr("width", legW - 10).attr("height", 100)
         .append("xhtml:div")
         .style("font-size", "10px").style("color", "#ccc").style("line-height", "1.2")
-        .html("Lines connect schools with >75% trope similarity (by Jaccard Index).");
+        .html("<br>Lines connect schools with >75% trope similarity.");
 
     svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
     legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
@@ -953,6 +947,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
