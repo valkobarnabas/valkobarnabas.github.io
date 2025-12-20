@@ -134,7 +134,7 @@
         }
 
         #active-content {
-            display: none;
+            display: none; /* Hidden by default */
             width: 100%;
             height: 100%;
             display: flex; 
@@ -285,7 +285,7 @@
         <div id="strip-right">
             <div id="placeholder-msg">Select a school to analyze</div>
             
-            <div id="active-content">
+            <div id="active-content" style="display: none;">
                 <div id="song-info-panel">
                     <div>
                         <span id="si-school"></span><span id="si-conf"></span>
@@ -325,7 +325,7 @@
             <ul>
                 <li><strong>Lyrical Ingredients:</strong> Which clichés (Tropes) appear in the lyrics?</li>
                 <li><strong>Trope Network:</strong> Schools grouped by conference. Node color = Trope Count.</li>
-                <li><strong>Song Topology:</strong> Speed (BPM) vs Length. Color = Number of "Fights" in lyrics.</li>
+                <li><strong>Song Topology:</strong> Speed (BPM) vs Length. Color intensity = Number of "Fights" in lyrics.</li>
                 <li><strong>Origin Story:</strong> How the song was created.</li>
             </ul>
             <p style="font-size:0.9em; color:#888;">Built with D3.js by Barnabás Valkó.</p>
@@ -464,9 +464,10 @@
             if(showTopologyTooltip) showTopologyTooltip(d);
         }
 
-        // --- VIZ 1: Grid ---
+        // --- VIZ 1: Grid (11x6) ---
         function initViz1() {
             const gridDiv = d3.select("#logo-grid");
+            
             const container = gridDiv.append("div")
                 .style("display", "grid")
                 .style("grid-template-columns", "repeat(11, 1fr)")
@@ -477,7 +478,9 @@
 
             const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
 
-            container.selectAll("div").data(sortedData).enter().append("div")
+            container.selectAll("div")
+                .data(sortedData)
+                .enter().append("div")
                 .style("display", "flex").style("align-items", "center").style("justify-content", "center")
                 .append("img")
                 .attr("src", d => `logos/${getSlug(d.school)}.png`)
@@ -492,6 +495,7 @@
         function drawTropeDashboard(d) {
             const container = d3.select("#trope-dashboard");
             container.html(""); 
+
             const wrapper = container.append("div")
                 .style("display", "flex").style("flex-direction", "column").style("gap", "20px").style("width", "100%");
 
@@ -508,9 +512,11 @@
                     cell.append("div")
                         .style("font-family", "FontAwesome").style("font-size", "22px").style("color", "#00f2ff").style("margin-bottom", "5px")
                         .text(icons[key]);
+                    
                     cell.append("div")
                         .style("font-size", "9px").style("color", "#aaa").style("margin-bottom", "5px")
                         .text(iconLabels[key]);
+
                     const circle = cell.append("div")
                         .style("width", "20px").style("height", "20px").style("border-radius", "50%")
                         .style("border", "2px solid " + (hasTrope ? "#00f2ff" : "#444"))
@@ -526,7 +532,7 @@
         initViz1();
 
 
-        // --- VIZ 4: Trope Network (Fixed Clusters) ---
+        // --- VIZ 4: Trope Network (Rectangle Regions) ---
         const drawViz4 = () => {
             const container = document.getElementById('jaccard-web');
             const w = container.clientWidth;
@@ -536,58 +542,77 @@
             const graphW = w * 0.8; 
             const legendX = w * 0.82; 
 
-            // Hardcoded Centers (2x3 Grid basically)
-            const conferences = ['ACC', 'Big 12', 'Big Ten', 'Pac-12', 'SEC', 'Independent'];
-            const centers = {
-                'ACC': {x: graphW*0.25, y: h*0.25},
-                'Big 12': {x: graphW*0.5, y: h*0.25},
-                'Big Ten': {x: graphW*0.75, y: h*0.25},
-                'Pac-12': {x: graphW*0.25, y: h*0.75},
-                'SEC': {x: graphW*0.5, y: h*0.75},
-                'Independent': {x: graphW*0.75, y: h*0.75}
+            // 3 cols, 2 rows
+            const cols = 3;
+            const rows = 2;
+            const cellW = graphW / cols;
+            const cellH = h / rows;
+            
+            // Map conference to grid index (row, col)
+            const mapConf = {
+                'ACC': {r:0, c:0}, 'Big 12': {r:0, c:1}, 'Big Ten': {r:0, c:2},
+                'Pac-12': {r:1, c:0}, 'SEC': {r:1, c:1}, 'Independent': {r:1, c:2}
             };
 
-            // Background Zones
-            const bgLayer = svg.append("g");
-            conferences.forEach(c => {
-                const pos = centers[c];
-                bgLayer.append("circle").attr("cx", pos.x).attr("cy", pos.y).attr("r", 50).attr("fill", "#222").attr("stroke", "#333");
-                bgLayer.append("text").attr("x", pos.x).attr("y", pos.y + 65).text(c).attr("text-anchor", "middle").style("fill", "#666").style("font-size", "10px").style("font-weight", "bold");
+            // Draw Rects
+            const rectG = svg.append("g");
+            Object.keys(mapConf).forEach(conf => {
+                const pos = mapConf[conf];
+                const x = pos.c * cellW;
+                const y = pos.r * cellH;
+                
+                // Box
+                rectG.append("rect")
+                    .attr("x", x + 5).attr("y", y + 5)
+                    .attr("width", cellW - 10).attr("height", cellH - 10)
+                    .attr("fill", "#222").attr("stroke", "#444").attr("rx", 5);
+                
+                // Label (Top Left)
+                rectG.append("text")
+                    .attr("x", x + 15).attr("y", y + 25)
+                    .text(conf)
+                    .style("fill", "#fff").style("font-weight", "bold").style("font-size", "12px");
             });
 
             const nodes = data.map(d => ({...d}));
             const g = svg.append("g");
 
             const simulation = d3.forceSimulation(nodes)
-                .force("x", d3.forceX(d => centers[d.conference].x).strength(0.8))
-                .force("y", d3.forceY(d => centers[d.conference].y).strength(0.8))
-                .force("collide", d3.forceCollide(10))
+                .force("x", d3.forceX(d => {
+                    const pos = mapConf[d.conference];
+                    return (pos.c * cellW) + cellW/2;
+                }).strength(0.8))
+                .force("y", d3.forceY(d => {
+                    const pos = mapConf[d.conference];
+                    return (pos.r * cellH) + cellH/2;
+                }).strength(0.8))
+                .force("collide", d3.forceCollide(14))
                 .stop();
 
-            // Run warm
+            // Run layout
             for (let i = 0; i < 300; ++i) simulation.tick();
 
-            const node = g.selectAll(".node-g").data(nodes).enter().append("g")
-                .attr("class", "node-g")
+            const nodeG = g.selectAll(".node-g").data(nodes).enter().append("g")
+                .attr("class", "node-group")
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                     d3.select(e.currentTarget).select("circle").raise(); 
-                     tooltip.style("opacity", 1).html(`${d.school}<br>${d.year}`)
+                     d3.select(e.currentTarget).raise(); // Raise group!
+                     tooltip.style("opacity", 1).html(`${d.school}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
-            node.append("circle")
-                .attr("r", 8) 
+            nodeG.append("circle")
+                .attr("r", 10) 
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#fff")
                 .attr("data-school", d => d.school);
 
-            node.append("text")
+            nodeG.append("text")
                 .text(d => d.year === "Unknown" ? "?" : d.year)
                 .attr("text-anchor", "middle").attr("dy", ".3em")
-                .style("font-size", "6px").style("fill", "#fff").style("pointer-events", "none");
+                .style("font-size", "8px").style("fill", "#fff").style("pointer-events", "none");
 
             // Legend
             const legend = svg.append("g").attr("transform", `translate(${legendX}, 20)`);
@@ -597,8 +622,8 @@
             grad.append("stop").attr("offset", "100%").style("stop-color", "#00ff00");
             
             legend.append("rect").attr("y", 10).attr("width", 50).attr("height", 10).style("fill", "url(#gradNet)");
-            legend.append("text").text("0").attr("y", 30).attr("x", 0).style("fill","#ccc");
-            legend.append("text").text("8+").attr("y", 30).attr("x", 40).style("fill","#ccc");
+            legend.append("text").text("0").attr("y", 30).attr("x", 0).style("fill","#ccc").style("font-size","9px");
+            legend.append("text").text("8+").attr("y", 30).attr("x", 40).style("fill","#ccc").style("font-size","9px");
             
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
         };
@@ -642,7 +667,7 @@
                 .attr("data-school", d => d.school)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
 
-            // Persistent Tooltip Group
+            // Persistent Tooltip
             const pTip = g.append("g").attr("class", "topo-tooltip").style("display", "none");
             pTip.append("rect").attr("width", 90).attr("height", 45).attr("x", 10).attr("y", -22);
             const tText = pTip.append("text").attr("x", 15).attr("y", -8);
@@ -650,7 +675,6 @@
             tText.append("tspan").attr("id", "pt-dur").attr("x", 15).attr("dy", 12);
             tText.append("tspan").attr("id", "pt-fight").attr("x", 15).attr("dy", 12);
 
-            // Register Global Trigger
             showTopologyTooltip = function(d) {
                 if(!d) {
                     pTip.style("display", "none");
@@ -658,9 +682,7 @@
                     const cx = x(d.sec_duration);
                     const cy = y(d.bpm);
                     
-                    pTip.style("display", "block").attr("transform", `translate(${cx}, ${cy})`)
-                        .raise(); // Bring to top
-                    
+                    pTip.style("display", "block").attr("transform", `translate(${cx}, ${cy})`).raise(); 
                     pTip.select("#pt-bpm").text(`BPM: ${d.bpm}`);
                     pTip.select("#pt-dur").text(`Dur: ${d.sec_duration}s`);
                     pTip.select("#pt-fight").text(`Fights: ${d.number_fights}`);
