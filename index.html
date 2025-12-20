@@ -626,12 +626,58 @@ const drawViz4 = () => {
     const radius = Math.min(cellW, cellH) * 0.4; 
 
     let nodes = data.map(d => ({...d}));
-    nodes.sort((a, b) => b.trope_count - a.trope_count);
+
+    // --- NEW: CLUSTER SORTING ---
+    // 1. Calculate a similarity matrix
+    const tKeys = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
+    const getJaccard = (a, b) => {
+        let union = 0, intersect = 0;
+        tKeys.forEach(k => { 
+            const hasA = a[k]==='Yes'; const hasB = b[k]==='Yes';
+            if(hasA||hasB) union++; if(hasA&&hasB) intersect++; 
+        });
+        return union === 0 ? 0 : intersect / union;
+    };
+
+    // 2. Greedy sort: Pick a node, find its most similar neighbor, add to list, repeat.
+    const sortedNodes = [];
+    const pool = [...nodes];
+    
+    // Start with the node that has the most tropes (often a good anchor)
+    pool.sort((a,b) => b.trope_count - a.trope_count);
+    sortedNodes.push(pool.shift());
+
+    while(pool.length > 0) {
+        // Compare the last added node to everyone left in the pool
+        const lastNode = sortedNodes[sortedNodes.length - 1];
+        let bestMatchIndex = -1;
+        let maxSim = -1;
+
+        for(let i = 0; i < pool.length; i++) {
+            const sim = getJaccard(lastNode, pool[i]);
+            // Tie-breaker: if similarity is equal, pick the one with higher trope count
+            if(sim > maxSim || (sim === maxSim && pool[i].trope_count > pool[bestMatchIndex]?.trope_count)) {
+                maxSim = sim;
+                bestMatchIndex = i;
+            }
+        }
+        
+        // Add best match to sorted list
+        sortedNodes.push(pool[bestMatchIndex]);
+        pool.splice(bestMatchIndex, 1);
+    }
+    
+    nodes = sortedNodes; // Apply the new order
+    // -----------------------------
+
     const nodeMap = {}; 
 
     nodes.forEach((d, i) => {
-        const col = i % cols;
+        // Snake Layout: zig-zag through rows to keep neighbors close
+        // (Left->Right, then Right->Left, etc.)
         const row = Math.floor(i / cols);
+        const colRaw = i % cols;
+        const col = (row % 2 === 0) ? colRaw : (cols - 1 - colRaw);
         
         // Calculate center of the cell
         d.x = (col * cellW) + cellW/2;
@@ -955,5 +1001,6 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
