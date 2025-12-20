@@ -14,7 +14,9 @@
             --card-bg: #0b1626;
             --text-color: #ffffff;
             --highlight: #00f2ff; /* Cyan for UI elements */
-            --accent: #ff00ff; /* Magenta */
+            --accent: #ff00ff; /* Hot Pink */
+            --green-dim: #006400;
+            --green-bright: #00ff00;
             --dim: #4a5d75;
             --border: 1px solid rgba(0, 242, 255, 0.2);
         }
@@ -42,7 +44,7 @@
             grid-column: 1 / 3;
             grid-row: 2 / 3;
             display: grid;
-            grid-template-columns: 4fr 12fr; 
+            grid-template-columns: 350px 1fr; /* Fixed Left Width, rest is content */
             background: #08101c;
             border-top: 2px solid var(--highlight);
             border-bottom: 2px solid var(--highlight);
@@ -137,13 +139,13 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center; /* CENTERED TEXT */
-            text-align: center;  /* CENTERED TEXT */
+            align-items: flex-start; /* LEFT ALIGNED */
+            text-align: left;        /* LEFT ALIGNED */
             min-width: 0; 
         }
 
         #spotify-panel {
-            flex: 0 0 400px; 
+            flex: 0 0 450px; 
             background: #000;
             border-left: 1px solid var(--dim);
             height: 100%;
@@ -160,11 +162,11 @@
         #si-conf { font-size: 0.9em; color: #666; font-style: italic; margin-top: 2px; font-weight: 400;}
         #si-title { font-size: 1.3em; color: var(--accent); margin: 5px 0 10px 0; font-style: italic; }
         
-        .badges { display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; justify-content: center; }
+        .badges { display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; justify-content: flex-start; }
         .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #ccc; display: flex; align-items: center; gap: 5px; }
         .badge i { color: var(--highlight); }
 
-        .stats-row { display: flex; gap: 20px; font-size: 0.9em; color: #aaa; justify-content: center; }
+        .stats-row { display: flex; gap: 20px; font-size: 0.9em; color: #aaa; justify-content: flex-start; }
         .stats-row b { color: #fff; }
 
         /* --- Viz Elements --- */
@@ -174,16 +176,21 @@
         /* Highlight States */
         .dimmed { opacity: 0.15; filter: grayscale(100%); }
         .highlighted { stroke: var(--highlight) !important; stroke-width: 3px !important; opacity: 1 !important; filter: none !important; }
+        
         .logo-dimmed { opacity: 0.2; filter: grayscale(100%); }
         .logo-highlighted { filter: drop-shadow(0 0 8px var(--highlight)); transform: scale(1.2); opacity: 1; z-index: 10; }
 
         /* Rect Highlight */
         rect { transition: fill 0.2s; }
-        rect.highlighted { stroke: var(--highlight); stroke-width: 2px; fill: var(--highlight) !important; opacity: 1 !important; }
+        rect.highlighted { stroke: var(--highlight); stroke-width: 2px; fill: var(--accent) !important; opacity: 1 !important; }
 
         /* Logos */
         .school-logo { cursor: pointer; transition: transform 0.2s; }
         .school-logo:hover { transform: scale(1.4); z-index: 100; filter: drop-shadow(0 0 5px white); }
+
+        /* UpSet Dots (Pink) */
+        .upset-dot { fill: #333; }
+        .upset-dot.active { fill: var(--accent); stroke: none; }
 
         /* Tooltips */
         .tooltip {
@@ -233,7 +240,7 @@
     <div id="viz1" class="viz-container">
         <h3>Lyrical Ingredients <span style="font-size:0.7em; color:#666;">Select Logo to Reveal Tropes</span></h3>
         <div class="chart-area" id="lyrical-panel" style="display:flex; height: 100%;">
-            <div id="logo-grid" style="flex: 0 0 55%; overflow-y: auto; padding-right: 10px;"></div>
+            <div id="logo-grid" style="flex: 0 0 50%; overflow-y: auto; padding-right: 10px;"></div>
             <div id="trope-dashboard" style="flex: 1; border-left: 1px solid #333; padding-left: 10px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
                 <div style="color:#666; font-style:italic;">Select a team<br>to view ingredients</div>
             </div>
@@ -324,13 +331,14 @@
         'men': 'Men', 'opponents': 'Foes', 'spelling': 'Spell'
     };
     
-    // Order for the Trope Dashboard
-    const tropeOrder = ['fight', 'victory', 'win_won', 'rah', 'nonsense', 'colors', 'men', 'opponents', 'spelling'];
+    // Rows for Dashboard
+    const row1 = ['fight', 'victory', 'win_won', 'rah'];
+    const row2 = ['nonsense', 'colors', 'men', 'opponents', 'spelling'];
 
-    // Blue -> Green -> Yellow
+    // Dark Green -> Bright Green
     const tropeColorScale = d3.scaleLinear()
-        .domain([0, 4, 8])
-        .range(["#0088FF", "#00FF00", "#FFFF00"]);
+        .domain([0, 8])
+        .range(["#1e4d2b", "#00ff00"]); // Dark Fern to Neon Green
 
     const confColors = d3.scaleOrdinal()
         .domain(['Big 12', 'Big Ten', 'ACC', 'SEC', 'Pac-12', 'Independent'])
@@ -351,7 +359,6 @@
         const tooltip = d3.select("#tooltip");
 
         // --- GLOBAL RESET ---
-        // Clicking SVG background resets
         d3.selectAll(".chart-area").on("click", function(e) {
             if(e.target === this || e.target.tagName === 'svg') updateSelection(null);
         });
@@ -364,7 +371,10 @@
                 d3.selectAll(".highlighted").classed("highlighted", false);
                 d3.selectAll(".logo-dimmed").classed("logo-dimmed", false);
                 d3.selectAll(".logo-highlighted").classed("logo-highlighted", false);
-                d3.selectAll("rect").attr("fill", "#444"); // Reset bars
+                d3.selectAll(".upset-dot").classed("dimmed", false); // Undim dots
+                
+                // Reset Bars (Default Grey)
+                d3.selectAll("#upset-origin rect").attr("fill", "#444").classed("highlighted", false);
 
                 // Reset Panels
                 d3.select("#placeholder-msg").style("display", "flex");
@@ -378,21 +388,23 @@
 
             const d = data.find(r => r.school === schoolName);
 
-            // 1. Visual States
-            // Nodes
+            // 1. Visual States (Dim Everything)
             d3.selectAll("circle").classed("dimmed", true).classed("highlighted", false);
-            d3.selectAll(`circle[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true);
-            
-            // Logos
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
+            d3.selectAll(".upset-dot").classed("dimmed", true); // Dim all dots initially
+
+            // Highlight Specific
+            d3.selectAll(`circle[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true);
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
 
-            // Bars
-            d3.selectAll("#upset-origin rect").attr("fill", "#444").classed("highlighted", false);
+            // Origin Bars Highlighting
+            d3.selectAll("#upset-origin rect").attr("fill", "#444").classed("highlighted", false).classed("dimmed", true);
             d3.selectAll("#upset-origin rect").each(function() {
                 const schools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
                 if (schools.includes(schoolName)) {
-                    d3.select(this).attr("fill", "#ff00ff").classed("highlighted", true);
+                    d3.select(this).attr("fill", "#ff00ff").classed("highlighted", true).classed("dimmed", false);
+                    // Also undim dots in this row
+                    d3.select(this.parentNode).selectAll(".upset-dot").classed("dimmed", false);
                 }
             });
 
@@ -419,17 +431,15 @@
                 d3.select("#spotify-panel").html(`<div style="color:#444;">No Audio</div>`);
             }
 
-            // 3. Update Trope Dashboard (Right Panel of Viz 1)
+            // 3. Update Trope Dashboard
             drawTropeDashboard(d);
         }
 
         // --- VIZ 1: Grid + Dashboard ---
         function initViz1() {
-            // A. Logo Grid
             const gridDiv = d3.select("#logo-grid");
             const logoSize = 32;
             
-            // Flex container for logos
             const container = gridDiv.append("div")
                 .style("display", "flex")
                 .style("flex-wrap", "wrap")
@@ -437,7 +447,6 @@
                 .style("justify-content", "center")
                 .style("padding-top", "10px");
 
-            // Sort alphabetical
             const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
 
             container.selectAll("img")
@@ -450,59 +459,59 @@
                 .attr("title", d => d.school)
                 .style("border-radius", "4px")
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
-                .on("error", function() { this.style.display='none'; }); // Hide broken
+                .on("error", function() { this.style.display='none'; });
         }
 
         function drawTropeDashboard(d) {
             const container = d3.select("#trope-dashboard");
             container.html(""); // Clear
 
-            const dash = container.append("div")
-                .style("display", "grid")
-                .style("grid-template-columns", "repeat(3, 1fr)") // 3x3 Grid
-                .style("gap", "15px")
-                .style("text-align", "center");
+            const wrapper = container.append("div")
+                .style("display", "flex")
+                .style("flex-direction", "column")
+                .style("gap", "20px")
+                .style("width", "100%");
 
-            tropeOrder.forEach(key => {
-                const hasTrope = d[key] === 'Yes';
-                const cell = dash.append("div").style("opacity", hasTrope ? 1 : 0.2);
-                
-                // Icon
-                cell.append("div")
-                    .style("font-family", "FontAwesome")
-                    .style("font-size", "24px")
-                    .style("color", "#00f2ff")
-                    .style("margin-bottom", "5px")
-                    .text(icons[key]);
-                
-                // Label
-                cell.append("div")
-                    .style("font-size", "10px")
-                    .style("color", "#aaa")
-                    .style("margin-bottom", "5px")
-                    .text(iconLabels[key]);
-                
-                // Circle Status
-                const circleDiv = cell.append("div")
-                    .style("width", "24px").style("height", "24px")
-                    .style("border-radius", "50%")
-                    .style("border", "2px solid " + (hasTrope ? "#00f2ff" : "#444"))
-                    .style("margin", "0 auto")
-                    .style("background", hasTrope ? "rgba(0, 242, 255, 0.2)" : "transparent")
+            // Helper for Rows
+            const createRow = (keys) => {
+                const rowDiv = wrapper.append("div")
                     .style("display", "flex")
-                    .style("align-items", "center")
-                    .style("justify-content", "center")
-                    .style("font-size", "10px")
-                    .style("color", "#fff")
-                    .style("font-weight", "bold");
+                    .style("justify-content", "space-around")
+                    .style("width", "100%");
                 
-                // Special Case: Fight Count
-                if (key === 'fight' && hasTrope) {
-                    circleDiv.text(d.number_fights);
-                } else if (hasTrope) {
-                    circleDiv.append("i").attr("class", "fas fa-check").style("font-size", "10px");
-                }
-            });
+                keys.forEach(key => {
+                    const hasTrope = d[key] === 'Yes';
+                    const cell = rowDiv.append("div")
+                        .style("display", "flex").style("flex-direction", "column").style("align-items", "center")
+                        .style("opacity", hasTrope ? 1 : 0.2);
+
+                    // Icon
+                    cell.append("div")
+                        .style("font-family", "FontAwesome").style("font-size", "22px").style("color", "#00f2ff").style("margin-bottom", "5px")
+                        .text(icons[key]);
+                    
+                    // Label
+                    cell.append("div")
+                        .style("font-size", "9px").style("color", "#aaa").style("margin-bottom", "5px")
+                        .text(iconLabels[key]);
+
+                    // Circle
+                    const circle = cell.append("div")
+                        .style("width", "20px").style("height", "20px")
+                        .style("border-radius", "50%")
+                        .style("border", "2px solid " + (hasTrope ? "#00f2ff" : "#444"))
+                        .style("background", hasTrope ? "rgba(0, 242, 255, 0.2)" : "transparent")
+                        .style("display", "flex").style("align-items", "center").style("justify-content", "center")
+                        .style("font-size", "10px").style("color", "#fff").style("font-weight", "bold");
+
+                    if (key === 'fight' && hasTrope) {
+                        circle.text(d.number_fights);
+                    }
+                });
+            };
+
+            createRow(row1); // 4 items
+            createRow(row2); // 5 items
         }
         initViz1();
 
@@ -576,7 +585,7 @@
         drawViz4();
 
 
-        // --- VIZ 3: Topology (Blue-Green-Yellow) ---
+        // --- VIZ 3: Topology (Dark Green to Neon Green) ---
         const drawViz3 = () => {
             const container = document.getElementById('topology-map');
             const w = container.clientWidth;
@@ -613,6 +622,15 @@
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#000")
                 .attr("data-school", d => d.school)
+                .on("mouseover", (e, d) => {
+                     tooltip.style("opacity", 1).html(
+                         `<b>${d.school}</b><br>
+                          BPM: ${d.bpm}<br>
+                          Duration: ${d.sec_duration}s<br>
+                          Tropes: ${d.trope_count}`
+                     ).style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                })
+                .on("mouseout", () => tooltip.style("opacity", 0))
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
 
             // Key
@@ -622,13 +640,11 @@
             leg.append("text").text("Trope Count").attr("y", 15).style("font-size","9px").style("fill","#00f2ff");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradTrope");
-            grad.append("stop").attr("offset", "0%").style("stop-color", "#0088FF");
-            grad.append("stop").attr("offset", "50%").style("stop-color", "#00FF00");
-            grad.append("stop").attr("offset", "100%").style("stop-color", "#FFFF00");
+            grad.append("stop").attr("offset", "0%").style("stop-color", "#1e4d2b");
+            grad.append("stop").attr("offset", "100%").style("stop-color", "#00ff00");
             
             leg.append("rect").attr("y", 25).attr("width", 70).attr("height", 8).style("fill", "url(#gradTrope)");
             leg.append("text").text("0").attr("y", 45).attr("x", 0);
-            leg.append("text").text("4").attr("y", 45).attr("x", 32);
             leg.append("text").text("8+").attr("y", 45).attr("x", 65);
             
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
@@ -680,13 +696,14 @@
                 g.append("rect")
                     .attr("x", barAreaWidth - barScale(d.count) - 10)
                     .attr("y", centerY - 8).attr("width", barScale(d.count)).attr("height", 16)
-                    .attr("fill", "#444")
+                    .attr("fill", "#444") // Default Grey
                     .attr("data-schools", JSON.stringify(d.schools))
                     .on("mouseover", function(e) { 
-                        if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#ff00ff"); 
-                        const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
-                        tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
-                               .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                         // Only grey bars get hover effect
+                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
+                         const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
+                         tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
+                                .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                     })
                     .on("mouseout", function() { 
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
@@ -698,7 +715,10 @@
                 
                 meta.forEach((m, k) => {
                     const active = d.sig[k] === '1';
-                    g.append("circle").attr("cx", barAreaWidth + (k * colW) + colW/2).attr("cy", centerY).attr("r", active ? 5 : 2).attr("class", active ? "upset-dot active" : "upset-dot");
+                    // Active Dots are ALWAYS pink (#ff00ff)
+                    g.append("circle").attr("cx", barAreaWidth + (k * colW) + colW/2).attr("cy", centerY).attr("r", active ? 5 : 2)
+                     .attr("class", active ? "upset-dot active" : "upset-dot")
+                     .style("fill", active ? "#ff00ff" : "#333");
                 });
             });
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
