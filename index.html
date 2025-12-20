@@ -733,7 +733,7 @@ const drawViz4 = () => {
 
     // Legend: Connections
     const sectionConnY = 105;
-    legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 25).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
+    legG.append("text").text("CONNECTIONS").attr("y", sectionConnY).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
     
     legG.append("foreignObject")
         .attr("x", 0).attr("y", sectionConnY + 10)
@@ -883,7 +883,7 @@ const drawViz4 = () => {
             const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
             
             g.append("text").attr("x", barAreaWidth - 10).attr("y", -10).attr("text-anchor", "end")
-             .style("fill", "#888").style("font-size", "10px").text("<i>(Number of Songs)</i>");
+             .style("fill", "#888").style("font-size", "10px").html("<i>(Number of Songs)</i>");
 
             const headerG = svg.append("g").attr("transform", `translate(${margin.left + barAreaWidth}, ${margin.top - 10})`);
             const colW = matrixWidth / meta.length;
@@ -947,6 +947,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
