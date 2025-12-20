@@ -685,7 +685,7 @@ const drawViz4 = () => {
         .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
         .on("mouseover", (e, d) => {
              d3.select(e.currentTarget).raise(); // Bring to front
-             d3.select("#tooltip").style("opacity", 1).html(`<b>${d.school}</b><br>Year written: ${d.year}`)
+             d3.select("#tooltip").style("opacity", 1).html(`<b>${d.school}</b><br>Tropes: ${d.trope_count}`)
                 .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
         })
         .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
@@ -697,7 +697,7 @@ const drawViz4 = () => {
         .attr("data-school", d => d.school);
 
     nodeG.append("text")
-        .text(d.trope_count)
+        .text(d => d.year === "Unknown" ? "?" : d.year)
         .attr("text-anchor", "middle").attr("dy", ".3em")
         .style("font-size", (radius * 0.7) + "px") // Text scales with radius
         .style("fill", "#fff").style("font-weight", "bold").style("pointer-events", "none")
@@ -947,47 +947,3 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
