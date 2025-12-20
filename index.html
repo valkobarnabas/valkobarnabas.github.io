@@ -562,35 +562,41 @@
         initViz1();
 
 
-       // --- VIZ 4: Trope Network (13x5 Grid, Sorted by Tropes) ---
+       // --- VIZ 4: Trope Network (4:1 Grid/Legend Split) ---
         const drawViz4 = () => {
-            const container = document.getElementById('jaccard-web');
-            d3.select("#jaccard-web").html(""); // Clear for resize
-            
-            const w = container.clientWidth;
-            const h = container.clientHeight;
-            const svg = d3.select("#jaccard-web").append("svg").attr("width", w).attr("height", h);
+            const container = d3.select("#jaccard-web");
+            container.html(""); // Clear previous render
 
-            // Grid Config: 13 Columns, 5 Rows (65 slots total)
+            // 1. Create Layout (Flexbox: 4 parts Chart, 1 part Legend)
+            container.style("display", "flex").style("height", "100%");
+
+            const chartDiv = container.append("div")
+                .style("flex", "4")
+                .style("position", "relative")
+                .style("overflow", "hidden");
+
+            const legendDiv = container.append("div")
+                .style("flex", "1")
+                .style("background", "rgba(0,0,0,0.2)") // Slight darken for contrast
+                .style("border-left", "1px solid #333");
+
+            // --- DRAW CHART (Left Side) ---
+            const w = chartDiv.node().getBoundingClientRect().width;
+            const h = chartDiv.node().getBoundingClientRect().height;
+            const svg = chartDiv.append("svg").attr("width", w).attr("height", h);
+
+            // Grid Config: 13 Columns, 5 Rows (65 slots)
+            // Recalculate cell size based on new narrower width
             const cols = 13;
             const rows = 5;
             const cellW = w / cols;
             const cellH = h / rows;
-            const radius = Math.min(cellW, cellH) * 0.35; // Responsive radius
+            const radius = Math.min(cellW, cellH) * 0.35; 
 
-            // 1. Prepare Nodes: Sort by Trope Count (Descending)
-            // We create a copy so we don't mess up the global order for other charts
             let nodes = data.map(d => ({...d}));
             nodes.sort((a, b) => b.trope_count - a.trope_count);
-
-            // 2. Prepare Links: Jaccard > 0.75)
-            const links = [];
-            const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
-            
-            // Need a map to find node coordinates quickly by ID after sorting
             const nodeMap = {}; 
 
-            // Assign Grid Positions
             nodes.forEach((d, i) => {
                 const col = i % cols;
                 const row = Math.floor(i / cols);
@@ -599,7 +605,9 @@
                 nodeMap[d.id] = d;
             });
 
-            // Calculate Links based on new Threshold
+            // Calculate Links
+            const links = [];
+            const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
             for(let i=0; i<data.length; i++) {
                 for(let j=i+1; j<data.length; j++) {
                     const n1 = data[i];
@@ -609,9 +617,7 @@
                         const a = n1[k]==='Yes'; const b = n2[k]==='Yes';
                         if(a||b) union++; if(a&&b) intersect++; 
                     });
-                    
                     if(union > 0 && (intersect/union) > 0.75) {
-                        // Use the coordinates from our sorted grid layout
                         const source = nodeMap[n1.id];
                         const target = nodeMap[n2.id];
                         links.push({ x1: source.x, y1: source.y, x2: target.x, y2: target.y });
@@ -620,25 +626,23 @@
             }
 
             const g = svg.append("g");
-
-            // Draw Links (White, Behind nodes)
+            // Draw Links
             g.selectAll("line").data(links).enter().append("line")
                 .attr("x1", d => d.x1).attr("y1", d => d.y1)
                 .attr("x2", d => d.x2).attr("y2", d => d.y2)
                 .attr("stroke", "#ffffff").attr("stroke-width", 1).attr("opacity", 0.15); 
 
-            // Draw Nodes (Groups)
+            // Draw Nodes
             const nodeG = g.selectAll(".node-group").data(nodes).enter().append("g")
                 .attr("class", "node-group")
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                     // Pop to front visual effect
                      d3.select(e.currentTarget).raise(); 
-                     tooltip.style("opacity", 1).html(`<b>${d.school}</b><br>Tropes: ${d.trope_count}`)
+                     d3.select("#tooltip").style("opacity", 1).html(`<b>${d.school}</b><br>Tropes: ${d.trope_count}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
-                .on("mouseout", () => tooltip.style("opacity", 0));
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 
             nodeG.append("circle")
                 .attr("r", radius)
@@ -646,18 +650,60 @@
                 .attr("stroke", "#fff").attr("stroke-width", 1)
                 .attr("data-school", d => d.school);
 
-            // Year Label (Always Visible)
             nodeG.append("text")
                 .text(d => d.year === "Unknown" ? "?" : d.year)
                 .attr("text-anchor", "middle").attr("dy", ".3em")
-                .style("font-size", (radius * 0.7) + "px") // Scale font to node
-                .style("fill", "#fff")
-                .style("font-weight", "bold")
-                .style("pointer-events", "none")
+                .style("font-size", (radius * 0.7) + "px")
+                .style("fill", "#fff").style("font-weight", "bold").style("pointer-events", "none")
                 .style("text-shadow", "0 0 2px black");
 
-            // Background Click Reset
+            // --- DRAW LEGEND (Right Side) ---
+            const legW = legendDiv.node().getBoundingClientRect().width;
+            const legH = legendDiv.node().getBoundingClientRect().height;
+            const legSvg = legendDiv.append("svg").attr("width", legW).attr("height", legH);
+
+            // 1. Gradient Definition
+            const defs = legSvg.append("defs");
+            const linearGradient = defs.append("linearGradient").attr("id", "trope-gradient");
+            linearGradient.append("stop").attr("offset", "0%").attr("stop-color", "#000055");
+            linearGradient.append("stop").attr("offset", "100%").attr("stop-color", "#00ff00");
+
+            const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
+
+            // Section 1: Trope Count
+            legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
+            
+            // Gradient Bar
+            legG.append("rect")
+                .attr("y", 10).attr("width", legW - 30).attr("height", 12)
+                .style("fill", "url(#trope-gradient)")
+                .style("stroke", "#444");
+
+            // Labels for Gradient
+            legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", "9px");
+            legG.append("text").text("8+").attr("y", 35).attr("x", legW - 30).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", "9px");
+
+            // Section 2: Jaccard Connections
+            const section2Y = 60;
+            legG.append("text").text("CONNECTIONS").attr("y", section2Y).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
+            
+            // Visual Diagram of Connection
+            const linkG = legG.append("g").attr("transform", `translate(0, ${section2Y + 20})`);
+            linkG.append("line").attr("x1", 10).attr("y1", 0).attr("x2", 50).attr("y2", 0).attr("stroke", "white").attr("stroke-width", 1).attr("opacity", 0.5);
+            linkG.append("circle").attr("cx", 10).attr("cy", 0).attr("r", 4).attr("fill", "#444").attr("stroke", "#fff");
+            linkG.append("circle").attr("cx", 50).attr("cy", 0).attr("r", 4).attr("fill", "#444").attr("stroke", "#fff");
+            
+            // Explanation Text
+            legG.append("foreignObject")
+                .attr("x", 0).attr("y", section2Y + 35)
+                .attr("width", legW - 20).attr("height", 60)
+                .append("xhtml:div")
+                .style("font-size", "10px").style("color", "#ccc").style("line-height", "1.2")
+                .html("Lines connect schools with >75% lyrical similarity (Jaccard Index).");
+
+            // Background Click Reset (applies to both svgs)
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
+            legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
         };
         drawViz4();
 
@@ -861,6 +907,7 @@
 </script>
 </body>
 </html>
+
 
 
 
