@@ -578,7 +578,7 @@
                         const a = nodes[i][k]==='Yes'; const b = nodes[j][k]==='Yes';
                         if(a||b) u++; if(a&&b) inter++;
                     });
-                    if(u>0 && (inter/u) > 0.75) links.push({source:nodes[i].id, target:nodes[j].id});
+                    if(u>0 && (inter/u) > 0.5) links.push({source:nodes[i].id, target:nodes[j].id}); #similarityindex
                 }
             }
 
@@ -783,3 +783,4 @@
 </script>
 </body>
 </html>
+
