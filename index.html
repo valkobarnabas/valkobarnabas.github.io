@@ -487,7 +487,7 @@
             d3.select("#si-logo").attr("src", `logos/${getSlug(d.school)}.png`).style("display", "block");
             d3.select("#si-school").text(d.school);
             d3.select("#si-conf").text(`(${d.conference})`);
-            d3.select("#si-title").text(d.song_name);
+            d3.select("#si-title").text(`"${d.song_name}"`);
             d3.select("#si-year").text(d.year);
 
             const wSpan = d3.select("#si-writers");
@@ -1037,6 +1037,7 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
 
 
 
