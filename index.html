@@ -10,160 +10,168 @@
     
     <style>
         :root {
-            --bg-color: #001220; /* Darker Navy */
-            --card-bg: #002b4d;
+            --bg-color: #050b14; 
+            --card-bg: #0b1626;
             --text-color: #ffffff;
-            --highlight: #00ffcc; /* Neon Cyan */
-            --accent: #ff00ff; /* Neon Magenta */
-            --secondary: #ffff00; /* Neon Yellow */
-            --dim: #3a506b;
-            --border: 1px solid rgba(0, 255, 204, 0.3);
+            --highlight: #00f2ff; /* Cyan */
+            --accent: #ff00ff; /* Magenta */
+            --dim: #4a5d75;
+            --border: 1px solid rgba(0, 242, 255, 0.2);
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             margin: 0;
             padding: 10px;
             height: 100vh;
-            box-sizing: border-box;
             display: grid;
-            /* Ratio: 3.5 (Top) : 2 (Strip) : 3.5 (Bottom) */
+            /* Ratio: 3.5 : 2 : 3.5 */
             grid-template-rows: 3.5fr 2fr 3.5fr; 
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 15px;
             overflow: hidden; 
         }
 
-        /* --- Grid Areas --- */
+        /* --- Layout --- */
         #viz1 { grid-column: 1 / 2; grid-row: 1 / 2; } /* Top Left */
         #viz4 { grid-column: 2 / 3; grid-row: 1 / 2; } /* Top Right */
         
-        /* The Middle Strip */
         #middle-strip {
             grid-column: 1 / 3;
             grid-row: 2 / 3;
-            display: flex;
-            background: rgba(0, 20, 40, 0.8);
+            display: grid;
+            grid-template-columns: 2fr 10fr 2fr; /* 2:10:2 Ratio */
+            background: #08101c;
             border-top: 2px solid var(--highlight);
             border-bottom: 2px solid var(--highlight);
-            align-items: center;
+            overflow: hidden;
         }
 
         #viz3 { grid-column: 1 / 2; grid-row: 3 / 4; } /* Bottom Left */
         #viz2 { grid-column: 2 / 3; grid-row: 3 / 4; } /* Bottom Right */
 
-        /* --- Containers --- */
+        /* --- Cards --- */
         .viz-container {
             background: var(--card-bg);
-            border-radius: 8px;
+            border-radius: 6px;
             padding: 10px;
-            position: relative;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
             border: var(--border);
             display: flex;
             flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         h3 { 
-            margin: 0 0 5px 0; 
+            margin: 0 0 8px 0; 
             color: var(--highlight); 
-            font-weight: 400; 
+            font-weight: 600; 
             font-size: 1.1em;
             text-transform: uppercase;
             letter-spacing: 1px;
             border-bottom: 1px solid var(--dim);
             padding-bottom: 5px;
+            display: flex; justify-content: space-between;
         }
         
         .chart-area { flex-grow: 1; position: relative; overflow: hidden; }
 
-        /* --- Middle Strip Sections --- */
-        /* Left: Title (2 parts) */
+        /* --- Middle Strip Content --- */
+        /* Left: Project Title */
         #strip-title {
-            flex: 2;
             padding: 0 20px;
             border-right: 1px solid var(--dim);
-            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            text-align: center;
         }
-        #strip-title h1 { margin: 0; font-size: 1.8em; color: var(--highlight); line-height: 1; }
-        #strip-title span { font-size: 0.9em; color: #aaa; letter-spacing: 2px; }
+        #strip-title h1 { margin: 0; font-size: 1.5em; color: var(--highlight); line-height: 1.1; }
+        #strip-title span { font-size: 0.8em; color: #888; letter-spacing: 2px; }
 
-        /* Middle: Song Info (10 parts) */
+        /* Middle: Song Data */
         #strip-info {
-            flex: 10;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
+            position: relative;
+            padding: 0 20px;
+        }
+        
+        #info-school-row { 
+            display: flex; 
+            align-items: baseline; 
+            gap: 10px; 
+            flex-wrap: wrap; 
+            justify-content: center;
+        }
+        #info-school { font-size: 2.2em; font-weight: 800; color: #fff; margin: 0; text-shadow: 0 0 15px rgba(0, 242, 255, 0.4); }
+        #info-conf { font-size: 1.2em; color: #666; font-style: italic; }
+        #info-icons { font-size: 1.2em; color: var(--accent); margin-left: 10px; display: flex; gap: 8px;}
+        
+        #info-song { font-size: 1.4em; color: var(--accent); font-style: italic; margin: 5px 0; }
+        
+        #info-stats { font-size: 1.0em; color: #ccc; margin-top: 5px; }
+        #info-stats b { color: var(--highlight); margin-left: 5px; }
+
+        /* Right: Spotify */
+        #strip-player {
+            border-left: 1px solid var(--dim);
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
             position: relative;
         }
-        #info-school { font-size: 2.2em; font-weight: bold; color: #fff; margin: 0; text-shadow: 0 0 10px var(--highlight); }
-        #info-song { font-size: 1.4em; color: var(--accent); font-style: italic; margin: 5px 0 10px 0; }
-        .info-stats { display: flex; gap: 30px; font-size: 0.9em; color: #ccc; }
-        .info-stats span b { color: var(--highlight); }
-        
-        /* Right: Spotify (2 parts) */
-        #strip-player {
-            flex: 2;
-            height: 100%;
-            border-left: 1px solid var(--dim);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 5px;
-            background: #000;
-        }
-        iframe { width: 100%; height: 100%; border: none; }
+        /* Force iframe to fill the 2fr space exactly */
+        #strip-player iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: none; }
 
-        /* --- Viz Styling --- */
+        /* --- Viz Elements --- */
         .node circle { stroke: #fff; stroke-width: 1.5px; cursor: pointer; transition: all 0.2s; }
-        .node circle:hover { stroke: var(--highlight); stroke-width: 3px; filter: drop-shadow(0 0 5px var(--highlight)); }
+        .node circle:hover { stroke: var(--highlight); stroke-width: 4px; filter: drop-shadow(0 0 8px var(--highlight)); }
         
-        .dimmed { opacity: 0.15; filter: grayscale(100%); }
+        .dimmed { opacity: 0.1; filter: grayscale(100%); }
         .highlighted { stroke: var(--highlight) !important; opacity: 1 !important; filter: none !important; }
 
-        /* UpSet Matrix */
-        .upset-dot { fill: #555; }
-        .upset-dot.active { fill: var(--highlight); }
-        
-        /* Logos in Viz 1 */
-        .school-logo {
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .school-logo:hover { transform: scale(1.5); z-index: 100; }
+        /* Logos */
+        .school-logo { cursor: pointer; transition: transform 0.2s; }
+        .school-logo:hover { transform: scale(1.4); z-index: 100; filter: drop-shadow(0 0 5px white); }
+
+        /* Matrix Dots */
+        .upset-dot { fill: #333; }
+        .upset-dot.active { fill: var(--highlight); stroke: none; }
 
         /* Tooltip */
         .tooltip {
             position: absolute;
-            background: rgba(0,0,0,0.8);
-            padding: 5px 10px;
+            background: rgba(0, 18, 32, 0.95);
+            padding: 8px 12px;
             border-radius: 4px;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 1000;
+            transition: opacity 0.1s;
+            z-index: 9999;
             border: 1px solid var(--highlight);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            font-size: 0.9em;
         }
 
-        text { fill: #ccc; font-family: sans-serif; }
+        text { fill: #aaa; font-size: 11px; }
     </style>
 </head>
 <body>
 
     <div id="viz1" class="viz-container">
-        <h3>Lyrical Ingredients <span style="font-size:0.6em; float:right; color:#888;">Hover logos to see school</span></h3>
+        <h3>Lyrical Ingredients <span style="font-size:0.7em; color:#666;">Logos (Left) vs. Topics (Right)</span></h3>
         <div class="chart-area" id="upset-horizontal"></div>
     </div>
 
     <div id="viz4" class="viz-container">
-        <h3>Jaccard Similarity Web</h3>
+        <h3>Jaccard Similarity Web <span style="font-size:0.7em; color:#666;">Grouped by Conference</span></h3>
         <div class="chart-area" id="jaccard-web"></div>
     </div>
 
@@ -173,13 +181,14 @@
             <h1>FIGHT<br>SONGS</h1>
         </div>
         <div id="strip-info">
-            <div id="info-school">SELECT A SCHOOL</div>
-            <div id="info-song">Click dots or logos to explore</div>
-            <div class="info-stats" id="info-details" style="opacity: 0;">
-                <span>Year: <b id="d-year"></b></span>
-                <span>Writers: <b id="d-writer"></b></span>
-                <span>Student Written: <b id="d-student"></b></span>
-                <span>Contest: <b id="d-contest"></b></span>
+            <div id="info-school-row">
+                <div id="info-school">SELECT A SCHOOL</div>
+                <div id="info-conf"></div>
+                <div id="info-icons"></div>
+            </div>
+            <div id="info-song">Click nodes or logos to explore</div>
+            <div id="info-stats" style="opacity: 0;">
+                Writers: <b id="d-writers"></b> &nbsp;|&nbsp; Year: <b id="d-year"></b>
             </div>
         </div>
         <div id="strip-player">
@@ -188,13 +197,13 @@
     </div>
 
     <div id="viz3" class="viz-container">
-        <h3>Song Topology</h3>
+        <h3>Song Topology <span style="font-size:0.7em; color:#666;">Duration vs BPM</span></h3>
         <div class="chart-area" id="topology-map"></div>
     </div>
 
     <div id="viz2" class="viz-container">
-        <h3>Origin Story <span style="font-size:0.6em; color:#888;">(Centered)</span></h3>
-        <div class="chart-area" id="upset-vertical" style="display:flex; justify-content:center;"></div>
+        <h3>Origin Story <span style="font-size:0.7em; color:#666;">Centered</span></h3>
+        <div class="chart-area" id="upset-vertical"></div>
     </div>
 
     <div id="tooltip" class="tooltip"></div>
@@ -202,23 +211,24 @@
 <script>
     // --- Utils ---
     const getSlug = (name) => name.toLowerCase().replace(/ /g, "_").replace(/[^a-z0-9_]/g, "");
-    
-    // --- Config ---
-    // Brighter Neon Palette
-    const confColors = d3.scaleOrdinal()
-        .range(["#FF00FF", "#00FF00", "#00FFFF", "#FFFF00", "#FF9900", "#FF0099"]);
-    
+
+    // --- Icons ---
     const icons = {
         'fight': '\uf6de', 'victory': '\uf091', 'win_won': '\uf005', 
         'victory_win_won': '\uf091', 'rah': '\uf0a1', 'nonsense': '\uf118', 
         'colors': '\uf53f', 'men': '\uf183', 'opponents': '\uf21e', 
-        'spelling': '\uf15d', 'student_writer': '\uf19d', 'official_song': '\uf058', 
-        'contest': '\uf091'
+        'spelling': '\uf15d', 
+        'student_writer': '\uf19d', 'official_song': '\uf058', 'contest': '\uf091'
     };
+
+    // --- Colors ---
+    const confColors = d3.scaleOrdinal()
+        .domain(['Big 12', 'Big Ten', 'ACC', 'SEC', 'Pac-12', 'Independent'])
+        .range(["#FF00FF", "#00FFFF", "#FFFF00", "#FF4400", "#00FF00", "#FFFFFF"]);
 
     d3.csv("fight-songs.csv").then(data => {
         
-        // Data Cleanup
+        // Clean Data
         data.forEach(d => {
             d.bpm = +d.bpm;
             d.sec_duration = +d.sec_duration;
@@ -229,43 +239,50 @@
 
         const tooltip = d3.select("#tooltip");
 
-        // --- GLOBAL INTERACTION ---
+        // --- UPDATE LOGIC ---
         function updateSelection(schoolName) {
-            // Reset if null
             if (!schoolName) {
+                // Reset
                 d3.selectAll(".dimmed").classed("dimmed", false);
                 d3.selectAll(".highlighted").classed("highlighted", false);
                 d3.select("#info-school").text("SELECT A SCHOOL");
-                d3.select("#info-song").text("Click dots or logos to explore");
-                d3.select("#info-details").style("opacity", 0);
+                d3.select("#info-conf").text("");
+                d3.select("#info-icons").html("");
+                d3.select("#info-song").text("Click nodes or logos to explore");
+                d3.select("#info-stats").style("opacity", 0);
                 d3.select("#strip-player").html('<div style="color: #444; font-size: 0.8em; text-align: center;">Spotify<br>Player</div>');
                 return;
             }
 
             const d = data.find(r => r.school === schoolName);
-            
-            // Visual Feedback
+
+            // Highlight
             d3.selectAll("circle, .school-logo").classed("dimmed", true).classed("highlighted", false);
             d3.selectAll(`[data-school="${schoolName}"]`).classed("dimmed", false).classed("highlighted", true);
 
-            // Update Middle Strip
+            // Text Update
             d3.select("#info-school").text(d.school);
+            d3.select("#info-conf").text(`(${d.conference})`);
             d3.select("#info-song").text(d.song_name);
-            d3.select("#info-details").style("opacity", 1);
+            d3.select("#d-writers").text(d.writers.length > 25 ? "Multiple" : d.writers);
             d3.select("#d-year").text(d.year);
-            d3.select("#d-writer").text(d.writers.length > 20 ? "Various" : d.writers);
-            d3.select("#d-student").text(d.student_writer);
-            d3.select("#d-contest").text(d.contest);
+            d3.select("#info-stats").style("opacity", 1);
 
-            // Spotify
+            // Icons Update (Next to title)
+            let iconHTML = "";
+            if(d.student_writer === "Yes") iconHTML += `<i class="fas fa-graduation-cap" title="Student Writer"></i>`;
+            if(d.contest === "Yes") iconHTML += `<i class="fas fa-trophy" title="Contest Winner"></i>`;
+            if(d.official_song === "Yes") iconHTML += `<i class="fas fa-check-circle" title="Official Song"></i>`;
+            d3.select("#info-icons").html(iconHTML);
+
+            // Spotify Update
             if (d.spotify_id) {
-                // Using embed format
                 const url = `https://open.spotify.com/embed/track/${d.spotify_id}?utm_source=generator&theme=0`;
                 d3.select("#strip-player").html(`<iframe src="${url}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`);
             }
         }
 
-        // --- VIZ 1: Horizontal UpSet with LOGOS ---
+        // --- VIZ 1: Horizontal UpSet (Reversed: Logos Left, Matrix Right) ---
         const drawViz1 = () => {
             const container = document.getElementById('upset-horizontal');
             const w = container.clientWidth;
@@ -274,103 +291,118 @@
 
             const tropes = ['fight', 'victory', 'win_won', 'rah', 'nonsense', 'colors', 'men', 'opponents', 'spelling'];
             
-            // Aggregate
+            // Calculate Combos
             const combos = {};
             data.forEach(d => {
                 const sig = tropes.map(t => d[t] === 'Yes' ? '1' : '0').join("");
                 if (!combos[sig]) combos[sig] = { schools: [], sig: sig };
                 combos[sig].schools.push(d.school);
             });
-            // Top 8 combos to fit vertically
-            const sorted = Object.values(combos).sort((a,b) => b.schools.length - a.schools.length).slice(0, 8);
+            // Take Top 6 to allow plenty of height
+            const sorted = Object.values(combos).sort((a,b) => b.schools.length - a.schools.length).slice(0, 6);
             
-            const margin = {top: 10, right: 10, bottom: 80, left: 100}; // Left for Matrix labels
+            const margin = {top: 30, right: 10, bottom: 10, left: 10};
             const innerH = h - margin.top - margin.bottom;
             const rowH = innerH / sorted.length;
+            
+            const matrixWidth = w * 0.5; // Right 50%
+            const logoAreaWidth = w * 0.5; // Left 50%
 
             const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+            // Column Headers for Matrix (Right Side)
+            const headerG = svg.append("g").attr("transform", `translate(${margin.left + logoAreaWidth}, ${margin.top - 10})`);
+            const colW = matrixWidth / tropes.length;
+            
+            tropes.forEach((t, i) => {
+                headerG.append("text")
+                    .attr("x", i * colW + colW/2)
+                    .attr("y", 0)
+                    .attr("text-anchor", "middle")
+                    .style("font-family", "FontAwesome")
+                    .style("font-size", "14px")
+                    .style("fill", "#00f2ff")
+                    .text(icons[t])
+                    .append("title").text(t);
+            });
+
+            // Rows
             sorted.forEach((combo, i) => {
                 const y = i * rowH;
                 const centerY = y + rowH/2;
+
+                // 1. Draw Logos (Left Side - Stacking)
+                const logoSize = Math.min(rowH - 5, 40);
+                const logoPadding = 5;
                 
-                // Draw Logos
                 combo.schools.forEach((school, j) => {
-                    // Logo size logic
-                    const logoSize = Math.min(rowH - 4, 30);
+                    // Wrap logos if too many
+                    const maxPerRow = Math.floor(logoAreaWidth / (logoSize + logoPadding));
+                    const r = Math.floor(j / maxPerRow);
+                    const c = j % maxPerRow;
+                    
+                    // Simple stack logic, might overlap if huge count, but usually fits top combos
                     g.append("image")
                         .attr("xlink:href", `logos/${getSlug(school)}.png`)
-                        .attr("x", j * (logoSize + 5))
-                        .attr("y", centerY - logoSize/2)
+                        .attr("x", c * (logoSize + 5))
+                        .attr("y", centerY - logoSize/2) // Centered vertically in row
                         .attr("width", logoSize)
                         .attr("height", logoSize)
                         .attr("class", "school-logo")
                         .attr("data-school", school)
-                        // Fallback color square if image missing (using error handler in real img, hard in SVG)
-                        .on("error", function() { d3.select(this).style("display", "none"); }) 
+                        .on("error", function() { d3.select(this).style("display", "none"); })
+                        .on("click", (e) => { e.stopPropagation(); updateSelection(school); })
                         .on("mouseover", (e) => {
                             tooltip.style("opacity", 1).html(school)
-                                .style("left", (e.pageX + 10) + "px").style("top", (e.pageY - 10) + "px");
+                                .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                         })
-                        .on("mouseout", () => tooltip.style("opacity", 0))
-                        .on("click", (e) => { e.stopPropagation(); updateSelection(school); });
+                        .on("mouseout", () => tooltip.style("opacity", 0));
                 });
 
-                // Matrix Dots (Left Side)
+                // 2. Draw Matrix Dots (Right Side)
+                // Draw row line
+                g.append("line")
+                    .attr("x1", logoAreaWidth)
+                    .attr("x2", w)
+                    .attr("y1", centerY).attr("y2", centerY)
+                    .attr("stroke", "#333").attr("stroke-width", 1);
+
                 tropes.forEach((t, k) => {
                     const active = combo.sig[k] === '1';
-                    // Text Labels (Only draw once)
-                    if (i === sorted.length - 1) {
-                         svg.append("text")
-                            .attr("x", margin.left - 5 + (k*25) - (tropes.length*25)) // Position left of margin
-                            .attr("y", h - 5)
-                            .attr("transform", `rotate(-45, ${margin.left + (k*20) - 200}, ${h-10})`) // Simplified rotation
-                            // Actually, let's put matrix below like before, simpler for text
-                    }
-                });
-            });
-
-            // Re-doing Matrix to be below the rows, aligned with nothing? 
-            // The user wanted horizontal upset. Matrix usually on Left for horizontal bars.
-            // Let's put Matrix on the LEFT of the logos.
-            
-            const matrixG = svg.append("g").attr("transform", `translate(10, ${margin.top})`);
-            tropes.forEach((t, k) => {
-                // Column Header (Rotated)
-                matrixG.append("text")
-                    .attr("x", k * 10)
-                    .attr("y", -5)
-                    .style("font-family", "FontAwesome")
-                    .style("font-size", "10px")
-                    .text(icons[t])
-                    .append("title").text(t); // Tooltip for icon
-                
-                // Dots
-                sorted.forEach((combo, i) => {
-                    const active = combo.sig[k] === '1';
-                    matrixG.append("circle")
-                        .attr("cx", k * 10 + 5)
-                        .attr("cy", i * rowH + rowH/2)
-                        .attr("r", active ? 3 : 1)
+                    g.append("circle")
+                        .attr("cx", logoAreaWidth + (k * colW) + colW/2)
+                        .attr("cy", centerY)
+                        .attr("r", active ? 5 : 2)
                         .attr("class", active ? "upset-dot active" : "upset-dot");
                 });
             });
-            
-            // Interaction to clear
+
             svg.on("click", () => updateSelection(null));
         };
         drawViz1();
 
-        // --- VIZ 4: Similarity Web (Bounded) ---
+        // --- VIZ 4: Jaccard Web (Fixed Positions via Grouped Force) ---
         const drawViz4 = () => {
             const container = document.getElementById('jaccard-web');
             const w = container.clientWidth;
             const h = container.clientHeight;
             const svg = d3.select("#jaccard-web").append("svg").attr("width", w).attr("height", h);
+            
+            // Pre-calculate Conference Centers (Hexagon layout)
+            const conferences = ['Big 12', 'Big Ten', 'ACC', 'SEC', 'Pac-12', 'Independent'];
+            const centers = {};
+            const radius = Math.min(w, h) * 0.35;
+            conferences.forEach((c, i) => {
+                const angle = (i / 6) * 2 * Math.PI;
+                centers[c] = {
+                    x: w/2 + radius * Math.cos(angle),
+                    y: h/2 + radius * Math.sin(angle)
+                };
+            });
 
+            // Prepare Links
             const nodes = data.map(d => ({...d}));
             const links = [];
-            // Recalculate links
             const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
             for(let i=0; i<nodes.length; i++) {
                 for(let j=i+1; j<nodes.length; j++) {
@@ -379,51 +411,55 @@
                         const a = nodes[i][k]==='Yes'; const b = nodes[j][k]==='Yes';
                         if(a||b) u++; if(a&&b) inter++;
                     });
-                    if(u>0 && (inter/u)>0.75) links.push({source:nodes[i].id, target:nodes[j].id});
+                    if(u>0 && (inter/u) > 0.75) links.push({source:nodes[i].id, target:nodes[j].id});
                 }
             }
 
-            const sim = d3.forceSimulation(nodes)
-                .force("link", d3.forceLink(links).id(d=>d.id).distance(30))
-                .force("charge", d3.forceManyBody().strength(-50))
-                .force("center", d3.forceCenter(w/2, h/2))
-                .force("collide", d3.forceCollide().radius(d => 4 + d.trope_count * 1.5));
+            const g = svg.append("g");
 
-            const link = svg.append("g").selectAll("line").data(links).enter().append("line")
-                .attr("stroke", "#333").attr("stroke-width", 1);
-            
-            const node = svg.append("g").selectAll("circle").data(nodes).enter().append("circle")
-                .attr("r", d => 3 + d.trope_count * 1.5)
+            const link = g.append("g").selectAll("line").data(links).enter().append("line")
+                .attr("stroke", "#444").attr("stroke-width", 1.5).attr("opacity", 0.4);
+
+            const node = g.append("g").selectAll("circle").data(nodes).enter().append("circle")
+                .attr("r", d => 4 + d.trope_count)
                 .attr("fill", d => confColors(d.conference))
+                .attr("stroke", "#000")
                 .attr("data-school", d => d.school)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                     tooltip.style("opacity", 1).html(`${d.school}<br>Tropes: ${d.trope_count}`)
+                     tooltip.style("opacity", 1).html(`${d.school} (${d.conference})`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => tooltip.style("opacity", 0));
 
-            sim.on("tick", () => {
-                // Bounding Box Logic
-                node
-                    .attr("cx", d => d.x = Math.max(10, Math.min(w - 10, d.x)))
-                    .attr("cy", d => d.y = Math.max(10, Math.min(h - 10, d.y)));
+            // Force Simulation
+            const simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d=>d.id).strength(0.1)) // Weak link pull
+                .force("charge", d3.forceManyBody().strength(-15)) // Weak repulsion
+                .force("collide", d3.forceCollide().radius(d => 6 + d.trope_count)) // No overlap
+                .force("x", d3.forceX(d => centers[d.conference] ? centers[d.conference].x : w/2).strength(0.8)) // Strong pull to conference center
+                .force("y", d3.forceY(d => centers[d.conference] ? centers[d.conference].y : h/2).strength(0.8));
 
+            simulation.on("tick", () => {
                 link
                     .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
                     .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                node
+                    .attr("cx", d => d.x).attr("cy", d => d.y);
             });
+
+            svg.on("click", () => updateSelection(null));
         };
         drawViz4();
 
-        // --- VIZ 3: Topology (With Key) ---
+        // --- VIZ 3: Topology (Duration vs BPM) ---
         const drawViz3 = () => {
             const container = document.getElementById('topology-map');
             const w = container.clientWidth;
             const h = container.clientHeight;
             const svg = d3.select("#topology-map").append("svg").attr("width", w).attr("height", h);
             
-            const margin = {top: 10, right: 80, bottom: 20, left: 30}; // Right space for Legend
+            const margin = {top: 10, right: 30, bottom: 20, left: 30};
             const iw = w - margin.left - margin.right;
             const ih = h - margin.top - margin.bottom;
 
@@ -438,48 +474,30 @@
             
             g.append("g").selectAll("path").data(contours).enter().append("path")
                 .attr("d", d3.geoPath())
-                .attr("fill", "#00ffcc").attr("opacity", 0.05);
+                .attr("fill", "#00f2ff").attr("opacity", 0.08); // Brighter cyan, low opacity
 
             // Axes
-            g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5).tickSize(-ih).tickFormat(""));
-            g.append("g").call(d3.axisLeft(y).ticks(5).tickSize(-iw).tickFormat(""));
-            
-            // Clean axis lines
-            g.selectAll(".tick line").attr("stroke", "#333").attr("stroke-dasharray", "2,2");
-            g.selectAll(".domain").remove();
+            g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5));
+            g.append("g").call(d3.axisLeft(y).ticks(5));
+            g.selectAll(".domain, .tick line").attr("stroke", "#444");
 
             // Dots
             g.selectAll("circle").data(data).enter().append("circle")
                 .attr("cx", d => x(d.sec_duration))
                 .attr("cy", d => y(d.bpm))
-                .attr("r", d => (d.number_fights + 1) * 2.5)
+                .attr("r", d => (d.number_fights + 1) * 2)
                 .attr("fill", d => d3.interpolateViridis(d.trope_count / 8))
                 .attr("stroke", "#000")
                 .attr("data-school", d => d.school)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
-
-            // Legend/Key (Right Side)
-            const leg = svg.append("g").attr("transform", `translate(${w - 70}, 20)`);
-            leg.append("text").text("KEY").attr("font-weight","bold").attr("fill","#fff").attr("y", -5);
             
-            // Size Key
-            leg.append("circle").attr("r", 3).attr("cy", 10).attr("fill", "#888");
-            leg.append("text").text("0 Fights").attr("x", 10).attr("y", 13).style("font-size", "9px");
-            leg.append("circle").attr("r", 10).attr("cy", 30).attr("fill", "#888");
-            leg.append("text").text("High Fights").attr("x", 15).attr("y", 33).style("font-size", "9px");
-
-            // Color Key (Gradient)
-            const grad = svg.append("defs").append("linearGradient").attr("id", "grad1");
-            grad.append("stop").attr("offset", "0%").style("stop-color", d3.interpolateViridis(0));
-            grad.append("stop").attr("offset", "100%").style("stop-color", d3.interpolateViridis(1));
-            
-            leg.append("rect").attr("y", 50).attr("width", 50).attr("height", 6).style("fill", "url(#grad1)");
-            leg.append("text").text("Few Tropes").attr("y", 48).style("font-size", "8px");
-            leg.append("text").text("Many").attr("y", 48).attr("x", 30).style("font-size", "8px");
+            // Labels
+            g.append("text").attr("x", iw).attr("y", ih-5).attr("text-anchor", "end").text("Duration (sec)");
+            g.append("text").attr("x", 5).attr("y", 10).text("BPM");
         };
         drawViz3();
 
-        // --- VIZ 2: Vertical UpSet (Centered Origin) ---
+        // --- VIZ 2: Vertical UpSet (Centered) ---
         const drawViz2 = () => {
             const container = document.getElementById('upset-vertical');
             const w = container.clientWidth;
@@ -495,47 +513,44 @@
             });
             const sorted = Object.values(combos).sort((a,b) => b.count - a.count);
 
-            // Centering math
-            const barW = 30;
+            const barW = 40;
             const totalW = sorted.length * barW;
             const startX = (w - totalW) / 2;
-            const bottomSpace = 80;
-            
+            const bottomSpace = 90;
             const maxVal = d3.max(sorted, d=>d.count);
-            const scale = d3.scaleLinear().domain([0, maxVal]).range([0, h - bottomSpace - 20]);
+            const scale = d3.scaleLinear().domain([0, maxVal]).range([0, h - bottomSpace - 30]);
 
-            const g = svg.append("g").attr("transform", `translate(${startX}, 10)`);
+            const g = svg.append("g").attr("transform", `translate(${startX}, 20)`);
 
             sorted.forEach((d, i) => {
-                // Bar
                 g.append("rect")
-                    .attr("x", i * barW)
+                    .attr("x", i * barW + 5)
                     .attr("y", h - bottomSpace - scale(d.count))
-                    .attr("width", barW - 5)
+                    .attr("width", barW - 10)
                     .attr("height", scale(d.count))
-                    .attr("fill", "#FF0099");
-                
+                    .attr("fill", "#ff00ff"); // Magenta bars
+
                 // Matrix
                 meta.forEach((m, j) => {
                     const active = d.sig[j] === '1';
                     g.append("text")
-                        .attr("x", i * barW + (barW-5)/2)
-                        .attr("y", h - bottomSpace + 20 + (j*20))
+                        .attr("x", i * barW + barW/2)
+                        .attr("y", h - bottomSpace + 25 + (j*25))
                         .attr("text-anchor", "middle")
                         .style("font-family", "FontAwesome")
-                        .style("fill", active ? "#00ffcc" : "#333")
+                        .style("font-size", "14px")
+                        .style("fill", active ? "#00f2ff" : "#222")
                         .text(active ? icons[m] : ".");
                 });
             });
 
-            // Labels on left of the centered block
+            // Labels
             meta.forEach((m, j) => {
                 svg.append("text")
                     .attr("x", startX - 10)
-                    .attr("y", 10 + h - bottomSpace + 20 + (j*20))
+                    .attr("y", 20 + h - bottomSpace + 25 + (j*25))
                     .attr("text-anchor", "end")
-                    .text(m.replace("_", " "))
-                    .style("font-size", "10px");
+                    .text(m.replace("_", " "));
             });
         };
         drawViz2();
