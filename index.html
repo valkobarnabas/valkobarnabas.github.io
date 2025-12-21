@@ -853,18 +853,25 @@ const drawViz4 = () => {
     legG.append("text").text("# of Tropes").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", "10px");
 
     // Legend: Connections
-    const sectionConnY = 105;
-    legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
-    
-    legG.append("foreignObject")
-        .attr("x", 0).attr("y", sectionConnY + 10)
-        .attr("width", legW - 10).attr("height", 100)
-        .append("xhtml:div")
-        .style("font-size", "10px").style("color", "#ccc").style("line-height", "1.2")
-        .html("Lines connect schools with >75% trope similarity by Jaccard Index.");
+            const sectionConnY = 105;
+            legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
+            
+            // --- ADDED: Visual Example ---
+            const exG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
+            exG.append("line").attr("x1", 20).attr("y1", 0).attr("x2", 60).attr("y2", 0).attr("stroke", "#fff").attr("stroke-width", 2).attr("opacity", 0.6);
+            exG.append("circle").attr("cx", 20).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
+            exG.append("circle").attr("cx", 60).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
+            
+            // Text moved down to accommodate example
+            legG.append("foreignObject")
+                .attr("x", 0).attr("y", sectionConnY + 35)
+                .attr("width", legW - 10).attr("height", 100)
+                .append("xhtml:div")
+                .style("font-size", "10px").style("color", "#ccc").style("line-height", "1.2")
+                .html("Lines connect schools with >75% trope similarity by Jaccard Index.");
 
-    svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
-    legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
+            svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
+            legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
 };
         drawViz4();
 
@@ -1016,48 +1023,6 @@ const drawViz4 = () => {
                     headerG.append("text").attr("x", x).attr("y", -8 + (idx*9)).attr("text-anchor", "middle")
                         .style("font-size", "9px").style("fill", "#bbb").text(word);
                 });
-
-                // --- KEYBOARD NAVIGATION ---
-    document.addEventListener('keydown', (e) => {
-            // Ignore if modal is open
-            if(document.getElementById('about-modal').style.display === 'flex') {
-                if(e.key === "Escape") document.getElementById('about-modal').style.display = 'none';
-                return;
-            }
-
-            if (e.key === "Escape") {
-                updateSelection(null);
-                return;
-            }
-
-            // If nothing selected, Arrow keys select the first one
-            if (currentIndex === -1) {
-                if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-                    updateSelection(sortedData[0].school);
-                }
-                return;
-            }
-
-            let nextIndex = currentIndex;
-            const total = sortedData.length;
-            const row = Math.floor(currentIndex / COLS);
-            const col = currentIndex % COLS;
-
-            if (e.key === "ArrowRight") {
-                if (col < COLS - 1 && currentIndex + 1 < total) nextIndex++;
-            } else if (e.key === "ArrowLeft") {
-                if (col > 0) nextIndex--;
-            } else if (e.key === "ArrowDown") {
-                if (currentIndex + COLS < total) nextIndex += COLS;
-            } else if (e.key === "ArrowUp") {
-                if (currentIndex - COLS >= 0) nextIndex -= COLS;
-            }
-
-            if (nextIndex !== currentIndex) {
-                e.preventDefault(); // Prevent scrolling page
-                updateSelection(sortedData[nextIndex].school);
-            }
-        });
                 
             });
 
@@ -1110,3 +1075,4 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
+
