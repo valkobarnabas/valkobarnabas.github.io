@@ -410,6 +410,11 @@
 
     let showTopologyTooltip = null; // Global reference
 
+    // Global state for navigation
+    let sortedData = [];
+    let currentIndex = -1; 
+    const COLS = 11; // Matches your CSS grid
+
     d3.csv("fight-songs.csv").then(data => {
         data = data.filter(d => d.school && d.school.trim() !== "");
         data.forEach(d => {
@@ -421,6 +426,9 @@
             d.id = d.school;
         });
 
+        // Sort data alphabetically once for consistent navigation
+        sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
+
         const tooltip = d3.select("#tooltip");
 
         // --- GLOBAL RESET ---
@@ -431,6 +439,8 @@
         // --- UPDATE FUNCTION ---
         function updateSelection(schoolName) {
             if (!schoolName) {
+                currentIndex = -1; // Reset index
+                
                 // Reset Visuals
                 d3.selectAll(".dimmed").classed("dimmed", false);
                 d3.selectAll(".highlighted").classed("highlighted", false);
@@ -444,18 +454,18 @@
                 d3.select("#active-content").style("display", "none");
                 d3.select("#si-logo").style("display", "none");
                 d3.select("#spotify-panel").html("");
-                d3.select("#trope-dashboard").html('<div style="color:#666; font-style:italic;">Select a school fight song<br>from the menu at left <br>to view its tropes</div>');
-
+                
                 drawTropeDashboard(null);
                 
-                // Hide Persistent Tooltip
                 if(showTopologyTooltip) showTopologyTooltip(null);
-                
                 return;
             }
 
+            // Update current index for keyboard nav
+            currentIndex = sortedData.findIndex(d => d.school === schoolName);
             const d = data.find(r => r.school === schoolName);
 
+            // ... (rest of your existing updateSelection logic: Visual States, Highlights, etc.)
             // 1. Visual States (Dim Everything)
             d3.selectAll("circle").classed("dimmed", true).classed("highlighted", false);
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
@@ -1049,10 +1059,53 @@ const drawViz4 = () => {
         drawViz3(); // Topology
         drawViz4(); // Network
     });
+
+// --- KEYBOARD NAVIGATION ---
+    document.addEventListener('keydown', (e) => {
+            // Ignore if modal is open
+            if(document.getElementById('about-modal').style.display === 'flex') {
+                if(e.key === "Escape") document.getElementById('about-modal').style.display = 'none';
+                return;
+            }
+
+            if (e.key === "Escape") {
+                updateSelection(null);
+                return;
+            }
+
+            // If nothing selected, Arrow keys select the first one
+            if (currentIndex === -1) {
+                if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                    updateSelection(sortedData[0].school);
+                }
+                return;
+            }
+
+            let nextIndex = currentIndex;
+            const total = sortedData.length;
+            const row = Math.floor(currentIndex / COLS);
+            const col = currentIndex % COLS;
+
+            if (e.key === "ArrowRight") {
+                if (col < COLS - 1 && currentIndex + 1 < total) nextIndex++;
+            } else if (e.key === "ArrowLeft") {
+                if (col > 0) nextIndex--;
+            } else if (e.key === "ArrowDown") {
+                if (currentIndex + COLS < total) nextIndex += COLS;
+            } else if (e.key === "ArrowUp") {
+                if (currentIndex - COLS >= 0) nextIndex -= COLS;
+            }
+
+            if (nextIndex !== currentIndex) {
+                e.preventDefault(); // Prevent scrolling page
+                updateSelection(sortedData[nextIndex].school);
+            }
+        });
     
 </script>
 </body>
 </html>
+
 
 
 
