@@ -163,14 +163,17 @@
 
         #song-info-panel {
             flex: 1; 
-            padding: 10px 30px;
+            /* CHANGED: Increased top/bottom padding from 10px to 20px */
+            padding: 20px 30px; 
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: flex-start; 
             text-align: left;        
-            min-width: 0; 
-        }
+            min-width: 0;
+            /* NEW: Adds even spacing between school name, title, badges, etc. */
+            gap: 6px; 
+        }}
 
         #spotify-panel {
     flex: 1 1 0px; 
@@ -794,8 +797,8 @@ function drawTropeDashboard(d) {
             const legH = lRect.height;
             const legSvg = legendDiv.append("svg").attr("width", legW).attr("height", legH);
 
-            const baseFS = Math.max(8, Math.min(10, legW / 12)); // Headers
-            const smallFS = Math.max(7, Math.min(9, legW / 14)); // Labels
+            const baseFS = Math.max(9, Math.min(13, legW / 10)); 
+            const smallFS = Math.max(8, Math.min(11, legW / 12));
 
             const defs = legSvg.append("defs");
             const linearGradient = defs.append("linearGradient").attr("id", "trope-gradient");
@@ -1107,6 +1110,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
