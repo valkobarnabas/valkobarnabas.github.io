@@ -162,15 +162,19 @@
         }
 
         #song-info-panel {
-            flex: 1; 
-            padding: 20px 30px; 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start; 
-            text-align: left;        
-            min-width: 0;
-        }}
+    flex: 1; 
+    padding: clamp(5px, 2vh, 20px) 30px; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start; 
+    text-align: left;        
+    min-width: 0; 
+    /* Responsive Gap: Scales with window height to prevent overflow */
+    gap: clamp(2px, 1.5vh, 10px);
+    /* Safety: prevents rendering outside the box */
+    overflow: hidden; 
+}
 
         #spotify-panel {
     flex: 1 1 0px; 
@@ -1107,6 +1111,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
