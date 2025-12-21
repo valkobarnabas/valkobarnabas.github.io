@@ -492,12 +492,12 @@
                 
                 // Reset Visuals
                 d3.selectAll(".dimmed").classed("dimmed", false);
-                d3.selectAll(".neighbor").classed("neighbor", false); // Reset neighbor class
+                d3.selectAll(".neighbor").classed("neighbor", false);
                 d3.selectAll(".highlighted").classed("highlighted", false);
                 d3.selectAll(".logo-dimmed").classed("logo-dimmed", false);
                 d3.selectAll(".logo-highlighted").classed("logo-highlighted", false);
                 
-                // Reset Links
+                // Reset Links (White and opaque)
                 d3.selectAll(".network-link")
                     .style("opacity", 0.99)
                     .style("stroke", "#ffffff");
@@ -524,41 +524,61 @@
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
             d3.selectAll("rect").classed("dimmed", true).classed("highlighted", false);
 
-            // 2. Highlight Specific Nodes & Links
+            // 2. Identify Neighbors
             const neighbors = [];
 
-            // Handle Links (Viz 4)
+            // Handle Links (Viz 4): Dim all, then highlight connected ones in Grey
             d3.selectAll(".network-link")
-                .style("opacity", 0.05) // Dim all lines
+                .style("opacity", 0.05) 
                 .style("stroke", "#fff")
                 .filter(l => l.source === schoolName || l.target === schoolName)
                 .style("opacity", 1)
-                .style("stroke", "#aaa") // Make active lines Grey
+                .style("stroke", "#aaa") // Active lines become Grey
                 .each(l => {
-                    // Collect neighbor names
                     neighbors.push(l.source === schoolName ? l.target : l.source);
                 });
 
-            // Handle Circles (Viz 4 & 3)
+            // 3. Highlight Circles (Viz 4 & 3)
             d3.selectAll(`circle`).each(function(cd) {
-                // Note: Viz 3 circles might not have 'school' in datum directly if using a different structure, 
-                // but your circles use data(data), so cd.school works.
                 if(!cd || !cd.school) return;
 
                 const circle = d3.select(this);
+                const isViz4 = this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group";
                 
                 if (cd.school === schoolName) {
-                    // SELECTED NODE
+                    // --- SELECTED NODE ---
                     circle.classed("dimmed", false).classed("highlighted", true);
-                    circle.raise();
-                    if (this.parentNode.tagName === 'g') d3.select(this.parentNode).raise();
+                    
+                    if (isViz4) {
+                        // VIZ 4: Raise the whole GROUP (keeps text on top of circle)
+                        d3.select(this.parentNode).raise();
+                    } else {
+                        // VIZ 3: Raise the CIRCLE (no text to worry about)
+                        circle.raise();
+                    }
                 } else if (neighbors.includes(cd.school)) {
-                    // NEIGHBOR NODE (Light Grey)
+                    // --- NEIGHBOR NODE ---
                     circle.classed("dimmed", false).classed("neighbor", true);
-                    // Optional: raise neighbors too so they aren't buried
-                    if (this.parentNode.tagName === 'g') d3.select(this.parentNode).raise();
+                    
+                    // Optional: Raise neighbors slightly so they sit above dimmed nodes
+                    if (isViz4) {
+                        d3.select(this.parentNode).raise();
+                    } else {
+                        circle.raise();
+                    }
                 }
             });
+
+            // Raise Selected Node AGAIN to ensure it is absolutely on top of neighbors
+            // (This ensures the selected node covers the neighbor nodes if they overlap)
+            d3.selectAll(".highlighted").each(function() {
+                if (this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group") {
+                    d3.select(this.parentNode).raise();
+                } else {
+                    d3.select(this).raise();
+                }
+            });
+
 
             // Highlight Logo
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
@@ -575,7 +595,7 @@
                  d3.select(this.parentNode).selectAll(".upset-dot").classed("dimmed", true);
             });
 
-            // 3. Middle Strip Info
+            // 4. Middle Strip Info
             d3.select("#placeholder-msg").style("display", "none");
             d3.select("#active-content").style("display", "flex");
 
@@ -1167,6 +1187,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
