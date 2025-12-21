@@ -202,23 +202,30 @@
         #si-title { 
     font-size: clamp(0.9rem, 2vw, 1.3em); 
     color: var(--accent); 
-    margin: 5px 0 10px 0; 
+    margin: 0; /* CHANGED: Let the parent 'gap' handle the spacing */
     font-style: italic; 
+    line-height: 1.2; /* Tighter line height helps fit content */
 }
         
-        .badges { display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; justify-content: flex-start; }
+        .badges { 
+                display: flex; 
+                gap: 10px; 
+                margin: 0; /* CHANGED: Removed margin-bottom */
+                flex-wrap: wrap; 
+                justify-content: flex-start; 
+            }
         .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #ccc; display: flex; align-items: center; gap: 5px; }
         .badge i { color: var(--highlight); }
 
         .stats-row { 
-            display: flex; 
-            gap: 20px; 
-            font-size: 0.9em; 
-            color: #aaa; 
-            justify-content: flex-start; 
-            margin-top: 5px;
-            white-space: nowrap; /* Ensures text stays on one line for measuring */
-        }
+                display: flex; 
+                gap: 20px; 
+                font-size: 0.9em; 
+                color: #aaa; 
+                justify-content: flex-start; 
+                margin: 0; /* CHANGED: Removed margin-top */
+                white-space: nowrap; 
+            }
         .stats-row b { color: #fff; }
 
         /* --- Viz Elements --- */
@@ -1111,6 +1118,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
