@@ -232,7 +232,23 @@
         .node circle { stroke: #fff; stroke-width: 1px; cursor: pointer; transition: all 0.2s; }
         
         /* Highlight States */
-        .dimmed { fill: var(--grey-dim) !important; opacity: 0.4 !important; stroke: #222 !important; }
+        /* 1. Make the "non-connected" nodes darker/fainter */
+            .dimmed { 
+                fill: #222 !important; 
+                opacity: 0.3 !important; 
+                stroke: #333 !important; 
+            }
+            
+            /* 2. New Class for Connected Neighbors (Light Grey) */
+            .neighbor {
+                fill: #aaa !important; 
+                stroke: #fff !important; 
+                stroke-width: 2px !important;
+                opacity: 1 !important;
+            }
+            
+            /* 3. Ensure lines transition smoothly */
+            line { transition: all 0.3s; }
         .highlighted { 
             fill: var(--accent) !important; 
             stroke: #fff !important; 
@@ -472,50 +488,75 @@
         // --- UPDATE FUNCTION ---
         function updateSelection(schoolName) {
             if (!schoolName) {
-                currentIndex = -1; // Reset index
+                currentIndex = -1; 
                 
                 // Reset Visuals
                 d3.selectAll(".dimmed").classed("dimmed", false);
+                d3.selectAll(".neighbor").classed("neighbor", false); // Reset neighbor class
                 d3.selectAll(".highlighted").classed("highlighted", false);
                 d3.selectAll(".logo-dimmed").classed("logo-dimmed", false);
                 d3.selectAll(".logo-highlighted").classed("logo-highlighted", false);
+                
+                // Reset Links
+                d3.selectAll(".network-link")
+                    .style("opacity", 0.99)
+                    .style("stroke", "#ffffff");
+
                 d3.selectAll("rect").classed("highlighted", false).classed("dimmed", false).attr("fill", "#444");
                 d3.selectAll(".upset-dot").classed("dimmed", false).style("fill", function() { return d3.select(this).classed("active") ? "#888" : "#333"; });
 
-                // Reset Panels
                 d3.select("#placeholder-msg").style("display", "flex");
                 d3.select("#active-content").style("display", "none");
                 d3.select("#si-logo").style("display", "none");
                 d3.select("#spotify-panel").html("");
                 
                 drawTropeDashboard(null);
-                drawViz4();
                 
                 if(showTopologyTooltip) showTopologyTooltip(null);
                 return;
             }
 
-            // Update current index for keyboard nav
             currentIndex = sortedData.findIndex(d => d.school === schoolName);
             const d = data.find(r => r.school === schoolName);
 
-            // ... (rest of your existing updateSelection logic: Visual States, Highlights, etc.)
-            // 1. Visual States (Dim Everything)
-            d3.selectAll("circle").classed("dimmed", true).classed("highlighted", false);
+            // 1. Visual States (Dim Everything first)
+            d3.selectAll("circle").classed("dimmed", true).classed("highlighted", false).classed("neighbor", false);
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
             d3.selectAll("rect").classed("dimmed", true).classed("highlighted", false);
 
-            // 2. Highlight Specific Nodes
-            d3.selectAll(`circle[data-school="${schoolName}"]`).each(function() {
+            // 2. Highlight Specific Nodes & Links
+            const neighbors = [];
+
+            // Handle Links (Viz 4)
+            d3.selectAll(".network-link")
+                .style("opacity", 0.05) // Dim all lines
+                .style("stroke", "#fff")
+                .filter(l => l.source === schoolName || l.target === schoolName)
+                .style("opacity", 1)
+                .style("stroke", "#aaa") // Make active lines Grey
+                .each(l => {
+                    // Collect neighbor names
+                    neighbors.push(l.source === schoolName ? l.target : l.source);
+                });
+
+            // Handle Circles (Viz 4 & 3)
+            d3.selectAll(`circle`).each(function(cd) {
+                // Note: Viz 3 circles might not have 'school' in datum directly if using a different structure, 
+                // but your circles use data(data), so cd.school works.
+                if(!cd || !cd.school) return;
+
                 const circle = d3.select(this);
-                circle.classed("dimmed", false).classed("highlighted", true);
                 
-                // FIX: If this is a Network node (inside a Group), raise the GROUP, not the circle.
-                if (this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group") {
-                    d3.select(this.parentNode).raise();
-                } else {
-                    // Topology node: Raise the circle
+                if (cd.school === schoolName) {
+                    // SELECTED NODE
+                    circle.classed("dimmed", false).classed("highlighted", true);
                     circle.raise();
+                    if (this.parentNode.tagName === 'g') d3.select(this.parentNode).raise();
+                } else if (neighbors.includes(cd.school)) {
+                    // NEIGHBOR NODE (Light Grey)
+                    circle.classed("dimmed", false).classed("neighbor", true);
+                    // Optional: raise neighbors too so they aren't buried
+                    if (this.parentNode.tagName === 'g') d3.select(this.parentNode).raise();
                 }
             });
 
@@ -545,14 +586,12 @@
             d3.select("#si-year").text(d.year);
 
             const wSpan = d3.select("#si-writers");
-            wSpan.text(d.writers).style("font-size", "1em"); // 1. Set full text & reset size
+            wSpan.text(d.writers).style("font-size", "1em");
             
             const rowNode = wSpan.node().closest(".stats-row");
             const panelNode = document.getElementById("song-info-panel");
             
             let fs = 1.0;
-            // 2. Loop: While the row is wider than the panel (minus padding), shrink text
-            // We limit it to 0.5em so it doesn't become microscopic
             while (rowNode.scrollWidth > (panelNode.clientWidth - 40) && fs > 0.5) {
                 fs -= 0.05;
                 wSpan.style("font-size", `${fs}em`);
@@ -751,26 +790,36 @@ function drawTropeDashboard(d) {
                         if(a||b) union++; if(a&&b) intersect++; 
                     });
                     if(union > 0 && (intersect/union) > 0.75) {
-                        links.push({ x1: n1.x, y1: n1.y, x2: n2.x, y2: n2.y });
+                        // CHANGED: Added source/target names to object
+                        links.push({ 
+                            source: n1.school, target: n2.school, 
+                            x1: n1.x, y1: n1.y, x2: n2.x, y2: n2.y 
+                        });
                     }
                 }
             }
 
-            // Manual Links (Triangle)
+            // Manual Links
             const manualLinks = [["Michigan", "Tennessee"], ["Tennessee", "Boston College"], ["Boston College", "Michigan"]];
             manualLinks.forEach(pair => {
                 if(nodeMap[pair[0]] && nodeMap[pair[1]]) {
-                    links.push({ x1: nodeMap[pair[0]].x, y1: nodeMap[pair[0]].y, x2: nodeMap[pair[1]].x, y2: nodeMap[pair[1]].y });
+                    // CHANGED: Added source/target names here too
+                    links.push({ 
+                        source: pair[0], target: pair[1],
+                        x1: nodeMap[pair[0]].x, y1: nodeMap[pair[0]].y, 
+                        x2: nodeMap[pair[1]].x, y2: nodeMap[pair[1]].y 
+                    });
                 }
             });
 
             const g = svg.append("g");
             
             g.selectAll("line").data(links).enter().append("line")
+                .attr("class", "network-link") // CHANGED: Added class for selection
                 .attr("x1", d => d.x1).attr("y1", d => d.y1)
                 .attr("x2", d => d.x2).attr("y2", d => d.y2)
-                .attr("stroke", "#ffffff").attr("stroke-width", 3).attr("opacity", 0.99); 
-
+                .attr("stroke", "#ffffff").attr("stroke-width", 3).attr("opacity", 0.99);
+            
             // Draw Nodes
             const nodeG = g.selectAll(".node-group").data(nodes).enter().append("g")
                 .attr("class", "node-group")
@@ -1118,6 +1167,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
