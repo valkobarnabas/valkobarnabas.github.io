@@ -300,7 +300,7 @@
         <div class="chart-area" id="lyrical-panel" style="display:flex; height: 100%;">
             <div id="logo-grid" style="flex: 0 0 55%; overflow: hidden; padding-right: 10px;"></div>
             <div id="trope-dashboard" style="flex: 1; border-left: 1px solid #333; padding-left: 10px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                <div style="color:#666; font-style:italic;"></div>
+                <div style="color:#666; font-style:italic;">Select a school fight song<br>from the menu at left<br>to view its tropes</div>
             </div>
         </div>
     </div>
@@ -853,25 +853,18 @@ const drawViz4 = () => {
     legG.append("text").text("# of Tropes").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", "10px");
 
     // Legend: Connections
-            const sectionConnY = 105;
-            legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
-            
-            // --- ADDED: Visual Example ---
-            const exG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
-            exG.append("line").attr("x1", 20).attr("y1", 0).attr("x2", 60).attr("y2", 0).attr("stroke", "#fff").attr("stroke-width", 2).attr("opacity", 0.6);
-            exG.append("circle").attr("cx", 20).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
-            exG.append("circle").attr("cx", 60).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
-            
-            // Text moved down to accommodate example
-            legG.append("foreignObject")
-                .attr("x", 0).attr("y", sectionConnY + 35)
-                .attr("width", legW - 10).attr("height", 100)
-                .append("xhtml:div")
-                .style("font-size", "10px").style("color", "#ccc").style("line-height", "1.2")
-                .html("Lines connect schools with >75% trope similarity by Jaccard Index.");
+    const sectionConnY = 105;
+    legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
+    
+    legG.append("foreignObject")
+        .attr("x", 0).attr("y", sectionConnY + 10)
+        .attr("width", legW - 10).attr("height", 100)
+        .append("xhtml:div")
+        .style("font-size", "10px").style("color", "#ccc").style("line-height", "1.2")
+        .html("Lines connect schools with >75% trope similarity by Jaccard Index.");
 
-            svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
-            legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
+    svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
+    legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
 };
         drawViz4();
 
@@ -988,8 +981,6 @@ const drawViz4 = () => {
             const container = document.getElementById('upset-origin');
             const w = container.clientWidth;
             const h = container.clientHeight;
-            // Clear previous
-            d3.select("#upset-origin").html(""); 
             const svg = d3.select("#upset-origin").append("svg").attr("width", w).attr("height", h);
 
             const meta = ['student_writer', 'official_song', 'contest'];
@@ -1025,86 +1016,12 @@ const drawViz4 = () => {
                     headerG.append("text").attr("x", x).attr("y", -8 + (idx*9)).attr("text-anchor", "middle")
                         .style("font-size", "9px").style("fill", "#bbb").text(word);
                 });
-            });
 
-            sorted.forEach((d, i) => {
-                const y = i * rowH;
-                const centerY = y + rowH/2;
-                const rowG = g.append("g").attr("class", "upset-row");
-
-                rowG.append("rect")
-                    .attr("x", barAreaWidth - barScale(d.count) - 10)
-                    .attr("y", centerY - 8).attr("width", barScale(d.count)).attr("height", 16)
-                    .attr("fill", "#444") 
-                    .attr("data-schools", JSON.stringify(d.schools))
-                    .on("mouseover", function(e) { 
-                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
-                         const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
-                         tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
-                                .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
-                    })
-                    .on("mouseout", function() { 
-                        if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
-                        tooltip.style("opacity", 0);
-                    });
-                
-                rowG.append("text").attr("x", barAreaWidth - barScale(d.count) - 15).attr("y", centerY + 4).attr("text-anchor", "end").text(d.count);
-                rowG.append("line").attr("x1", barAreaWidth).attr("x2", w).attr("y1", centerY).attr("y2", centerY).attr("stroke", "#333");
-                
-                meta.forEach((m, k) => {
-                    const active = d.sig[k] === '1';
-                    rowG.append("circle").attr("cx", barAreaWidth + (k * colW) + colW/2).attr("cy", centerY).attr("r", active ? 5 : 2)
-                     .attr("class", active ? "upset-dot active" : "upset-dot")
-                     .style("fill", active ? "#888" : "#333");
-                });
-            });
-            svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
-        };
-        drawViz2();
-                
-            });
-
-            sorted.forEach((d, i) => {
-                const y = i * rowH;
-                const centerY = y + rowH/2;
-                const rowG = g.append("g").attr("class", "upset-row");
-
-                rowG.append("rect")
-                    .attr("x", barAreaWidth - barScale(d.count) - 10)
-                    .attr("y", centerY - 8).attr("width", barScale(d.count)).attr("height", 16)
-                    .attr("fill", "#444") 
-                    .attr("data-schools", JSON.stringify(d.schools))
-                    .on("mouseover", function(e) { 
-                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
-                         const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
-                         tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
-                                .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
-                    })
-                    .on("mouseout", function() { 
-                        if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
-                        tooltip.style("opacity", 0);
-                    });
-                
-                rowG.append("text").attr("x", barAreaWidth - barScale(d.count) - 15).attr("y", centerY + 4).attr("text-anchor", "end").text(d.count);
-                rowG.append("line").attr("x1", barAreaWidth).attr("x2", w).attr("y1", centerY).attr("y2", centerY).attr("stroke", "#333");
-                
-                meta.forEach((m, k) => {
-                    const active = d.sig[k] === '1';
-                    rowG.append("circle").attr("cx", barAreaWidth + (k * colW) + colW/2).attr("cy", centerY).attr("r", active ? 5 : 2)
-                     .attr("class", active ? "upset-dot active" : "upset-dot")
-                     .style("fill", active ? "#888" : "#333");
-                });
-            });
-            svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
-        };
-        drawViz2();
-
-    // --- KEYBOARD NAVIGATION (Moved here to ensure it only adds ONCE) ---
-        document.addEventListener('keydown', (e) => {
+                // --- KEYBOARD NAVIGATION ---
+    document.addEventListener('keydown', (e) => {
             // Ignore if modal is open
-            const modal = document.getElementById('about-modal');
-            if (modal && modal.style.display === 'flex') {
-                if(e.key === "Escape") modal.style.display = 'none';
+            if(document.getElementById('about-modal').style.display === 'flex') {
+                if(e.key === "Escape") document.getElementById('about-modal').style.display = 'none';
                 return;
             }
 
@@ -1116,7 +1033,7 @@ const drawViz4 = () => {
             // If nothing selected, Arrow keys select the first one
             if (currentIndex === -1) {
                 if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-                    if(sortedData.length > 0) updateSelection(sortedData[0].school);
+                    updateSelection(sortedData[0].school);
                 }
                 return;
             }
@@ -1141,6 +1058,43 @@ const drawViz4 = () => {
                 updateSelection(sortedData[nextIndex].school);
             }
         });
+                
+            });
+
+            sorted.forEach((d, i) => {
+                const y = i * rowH;
+                const centerY = y + rowH/2;
+                const rowG = g.append("g").attr("class", "upset-row");
+
+                rowG.append("rect")
+                    .attr("x", barAreaWidth - barScale(d.count) - 10)
+                    .attr("y", centerY - 8).attr("width", barScale(d.count)).attr("height", 16)
+                    .attr("fill", "#444") 
+                    .attr("data-schools", JSON.stringify(d.schools))
+                    .on("mouseover", function(e) { 
+                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
+                         const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
+                         tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
+                                .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                    })
+                    .on("mouseout", function() { 
+                        if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
+                        tooltip.style("opacity", 0);
+                    });
+                
+                rowG.append("text").attr("x", barAreaWidth - barScale(d.count) - 15).attr("y", centerY + 4).attr("text-anchor", "end").text(d.count);
+                rowG.append("line").attr("x1", barAreaWidth).attr("x2", w).attr("y1", centerY).attr("y2", centerY).attr("stroke", "#333");
+                
+                meta.forEach((m, k) => {
+                    const active = d.sig[k] === '1';
+                    rowG.append("circle").attr("cx", barAreaWidth + (k * colW) + colW/2).attr("cy", centerY).attr("r", active ? 5 : 2)
+                     .attr("class", active ? "upset-dot active" : "upset-dot")
+                     .style("fill", active ? "#888" : "#333");
+                });
+            });
+            svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
+        };
+        drawViz2();
 
     });
 
@@ -1156,30 +1110,3 @@ const drawViz4 = () => {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
