@@ -758,7 +758,7 @@ function drawTropeDashboard(d) {
             g.selectAll("line").data(links).enter().append("line")
                 .attr("x1", d => d.x1).attr("y1", d => d.y1)
                 .attr("x2", d => d.x2).attr("y2", d => d.y2)
-                .attr("stroke", "#ffffff").attr("stroke-width", 5).attr("opacity", 0.5); 
+                .attr("stroke", "#ffffff").attr("stroke-width", 5).attr("opacity", 0.99); 
 
             // Draw Nodes
             const nodeG = g.selectAll(".node-group").data(nodes).enter().append("g")
@@ -1107,6 +1107,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
