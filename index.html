@@ -97,15 +97,15 @@
         .sub-top { font-size: 0.8em; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
         
         .main-title { 
-            font-size: clamp(1.2rem, 2.5vw, 2.2em); 
-            color: var(--highlight); 
-            font-weight: 800; 
-            line-height: 1.0; 
-            margin: 0; 
-            text-transform: uppercase; 
-            white-space: normal; 
-            overflow-wrap: break-word;
-        }
+    font-size: clamp(0.8rem, 2.5vw, 2.2em); 
+    color: var(--highlight); 
+    font-weight: 800; 
+    line-height: 1.0; 
+    margin: 0; 
+    text-transform: uppercase; 
+    white-space: normal; 
+    overflow-wrap: break-word;
+}
         
         .sub-bot { font-size: 1em; color: #fff; margin-top: 5px; font-weight: 300; display: flex; align-items: center; gap: 10px; }
         
@@ -931,6 +931,8 @@ function drawTropeDashboard(d) {
 
         // --- VIZ 2: Origin Story ---
         const drawViz2 = () => {
+            d3.select("#upset-origin").html("");
+            
             const container = document.getElementById('upset-origin');
             const w = container.clientWidth;
             const h = container.clientHeight;
@@ -1008,13 +1010,21 @@ function drawTropeDashboard(d) {
         drawViz2();
 
         // --- Window Resize Handler ---
-    window.addEventListener("resize", () => {
-        // Redraw all visualizations to fit new window size
-        initViz1(); // Lyrical (Re-runs logo grid)
-        drawViz2(); // Origin
-        drawViz3(); // Topology
-        drawViz4(); // Network
-    });
+window.addEventListener("resize", () => {
+    // 1. Redraw all visualizations to fit new window size
+    initViz1(); 
+    drawViz2(); 
+    drawViz3(); 
+    drawViz4();
+
+    // 2. Refit Middle Strip Text (Right Side)
+    // If a song is currently active (currentIndex > -1), we must re-run 
+    // updateSelection. This forces the "while" loop inside it to calculate 
+    // the new container width and shrink the font size accordingly.
+    if (currentIndex > -1 && sortedData[currentIndex]) {
+         updateSelection(sortedData[currentIndex].school);
+    }
+});
 
         document.addEventListener('keydown', (e) => {
             // Ignore if modal is open
@@ -1069,6 +1079,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
