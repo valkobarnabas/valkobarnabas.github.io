@@ -173,28 +173,34 @@
         }
 
         #spotify-panel {
-            flex: 0 0 450px; 
-            background: #000;
-            border-left: 1px solid var(--dim);
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-            box-sizing: border-box;
-        }
+    flex: 1 1 0px; 
+    max-width: 450px;
+    background: #000;
+    border-left: 1px solid var(--dim);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+}
 
         iframe { width: 100%; height: 152px; border: none; border-radius: 12px; }
 
         #si-school { 
-            font-size: 2.2em; 
-            font-weight: 800; 
-            color: #fff; 
-            line-height: 1.1; 
-            text-shadow: 0 0 10px var(--highlight), 0 0 20px var(--highlight); /* Added Glow */
-        }
-        #si-conf { font-size: 0.9em; color: #666; font-style: italic; font-weight: 400; margin-left: 10px;}
-        #si-title { font-size: 1.3em; color: var(--accent); margin: 5px 0 10px 0; font-style: italic; }
+    font-size: clamp(1.2rem, 3vw, 2.2em); 
+    font-weight: 800; 
+    color: #fff; 
+    line-height: 1.1; 
+    text-shadow: 0 0 10px var(--highlight), 0 0 20px var(--highlight);
+}
+        #si-conf { font-size: clamp(0.5em, 1vw, 0.9em); color: #666; font-style: italic; font-weight: 400; margin-left: 10px;}
+        #si-title { 
+    font-size: clamp(0.9rem, 2vw, 1.3em); 
+    color: var(--accent); 
+    margin: 5px 0 10px 0; 
+    font-style: italic; 
+}
         
         .badges { display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; justify-content: flex-start; }
         .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #ccc; display: flex; align-items: center; gap: 5px; }
@@ -576,11 +582,14 @@
             updateSelection(null);
         });
         
-
-        // UPDATED: Handles null 'd' for blank state
 function drawTropeDashboard(d) {
     const container = d3.select("#trope-dashboard");
     container.html(""); 
+
+    // 1. Measure the available width
+    const rect = container.node().getBoundingClientRect();
+    // 2. Calculate dynamic size (max 22px, min 10px)
+    const size = Math.max(10, Math.min(22, rect.width / 16)); 
 
     const wrapper = container.append("div")
         .style("display", "flex").style("flex-direction", "column").style("gap", "20px").style("width", "100%");
@@ -590,26 +599,29 @@ function drawTropeDashboard(d) {
             .style("display", "flex").style("justify-content", "space-around").style("width", "100%");
         
         keys.forEach(key => {
-            // If d is null, hasTrope is false (all icons dimmed)
             const hasTrope = d ? (d[key] === 'Yes') : false;
             const cell = rowDiv.append("div")
                 .style("display", "flex").style("flex-direction", "column").style("align-items", "center")
                 .style("opacity", hasTrope ? 1 : 0.2);
 
             cell.append("div")
-                .style("font-family", "FontAwesome").style("font-size", "22px").style("color", "#00f2ff").style("margin-bottom", "5px")
+                .style("font-family", "FontAwesome")
+                .style("font-size", size + "px") // <--- Use dynamic size
+                .style("color", "#00f2ff").style("margin-bottom", "5px")
                 .text(icons[key]);
             
             cell.append("div")
-                .style("font-size", "9px").style("color", "#aaa").style("margin-bottom", "5px")
+                .style("font-size", (size * 0.45) + "px") // <--- Scale label too
+                .style("color", "#aaa").style("margin-bottom", "5px")
                 .text(iconLabels[key]);
 
             const circle = cell.append("div")
-                .style("width", "20px").style("height", "20px").style("border-radius", "50%")
+                .style("width", size + "px").style("height", size + "px") // <--- Scale circle
+                .style("border-radius", "50%")
                 .style("border", "2px solid " + (hasTrope ? "#00f2ff" : "#444"))
                 .style("background", hasTrope ? "rgba(0, 242, 255, 0.2)" : "transparent")
                 .style("display", "flex").style("align-items", "center").style("justify-content", "center")
-                .style("font-size", "10px").style("color", "#fff").style("font-weight", "bold");
+                .style("font-size", (size * 0.5) + "px").style("color", "#fff").style("font-weight", "bold");
 
             if (key === 'fight' && hasTrope) circle.text(d.number_fights);
         });
@@ -782,6 +794,9 @@ function drawTropeDashboard(d) {
             const legH = lRect.height;
             const legSvg = legendDiv.append("svg").attr("width", legW).attr("height", legH);
 
+            const baseFS = Math.max(8, Math.min(10, legW / 12)); // Headers
+            const smallFS = Math.max(7, Math.min(9, legW / 14)); // Labels
+
             const defs = legSvg.append("defs");
             const linearGradient = defs.append("linearGradient").attr("id", "trope-gradient");
             linearGradient.append("stop").attr("offset", "0%").attr("stop-color", "#000055");
@@ -789,20 +804,21 @@ function drawTropeDashboard(d) {
 
             const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
 
-            legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
-            legG.append("rect").attr("y", 10).attr("width", legW - 30).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
-            legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", "9px");
-            legG.append("text").text("8").attr("y", 35).attr("x", legW - 30).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", "9px");
+            // Apply baseFS and smallFS instead of fixed "10px" or "9px"
+    legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS).attr("font-weight", "bold");
+    legG.append("rect").attr("y", 10).attr("width", legW - 30).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
+    legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS);
+    legG.append("text").text("8").attr("y", 35).attr("x", legW - 30).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS);
 
             const sectionYearY = 55;
-            legG.append("text").text("NODE LABELS").attr("y", sectionYearY).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
+            legG.append("text").text("NODE LABELS").attr("y", sectionYearY).attr("fill", "#00f2ff").attr("font-size", baseFS).attr("font-weight", "bold");
             const sampleG = legG.append("g").attr("transform", `translate(15, ${sectionYearY + 25})`);
             sampleG.append("circle").attr("r", 12).attr("fill", "#004400").attr("stroke", "#fff");
-            sampleG.append("text").text("#").attr("text-anchor", "middle").attr("dy", 3).attr("fill", "#fff").style("font-size", "10px").style("font-weight","bold");
-            legG.append("text").text("Num. of Tropes").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", "10px");
+            sampleG.append("text").text("#").attr("text-anchor", "middle").attr("dy", 3).attr("fill", "#fff").style("font-size", smallFS).style("font-weight","bold");
+            legG.append("text").text("Num. of Tropes").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", smallFS);
 
             const sectionConnY = 105;
-            legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
+            legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", baseFS).attr("font-weight", "bold");
             
             const exG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
             exG.append("line").attr("x1", 20).attr("y1", 0).attr("x2", 60).attr("y2", 0).attr("stroke", "#fff").attr("stroke-width", 2).attr("opacity", 0.6);
@@ -813,7 +829,7 @@ function drawTropeDashboard(d) {
                 .attr("x", 0).attr("y", sectionConnY + 35)
                 .attr("width", legW - 10).attr("height", 100)
                 .append("xhtml:div")
-                .style("font-size", "10px").style("color", "#ccc").style("line-height", "1.2")
+                .style("font-size", smallFS).style("color", "#ccc").style("line-height", "1.2")
                 .html("Lines connect schools with ≥75% trope similarity by Jaccard Index.");
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
@@ -907,7 +923,12 @@ function drawTropeDashboard(d) {
             };
 
             // Key
-            const leg = svg.append("g").attr("transform", `translate(${w - 100}, 20)`);
+            const isSmall = w < 400;
+            const legScale = isSmall ? 0.7 : 1; 
+            const legX = w - (isSmall ? 70 : 100);
+
+            const leg = svg.append("g")
+                .attr("transform", `translate(${legX}, 20) scale(${legScale})`);
             leg.append("text").text(`# of "Fight"s`).attr("y", 15).style("font-size","9px").style("fill","#FF4500");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
@@ -1079,6 +1100,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
