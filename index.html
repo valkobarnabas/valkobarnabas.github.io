@@ -618,9 +618,10 @@
             }
             
             let badgesHTML = "";
+            
+            if(d.official_song === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-check-circle"></i> Official</div>`;
             if(d.student_writer === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-graduation-cap"></i> Student</div>`;
             if(d.contest === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-trophy"></i> Contest</div>`;
-            if(d.official_song === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-check-circle"></i> Official</div>`;
             d3.select("#si-badges").html(badgesHTML);
 
             if (d.spotify_id) {
@@ -1046,7 +1047,7 @@ function drawTropeDashboard(d) {
             const h = container.clientHeight;
             const svg = d3.select("#upset-origin").append("svg").attr("width", w).attr("height", h);
 
-            const meta = ['student_writer', 'official_song', 'contest'];
+            const meta = ['official_song', 'student_writer', 'contest'];
             const combos = {};
             data.forEach(d => {
                 const sig = meta.map(t => d[t] === 'Yes' ? '1' : '0').join("");
@@ -1187,6 +1188,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
