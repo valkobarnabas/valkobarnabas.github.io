@@ -758,7 +758,7 @@ function drawTropeDashboard(d) {
             g.selectAll("line").data(links).enter().append("line")
                 .attr("x1", d => d.x1).attr("y1", d => d.y1)
                 .attr("x2", d => d.x2).attr("y2", d => d.y2)
-                .attr("stroke", "#ffffff").attr("stroke-width", 3).attr("opacity", 0.5); 
+                .attr("stroke", "#ffffff").attr("stroke-width", 5).attr("opacity", 0.5); 
 
             // Draw Nodes
             const nodeG = g.selectAll(".node-group").data(nodes).enter().append("g")
@@ -826,10 +826,17 @@ function drawTropeDashboard(d) {
             exG.append("circle").attr("cx", 60).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
             
             legG.append("foreignObject")
-                .attr("x", 0).attr("y", sectionConnY + 35)
-                .attr("width", legW - 10).attr("height", 100)
+                .attr("x", 0)
+                .attr("y", sectionConnY + 35)
+                .attr("width", legW - 10)
+                .attr("height", 100)
                 .append("xhtml:div")
-                .style("font-size", smallFS).style("color", "#ccc").style("line-height", "1.2")
+                // 2. Add explicit "+ 'px'" unit
+                .style("font-size", smallFS + "px") 
+                .style("color", "#ccc")
+                .style("line-height", "1.2")
+                // 3. Ensure the div fills the foreignObject width to force wrapping
+                .style("width", "100%") 
                 .html("Lines connect schools with ≥75% trope similarity by Jaccard Index.");
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
@@ -1100,6 +1107,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
