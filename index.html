@@ -799,7 +799,7 @@ function drawTropeDashboard(d) {
             const sampleG = legG.append("g").attr("transform", `translate(15, ${sectionYearY + 25})`);
             sampleG.append("circle").attr("r", 12).attr("fill", "#004400").attr("stroke", "#fff");
             sampleG.append("text").text("#").attr("text-anchor", "middle").attr("dy", 3).attr("fill", "#fff").style("font-size", "8px").style("font-weight","bold");
-            legG.append("text").text("# of Tropes").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", "10px");
+            legG.append("text").text("Num. of Tropes").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", "10px");
 
             const sectionConnY = 105;
             legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", "10px").attr("font-weight", "bold");
@@ -1035,6 +1035,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
