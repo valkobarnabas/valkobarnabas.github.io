@@ -21,6 +21,10 @@
             --grey-dim: #3a3a3a;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -1012,6 +1016,49 @@ const drawViz4 = () => {
                     headerG.append("text").attr("x", x).attr("y", -8 + (idx*9)).attr("text-anchor", "middle")
                         .style("font-size", "9px").style("fill", "#bbb").text(word);
                 });
+
+                // --- KEYBOARD NAVIGATION ---
+    document.addEventListener('keydown', (e) => {
+            // Ignore if modal is open
+            if(document.getElementById('about-modal').style.display === 'flex') {
+                if(e.key === "Escape") document.getElementById('about-modal').style.display = 'none';
+                return;
+            }
+
+            if (e.key === "Escape") {
+                updateSelection(null);
+                return;
+            }
+
+            // If nothing selected, Arrow keys select the first one
+            if (currentIndex === -1) {
+                if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                    updateSelection(sortedData[0].school);
+                }
+                return;
+            }
+
+            let nextIndex = currentIndex;
+            const total = sortedData.length;
+            const row = Math.floor(currentIndex / COLS);
+            const col = currentIndex % COLS;
+
+            if (e.key === "ArrowRight") {
+                if (col < COLS - 1 && currentIndex + 1 < total) nextIndex++;
+            } else if (e.key === "ArrowLeft") {
+                if (col > 0) nextIndex--;
+            } else if (e.key === "ArrowDown") {
+                if (currentIndex + COLS < total) nextIndex += COLS;
+            } else if (e.key === "ArrowUp") {
+                if (currentIndex - COLS >= 0) nextIndex -= COLS;
+            }
+
+            if (nextIndex !== currentIndex) {
+                e.preventDefault(); // Prevent scrolling page
+                updateSelection(sortedData[nextIndex].school);
+            }
+        });
+                
             });
 
             sorted.forEach((d, i) => {
@@ -1059,52 +1106,11 @@ const drawViz4 = () => {
         drawViz3(); // Topology
         drawViz4(); // Network
     });
-
-// --- KEYBOARD NAVIGATION ---
-    document.addEventListener('keydown', (e) => {
-            // Ignore if modal is open
-            if(document.getElementById('about-modal').style.display === 'flex') {
-                if(e.key === "Escape") document.getElementById('about-modal').style.display = 'none';
-                return;
-            }
-
-            if (e.key === "Escape") {
-                updateSelection(null);
-                return;
-            }
-
-            // If nothing selected, Arrow keys select the first one
-            if (currentIndex === -1) {
-                if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-                    updateSelection(sortedData[0].school);
-                }
-                return;
-            }
-
-            let nextIndex = currentIndex;
-            const total = sortedData.length;
-            const row = Math.floor(currentIndex / COLS);
-            const col = currentIndex % COLS;
-
-            if (e.key === "ArrowRight") {
-                if (col < COLS - 1 && currentIndex + 1 < total) nextIndex++;
-            } else if (e.key === "ArrowLeft") {
-                if (col > 0) nextIndex--;
-            } else if (e.key === "ArrowDown") {
-                if (currentIndex + COLS < total) nextIndex += COLS;
-            } else if (e.key === "ArrowUp") {
-                if (currentIndex - COLS >= 0) nextIndex -= COLS;
-            }
-
-            if (nextIndex !== currentIndex) {
-                e.preventDefault(); // Prevent scrolling page
-                updateSelection(sortedData[nextIndex].school);
-            }
-        });
     
 </script>
 </body>
 </html>
+
 
 
 
