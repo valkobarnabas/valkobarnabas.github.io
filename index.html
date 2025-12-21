@@ -1007,6 +1007,15 @@ function drawTropeDashboard(d) {
         };
         drawViz2();
 
+        // --- Window Resize Handler ---
+    window.addEventListener("resize", () => {
+        // Redraw all visualizations to fit new window size
+        initViz1(); // Lyrical (Re-runs logo grid)
+        drawViz2(); // Origin
+        drawViz3(); // Topology
+        drawViz4(); // Network
+    });
+
         document.addEventListener('keydown', (e) => {
             // Ignore if modal is open
             const modal = document.getElementById('about-modal');
@@ -1055,18 +1064,12 @@ document.addEventListener('keydown', (event) => {
     });
 
 
-// --- Window Resize Handler ---
-    window.addEventListener("resize", () => {
-        // Redraw all visualizations to fit new window size
-        initViz1(); // Lyrical (Re-runs logo grid)
-        drawViz2(); // Origin
-        drawViz3(); // Topology
-        drawViz4(); // Network
-    });
+
     
 </script>
 </body>
 </html>
+
 
 
 
