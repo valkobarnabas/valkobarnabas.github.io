@@ -125,6 +125,11 @@
             color: #000; 
         }
 
+                /* --- Legend Indicators --- */
+        .legend-indicator { pointer-events: none; transition: transform 0.2s ease-out; }
+        .legend-indicator path { fill: #fff; stroke: #000; stroke-width: 1px; }
+        .legend-indicator text { fill: #fff; font-size: 10px; font-weight: bold; text-anchor: middle; text-shadow: 0 0 3px #000; }
+
         #strip-right {
             display: flex;
             height: 100%;
@@ -524,6 +529,7 @@
                 
                 drawTropeDashboard(null);
                 if(showTopologyTooltip) showTopologyTooltip(null);
+                d3.selectAll(".legend-indicator").style("display", "none");
                 return;
             }
 
@@ -632,6 +638,41 @@
 
             drawTropeDashboard(d);
             if(showTopologyTooltip) showTopologyTooltip(d);
+           // 7. Update Legend Indicators
+            // A. Trope Indicator (0 to 8 range)
+            const tInd = d3.select("#trope-indicator");
+            if (tInd.node()) {
+                tInd.style("display", "block");
+                const lRect = d3.select("#jaccard-web svg").node() ? d3.select("#jaccard-web svg").node().getBoundingClientRect() : null;
+                // If the chart isn't rendered yet, skip. Otherwise calculate scale.
+                if(lRect) {
+                    // Re-calculate the width used in drawViz4
+                    const legDivW = d3.select("#jaccard-web > div:nth-child(2)").node().getBoundingClientRect().width;
+                    const barWidth = legDivW - 30;
+                    const scale = d3.scaleLinear().domain([0, 8]).range([0, barWidth]);
+                    const xPos = scale(d.trope_count);
+                    
+                    tInd.attr("transform", `translate(${xPos}, 0)`);
+                    tInd.select("text").text(d.trope_count);
+                }
+            }
+
+            // B. Fight Indicator (1 to 10 range)
+            const fInd = d3.select("#fight-indicator");
+            if (fInd.node()) {
+                if (d.number_fights === 0) {
+                     // Hide indicator if 0 (since it's the grey dot, not the bar)
+                     fInd.style("display", "none");
+                } else {
+                    fInd.style("display", "block");
+                    // Hardcoded width from drawViz3 is 70px
+                    const scale = d3.scaleLinear().domain([1, 10]).range([0, 70]).clamp(true);
+                    const xPos = scale(d.number_fights);
+                    
+                    fInd.attr("transform", `translate(${xPos}, 0)`);
+                    fInd.select("text").text(d.number_fights);
+                }
+            }
         }
     
         // --- GLOBAL RESET HANDLER ---
@@ -888,16 +929,29 @@ function drawTropeDashboard(d) {
             const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
 
             legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
-            legG.append("rect").attr("y", 10).attr("width", legW - 30).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
+            
+            // The Bar
+            const barWidth = legW - 30;
+            legG.append("rect").attr("y", 10).attr("width", barWidth).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
             legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
-            legG.append("text").text("8").attr("y", 35).attr("x", legW - 30).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
+            legG.append("text").text("8").attr("y", 35).attr("x", barWidth).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
+
+            // --- NEW: Trope Indicator (Hidden by default) ---
+            const tropeInd = legG.append("g")
+                .attr("id", "trope-indicator")
+                .attr("class", "legend-indicator")
+                .style("display", "none"); // Hidden initially
+            
+            // Triangle pointing down
+            tropeInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 10)"); 
+            // Text value above it
+            tropeInd.append("text").attr("y", -8).text("0");
 
             const sectionYearY = 55;
             legG.append("text").text("NODE LABELS").attr("y", sectionYearY).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             const sampleG = legG.append("g").attr("transform", `translate(15, ${sectionYearY + 25})`);
-            // Show Logo concept in legend
+            
             sampleG.append("circle").attr("r", 12).attr("fill", "#004400").attr("stroke", "#fff");
-            // Add a generic "Logo" text or icon to represent the logo
             sampleG.append("text").text("LOGO").attr("text-anchor","middle").attr("dy",3).attr("fill","#fff").style("font-size","6px");
             
             legG.append("text").text("School Logo").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", smallFS + "px");
@@ -920,7 +974,7 @@ function drawTropeDashboard(d) {
                 .style("color", "#ccc")
                 .style("line-height", "1.2")
                 .style("width", "100%") 
-                .html("Click a node to reveal Jaccard connections with 75% trope similarity.");
+                .html("Click a node to reveal Jaccard connections with ≥75% trope similarity.");
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
             legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
@@ -1027,9 +1081,20 @@ function drawTropeDashboard(d) {
             grad.append("stop").attr("offset", "100%").style("stop-color", "#FFFF00");
             
             leg.append("rect").attr("y", 25).attr("width", 70).attr("height", 8).style("fill", "url(#gradFight)");
-            leg.append("text").text("1").attr("y", 45).attr("x", 0); // Started at 1 because 0 is grey
+            leg.append("text").text("1").attr("y", 45).attr("x", 0); 
             leg.append("text").text("5").attr("y", 45).attr("x", 32);
             leg.append("text").text("10+").attr("y", 45).attr("x", 65);
+
+            // --- NEW: Fight Indicator (Hidden by default) ---
+            const fightInd = leg.append("g")
+                .attr("id", "fight-indicator")
+                .attr("class", "legend-indicator")
+                .style("display", "none");
+            
+            // Triangle
+            fightInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 25)");
+            // Text
+            fightInd.append("text").attr("y", 17).text("0");
 
             // Add Grey Dot Legend
             leg.append("circle").attr("r", 4).attr("cx", 5).attr("cy", 60).attr("fill", "#666").attr("stroke","#000");
@@ -1190,6 +1255,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
