@@ -924,7 +924,7 @@ function drawTropeDashboard(d) {
                 .style("color", "#ccc")
                 .style("line-height", "1.2")
                 .style("width", "100%") 
-                .html("Click a node to reveal Jaccard connections (≥75% similarity).");
+                .html("Click a node to reveal Jaccard connections (≥75% trope similarity).");
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
             legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
@@ -1194,6 +1194,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
