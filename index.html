@@ -531,11 +531,10 @@
                 if(showTopologyTooltip) showTopologyTooltip(null);
                 d3.selectAll(".legend-indicator").style("display", "none");
 
-                // Reset "No Fights" legend style
+                // Reset "No Fights" Legend
                 const nf = d3.select("#no-fights-group");
-                nf.style("opacity", 0.5);
-                nf.select("circle").attr("stroke", "#000").attr("stroke-width", 1).attr("fill", "#666");
-                nf.select("text").style("fill", "#ccc").style("font-weight", "normal");
+                nf.style("opacity", 0.5); // Back to default opacity
+                d3.select("#no-fights-check").style("display", "none"); // Hide check
                 
                 return;
             }
@@ -661,21 +660,20 @@
                 }
             }
 
-            // B. Fight Indicator (Logic Updated)
+            // B. Fight Indicator
             const fInd = d3.select("#fight-indicator");
             const noFightG = d3.select("#no-fights-group");
+            const nfCheck = d3.select("#no-fights-check");
             
             if (d.number_fights === 0) {
-                 // CASE 1: No Fights -> Hide triangle, Highlight the "No Fights" legend item
+                 // CASE 1: No Fights -> Show Checkmark
                  fInd.style("display", "none");
-                 noFightG.style("opacity", 1);
-                 noFightG.select("circle").attr("stroke", "#fff").attr("stroke-width", 2).attr("fill", "#fff");
-                 noFightG.select("text").style("fill", "#fff").style("font-weight", "bold");
+                 noFightG.style("opacity", 1); // Full opacity
+                 nfCheck.style("display", "block"); // Show Check
             } else {
-                // CASE 2: Has Fights -> Show triangle, Dim the "No Fights" legend item
-                noFightG.style("opacity", 0.5);
-                noFightG.select("circle").attr("stroke", "#000").attr("stroke-width", 1).attr("fill", "#666");
-                noFightG.select("text").style("fill", "#ccc").style("font-weight", "normal");
+                // CASE 2: Has Fights -> Hide Checkmark
+                noFightG.style("opacity", 0.3); // Dimmed
+                nfCheck.style("display", "none"); // Hide Check
 
                 fInd.style("display", "block");
                 const scale = d3.scaleLinear().domain([1, 10]).range([0, 70]).clamp(true);
@@ -1084,7 +1082,6 @@ function drawTropeDashboard(d) {
             const leg = svg.append("g")
                 .attr("transform", `translate(${legX}, 20) scale(${legScale})`);
             
-            // --- MOVED UP: Title at y=0 to make room below it ---
             leg.append("text").text(`# of "Fight"s`).attr("y", 0).style("font-size","9px").style("fill","#FF4500");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
@@ -1097,25 +1094,37 @@ function drawTropeDashboard(d) {
             leg.append("text").text("5").attr("y", 45).attr("x", 32);
             leg.append("text").text("10+").attr("y", 45).attr("x", 65);
 
-            // --- Fight Indicator ---
+            // --- Fight Indicator Triangle ---
             const fightInd = leg.append("g")
                 .attr("id", "fight-indicator")
                 .attr("class", "legend-indicator")
                 .style("display", "none");
             
-            // Triangle pointing down to the bar (Tip at 25)
             fightInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 25)");
-            
-            // --- MOVED DOWN: Number at y=15 (Between title and triangle) ---
             fightInd.append("text").attr("y", 15).text("0");
 
-            // --- No Fights Group ---
+            // --- NEW: No Fights Box & Checkmark ---
             const noFightsG = leg.append("g")
                 .attr("id", "no-fights-group") 
                 .style("opacity", 0.5); 
-                
-            noFightsG.append("circle").attr("r", 4).attr("cx", 5).attr("cy", 60).attr("fill", "#666").attr("stroke","#000");
-            noFightsG.append("text").text(`No "Fight"s`).attr("x", 15).attr("y", 63).style("font-size", "9px").style("fill", "#ccc");
+            
+            // 1. The Grey Box
+            noFightsG.append("rect")
+                .attr("x", 0).attr("y", 55)
+                .attr("width", 12).attr("height", 12)
+                .attr("fill", "#666").attr("stroke", "#000");
+
+            // 2. The White Checkmark (Hidden by default)
+            noFightsG.append("path")
+                .attr("id", "no-fights-check")
+                .attr("d", "M 2 6 L 5 9 L 10 2") // Simple check shape
+                .attr("transform", "translate(1, 56)") // Position inside box
+                .attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 2)
+                .style("display", "none");
+
+            noFightsG.append("text").text(`No "Fight"s`)
+                .attr("x", 18).attr("y", 65)
+                .style("font-size", "9px").style("fill", "#ccc");
             
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
         };
@@ -1272,6 +1281,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
