@@ -936,6 +936,15 @@ function drawTropeDashboard(d) {
             legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
             legG.append("text").text("8").attr("y", 35).attr("x", barWidth).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
 
+            // --- NEW: Trope Indicator (Hidden by default) ---
+            const tropeInd = legG.append("g")
+                .attr("id", "trope-indicator")
+                .attr("class", "legend-indicator")
+                .style("display", "none"); // Hidden initially
+            
+            // Triangle pointing down
+            tropeInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 10)");
+
             const sectionYearY = 55;
             legG.append("text").text("NODE LABELS").attr("y", sectionYearY).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             const sampleG = legG.append("g").attr("transform", `translate(15, ${sectionYearY + 25})`);
@@ -1244,6 +1253,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
