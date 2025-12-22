@@ -669,7 +669,7 @@
                  // CASE 1: No Fights -> Hide triangle, Highlight the "No Fights" legend item
                  fInd.style("display", "none");
                  noFightG.style("opacity", 1);
-                 noFightG.select("circle").attr("stroke", "#fff").attr("stroke-width", 2).attr("fill", "#888");
+                 noFightG.select("circle").attr("stroke", "#fff").attr("stroke-width", 2).attr("fill", "#fff");
                  noFightG.select("text").style("fill", "#fff").style("font-weight", "bold");
             } else {
                 // CASE 2: Has Fights -> Show triangle, Dim the "No Fights" legend item
@@ -1084,8 +1084,8 @@ function drawTropeDashboard(d) {
             const leg = svg.append("g")
                 .attr("transform", `translate(${legX}, 20) scale(${legScale})`);
             
-            // Moved label up slightly to make room for the triangle number
-            leg.append("text").text(`# of "Fight"s`).attr("y", 10).style("font-size","9px").style("fill","#FF4500");
+            // --- MOVED UP: Title at y=0 to make room below it ---
+            leg.append("text").text(`# of "Fight"s`).attr("y", 0).style("font-size","9px").style("fill","#FF4500");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
             grad.append("stop").attr("offset", "0%").style("stop-color", "#8B0000");
@@ -1103,15 +1103,16 @@ function drawTropeDashboard(d) {
                 .attr("class", "legend-indicator")
                 .style("display", "none");
             
-            // Triangle pointing down
+            // Triangle pointing down to the bar (Tip at 25)
             fightInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 25)");
-            // Text moved UP to y= -10 to sit above the bar and clear the title
-            fightInd.append("text").attr("y", -10).text("0");
+            
+            // --- MOVED DOWN: Number at y=15 (Between title and triangle) ---
+            fightInd.append("text").attr("y", 15).text("0");
 
-            // --- No Fights Group (Added ID for selection) ---
+            // --- No Fights Group ---
             const noFightsG = leg.append("g")
-                .attr("id", "no-fights-group") // <--- ADDED ID
-                .style("opacity", 0.5); // Default state
+                .attr("id", "no-fights-group") 
+                .style("opacity", 0.5); 
                 
             noFightsG.append("circle").attr("r", 4).attr("cx", 5).attr("cy", 60).attr("fill", "#666").attr("stroke","#000");
             noFightsG.append("text").text(`No "Fight"s`).attr("x", 15).attr("y", 63).style("font-size", "9px").style("fill", "#ccc");
@@ -1271,6 +1272,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
