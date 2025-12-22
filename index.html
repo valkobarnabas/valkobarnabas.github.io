@@ -810,7 +810,7 @@ function drawTropeDashboard(d) {
                         const a = n1[k]==='Yes'; const b = n2[k]==='Yes';
                         if(a||b) union++; if(a&&b) intersect++; 
                     });
-                    if(union > 0 && (intersect/union) > 0.75) {
+                    if(union > 0 && (intersect/union) > 0.74) {
                         // CHANGED: Added source/target names to object
                         links.push({ 
                             source: n1.school, target: n2.school, 
@@ -1188,6 +1188,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
