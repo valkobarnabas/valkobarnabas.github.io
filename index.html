@@ -511,6 +511,9 @@
                 // Reset Links (Hide them)
                 d3.selectAll(".network-link").style("opacity", 0); 
 
+                // --- FIX 1: Force all Viz 4 images to top on reset ---
+                d3.selectAll("#jaccard-web image").raise();
+
                 d3.selectAll("rect").classed("highlighted", false).classed("dimmed", false).attr("fill", "#444");
                 d3.selectAll(".upset-dot").classed("dimmed", false).style("fill", function() { return d3.select(this).classed("active") ? "#888" : "#333"; });
 
@@ -548,16 +551,19 @@
                 if(!cd || !cd.school) return;
 
                 const circle = d3.select(this);
-                const isViz4 = this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group";
+                const parent = this.parentNode;
+                const grandParent = parent ? parent.parentNode : null;
+
+                // --- FIX 2: Correctly detect Viz 4 structure (Group -> Group -> Circle) ---
+                const isViz4 = grandParent && grandParent.tagName === 'g' && grandParent.getAttribute("class") === "node-group";
                 
                 if (cd.school === schoolName) {
                     // --- SELECTED NODE ---
                     circle.classed("dimmed", false).classed("highlighted", true);
                     
                     if (isViz4) {
-                        // VIZ 4: Raise the group, AND explicitly raise the image inside it
-                        d3.select(this.parentNode).raise();
-                        d3.select(this.parentNode).select("image").raise(); // <--- FIX IS HERE
+                        d3.select(grandParent).raise(); // Bring whole node to front of SVG
+                        d3.select(parent).select("image").raise(); // Bring LOGO to front of Node
                     } else {
                         circle.raise();
                     }
@@ -566,28 +572,18 @@
                     circle.classed("dimmed", false).classed("neighbor", true);
                     
                     if (isViz4) {
-                        d3.select(this.parentNode).raise();
-                        d3.select(this.parentNode).select("image").raise(); // <--- FIX IS HERE
+                        d3.select(grandParent).raise(); 
+                        d3.select(parent).select("image").raise(); // Bring LOGO to front of Node
                     } else {
                         circle.raise();
                     }
                 }
             });
 
-            // Raise Selected Node Group AGAIN to ensure it covers neighbors
-            d3.selectAll(".highlighted").each(function() {
-                if (this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group") {
-                    d3.select(this.parentNode).raise();
-                    d3.select(this.parentNode).select("image").raise(); // <--- FIX IS HERE
-                } else {
-                    d3.select(this).raise();
-                }
-            });
-
-            // Highlight Logo (Viz 1)
+            // 4. Highlight Logo (Viz 1)
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
 
-            // Highlight Origin Bars
+            // 5. Highlight Origin Bars
             d3.selectAll("#upset-origin rect").each(function() {
                 const schools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
                 if (schools.includes(schoolName)) {
@@ -599,7 +595,7 @@
                  d3.select(this.parentNode).selectAll(".upset-dot").classed("dimmed", true);
             });
 
-            // 4. Update Middle Panel
+            // 6. Update Middle Panel
             d3.select("#placeholder-msg").style("display", "none");
             d3.select("#active-content").style("display", "flex");
 
@@ -1194,6 +1190,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
