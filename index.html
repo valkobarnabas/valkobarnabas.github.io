@@ -217,6 +217,18 @@
         .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #ccc; display: flex; align-items: center; gap: 5px; }
         .badge i { color: var(--highlight); }
 
+        /* --- Viz 4 Specific Styles --- */
+            .network-logo {
+                filter: grayscale(100%) drop-shadow(0 0 1px rgba(255,255,255,0.5));
+                transition: all 0.2s;
+                pointer-events: none; /* Let clicks pass through to the circle/group */
+            }
+            
+            /* Ensure the group keeps the image on top */
+            .node-group image {
+                z-index: 999;
+            }
+
         .stats-row { 
                 display: flex; 
                 gap: 20px; 
@@ -485,8 +497,7 @@
             if(e.target === this || e.target.tagName === 'svg') updateSelection(null);
         });
 
-        // --- UPDATE FUNCTION ---
-        function updateSelection(schoolName) {
+       function updateSelection(schoolName) {
             if (!schoolName) {
                 currentIndex = -1; 
                 
@@ -497,9 +508,8 @@
                 d3.selectAll(".logo-dimmed").classed("logo-dimmed", false);
                 d3.selectAll(".logo-highlighted").classed("logo-highlighted", false);
                 
-                // --- CHANGED: Hide Links by default now ---
-                d3.selectAll(".network-link")
-                    .style("opacity", 0); 
+                // Reset Links (Hide them)
+                d3.selectAll(".network-link").style("opacity", 0); 
 
                 d3.selectAll("rect").classed("highlighted", false).classed("dimmed", false).attr("fill", "#444");
                 d3.selectAll(".upset-dot").classed("dimmed", false).style("fill", function() { return d3.select(this).classed("active") ? "#888" : "#333"; });
@@ -510,7 +520,6 @@
                 d3.select("#spotify-panel").html("");
                 
                 drawTropeDashboard(null);
-                
                 if(showTopologyTooltip) showTopologyTooltip(null);
                 return;
             }
@@ -523,50 +532,59 @@
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
             d3.selectAll("rect").classed("dimmed", true).classed("highlighted", false);
 
-            // 2. Identify Neighbors
+            // 2. Identify Neighbors & Handle Links
             const neighbors = [];
-
-            // --- CHANGED: Handle Links (Viz 4) ---
-            // Hide all links first, then only show relevant ones
             d3.selectAll(".network-link")
                 .style("opacity", 0) 
                 .filter(l => l.source === schoolName || l.target === schoolName)
-                .style("opacity", 1) // Show specific links
+                .style("opacity", 1) 
                 .style("stroke", "#aaa") 
                 .each(l => {
                     neighbors.push(l.source === schoolName ? l.target : l.source);
                 });
-            
-            // ... (Rest of the function remains the same: Highlighting Circles, Logos, etc.) ...
-            
+
             // 3. Highlight Circles (Viz 4 & 3)
             d3.selectAll(`circle`).each(function(cd) {
                 if(!cd || !cd.school) return;
-                // ... existing circle highlight logic ...
+
                 const circle = d3.select(this);
                 const isViz4 = this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group";
                 
                 if (cd.school === schoolName) {
+                    // --- SELECTED NODE ---
                     circle.classed("dimmed", false).classed("highlighted", true);
-                    if (isViz4) d3.select(this.parentNode).raise();
-                    else circle.raise();
+                    
+                    if (isViz4) {
+                        // VIZ 4: Raise the group, AND explicitly raise the image inside it
+                        d3.select(this.parentNode).raise();
+                        d3.select(this.parentNode).select("image").raise(); // <--- FIX IS HERE
+                    } else {
+                        circle.raise();
+                    }
                 } else if (neighbors.includes(cd.school)) {
+                    // --- NEIGHBOR NODE ---
                     circle.classed("dimmed", false).classed("neighbor", true);
-                    if (isViz4) d3.select(this.parentNode).raise();
-                    else circle.raise();
+                    
+                    if (isViz4) {
+                        d3.select(this.parentNode).raise();
+                        d3.select(this.parentNode).select("image").raise(); // <--- FIX IS HERE
+                    } else {
+                        circle.raise();
+                    }
                 }
             });
-            
-             // Raise Selected Node AGAIN
-             d3.selectAll(".highlighted").each(function() {
+
+            // Raise Selected Node Group AGAIN to ensure it covers neighbors
+            d3.selectAll(".highlighted").each(function() {
                 if (this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group") {
                     d3.select(this.parentNode).raise();
+                    d3.select(this.parentNode).select("image").raise(); // <--- FIX IS HERE
                 } else {
                     d3.select(this).raise();
                 }
             });
 
-            // Highlight Logo
+            // Highlight Logo (Viz 1)
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
 
             // Highlight Origin Bars
@@ -581,11 +599,10 @@
                  d3.select(this.parentNode).selectAll(".upset-dot").classed("dimmed", true);
             });
 
-            // 4. Middle Strip Info
+            // 4. Update Middle Panel
             d3.select("#placeholder-msg").style("display", "none");
             d3.select("#active-content").style("display", "flex");
 
-            // ... (Rest of function is identical) ...
             d3.select("#si-logo").attr("src", `logos/${getSlug(d.school)}.png`).style("display", "block");
             d3.select("#si-school").text(d.school);
             d3.select("#si-conf").text(`(${d.conference})`);
@@ -850,6 +867,7 @@ function drawTropeDashboard(d) {
             
             circleGroup.append("image")
                 .attr("xlink:href", d => `logos/${getSlug(d.school)}.png`)
+                .attr("class", "network-logo")
                 .attr("x", -radius * 0.7) // Centered
                 .attr("y", -radius * 0.7)
                 .attr("width", radius * 1.4)
@@ -1176,6 +1194,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
