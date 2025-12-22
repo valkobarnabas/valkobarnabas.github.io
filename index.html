@@ -497,10 +497,9 @@
                 d3.selectAll(".logo-dimmed").classed("logo-dimmed", false);
                 d3.selectAll(".logo-highlighted").classed("logo-highlighted", false);
                 
-                // Reset Links (White and opaque)
+                // --- CHANGED: Hide Links by default now ---
                 d3.selectAll(".network-link")
-                    .style("opacity", 0.99)
-                    .style("stroke", "#ffffff");
+                    .style("opacity", 0); 
 
                 d3.selectAll("rect").classed("highlighted", false).classed("dimmed", false).attr("fill", "#444");
                 d3.selectAll(".upset-dot").classed("dimmed", false).style("fill", function() { return d3.select(this).classed("active") ? "#888" : "#333"; });
@@ -527,58 +526,45 @@
             // 2. Identify Neighbors
             const neighbors = [];
 
-            // Handle Links (Viz 4): Dim all, then highlight connected ones in Grey
+            // --- CHANGED: Handle Links (Viz 4) ---
+            // Hide all links first, then only show relevant ones
             d3.selectAll(".network-link")
-                .style("opacity", 0.05) 
-                .style("stroke", "#fff")
+                .style("opacity", 0) 
                 .filter(l => l.source === schoolName || l.target === schoolName)
-                .style("opacity", 1)
-                .style("stroke", "#aaa") // Active lines become Grey
+                .style("opacity", 1) // Show specific links
+                .style("stroke", "#aaa") 
                 .each(l => {
                     neighbors.push(l.source === schoolName ? l.target : l.source);
                 });
-
+            
+            // ... (Rest of the function remains the same: Highlighting Circles, Logos, etc.) ...
+            
             // 3. Highlight Circles (Viz 4 & 3)
             d3.selectAll(`circle`).each(function(cd) {
                 if(!cd || !cd.school) return;
-
+                // ... existing circle highlight logic ...
                 const circle = d3.select(this);
                 const isViz4 = this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group";
                 
                 if (cd.school === schoolName) {
-                    // --- SELECTED NODE ---
                     circle.classed("dimmed", false).classed("highlighted", true);
-                    
-                    if (isViz4) {
-                        // VIZ 4: Raise the whole GROUP (keeps text on top of circle)
-                        d3.select(this.parentNode).raise();
-                    } else {
-                        // VIZ 3: Raise the CIRCLE (no text to worry about)
-                        circle.raise();
-                    }
+                    if (isViz4) d3.select(this.parentNode).raise();
+                    else circle.raise();
                 } else if (neighbors.includes(cd.school)) {
-                    // --- NEIGHBOR NODE ---
                     circle.classed("dimmed", false).classed("neighbor", true);
-                    
-                    // Optional: Raise neighbors slightly so they sit above dimmed nodes
-                    if (isViz4) {
-                        d3.select(this.parentNode).raise();
-                    } else {
-                        circle.raise();
-                    }
+                    if (isViz4) d3.select(this.parentNode).raise();
+                    else circle.raise();
                 }
             });
-
-            // Raise Selected Node AGAIN to ensure it is absolutely on top of neighbors
-            // (This ensures the selected node covers the neighbor nodes if they overlap)
-            d3.selectAll(".highlighted").each(function() {
+            
+             // Raise Selected Node AGAIN
+             d3.selectAll(".highlighted").each(function() {
                 if (this.parentNode.tagName === 'g' && this.parentNode.getAttribute("class") === "node-group") {
                     d3.select(this.parentNode).raise();
                 } else {
                     d3.select(this).raise();
                 }
             });
-
 
             // Highlight Logo
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
@@ -599,6 +585,7 @@
             d3.select("#placeholder-msg").style("display", "none");
             d3.select("#active-content").style("display", "flex");
 
+            // ... (Rest of function is identical) ...
             d3.select("#si-logo").attr("src", `logos/${getSlug(d.school)}.png`).style("display", "block");
             d3.select("#si-school").text(d.school);
             d3.select("#si-conf").text(`(${d.conference})`);
@@ -618,7 +605,6 @@
             }
             
             let badgesHTML = "";
-            
             if(d.official_song === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-check-circle"></i> Official</div>`;
             if(d.student_writer === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-graduation-cap"></i> Student</div>`;
             if(d.contest === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-trophy"></i> Contest</div>`;
@@ -734,7 +720,7 @@ function drawTropeDashboard(d) {
         initViz1();
 
 
-       // --- VIZ 4: Trope Network (Hardcoded 13x5 Grid) ---
+       // --- VIZ 4: Trope Network (Sorted Grid) ---
         const drawViz4 = () => {
             const container = d3.select("#jaccard-web");
             container.html(""); 
@@ -757,61 +743,52 @@ function drawTropeDashboard(d) {
             const h = rect.height;
             
             const svg = chartDiv.append("svg").attr("width", w).attr("height", h).style("overflow", "visible");
-                                    
-            // --- HARDCODED LAYOUT ---
-            const gridLayout = [
-                ["Rutgers", "Pitt", "Illinois", "Syracuse", "Notre Dame", "Alabama", "TCU", "Michigan State", "Kentucky", "Washington State", "Penn State", "Auburn", "Texas"],
-                ["Florida State", "Virginia Tech", "USC", "UCLA", "Ohio State", "California", "Oregon", "LSU", "Louisville", "Baylor", "Arizona State", "Mississippi", "Duke"],
-                ["Utah", "Oklahoma State", "Mississippi State", "Colorado", "South Carolina", "Washington", "Iowa State", "Northwestern", "Texas A&M", "Kansas", "Kansas State", "Texas Tech", "Arkansas"],
-                ["Maryland", "Missouri", "Miami", "Minnesota", "Virginia", "Wisconsin", "Iowa", "Stanford", "Georgia Tech", "Florida", "Oregon State", "Purdue", "Oklahoma"],
-                ["Vanderbilt", "Wake Forest", "Indiana", "North Carolina State", "North Carolina", "Nebraska", "West Virginia", "Arizona", "Georgia", "Clemson", "Michigan", "Tennessee", "Boston College"]
-            ];
+            
+            // --- NEW: Sorting Logic ---
+            // 1. Trope Count (Descending)
+            // 2. Year (Ascending - older first)
+            // 3. Alphabetical
+            let sortedNodes = [...data].sort((a,b) => {
+                if (b.trope_count !== a.trope_count) return b.trope_count - a.trope_count;
+                if (a.year !== b.year) return a.year - b.year; 
+                return a.school.localeCompare(b.school);
+            });
 
-            const cols = 13;
-            const rows = 5;
+            // --- NEW: Dynamic Grid Layout ---
+            const cols = 13; // Keep the same density
+            // Calculate rows needed (Math.ceil)
+            const rows = Math.ceil(sortedNodes.length / cols);
+            
             const cellW = w / cols;
             const cellH = h / rows;
             const radius = Math.min(cellW, cellH) * 0.4; 
 
-            // Create a lookup for positions
-            const posMap = {};
-            gridLayout.forEach((rowArr, rIndex) => {
-                rowArr.forEach((schoolName, cIndex) => {
-                    // key lookup (case-insensitive fallback could be added if needed)
-                    posMap[schoolName] = { r: rIndex, c: cIndex };
-                });
+            // Assign X/Y based on sorted index
+            sortedNodes.forEach((d, i) => {
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                d.x = (col * cellW) + cellW/2;
+                d.y = (row * cellH) + cellH/2;
             });
-
-            // Map data to coordinates
-            // Filter out any data points not in the grid to avoid errors (though your data matches)
-            let nodes = data.filter(d => posMap[d.school]).map(d => {
-                const pos = posMap[d.school];
-                return {
-                    ...d,
-                    x: (pos.c * cellW) + cellW/2,
-                    y: (pos.r * cellH) + cellH/2
-                };
-            });
-
+            
             const nodeMap = {}; 
-            nodes.forEach(d => { nodeMap[d.id] = d; });
+            sortedNodes.forEach(d => { nodeMap[d.id] = d; });
 
             // --- LINKS ---
             const links = [];
             const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
             
             // Standard Jaccard Links
-            for(let i=0; i<nodes.length; i++) {
-                for(let j=i+1; j<nodes.length; j++) {
-                    const n1 = nodes[i];
-                    const n2 = nodes[j];
+            for(let i=0; i<sortedNodes.length; i++) {
+                for(let j=i+1; j<sortedNodes.length; j++) {
+                    const n1 = sortedNodes[i];
+                    const n2 = sortedNodes[j];
                     let union = 0, intersect = 0;
                     t.forEach(k => { 
                         const a = n1[k]==='Yes'; const b = n2[k]==='Yes';
                         if(a||b) union++; if(a&&b) intersect++; 
                     });
                     if(union > 0 && (intersect/union) > 0.74) {
-                        // CHANGED: Added source/target names to object
                         links.push({ 
                             source: n1.school, target: n2.school, 
                             x1: n1.x, y1: n1.y, x2: n2.x, y2: n2.y 
@@ -824,7 +801,6 @@ function drawTropeDashboard(d) {
             const manualLinks = [["Michigan", "Tennessee"], ["Tennessee", "Boston College"], ["Boston College", "Michigan"]];
             manualLinks.forEach(pair => {
                 if(nodeMap[pair[0]] && nodeMap[pair[1]]) {
-                    // CHANGED: Added source/target names here too
                     links.push({ 
                         source: pair[0], target: pair[1],
                         x1: nodeMap[pair[0]].x, y1: nodeMap[pair[0]].y, 
@@ -835,39 +811,51 @@ function drawTropeDashboard(d) {
 
             const g = svg.append("g");
             
+            // --- CHANGED: Links hidden by default (opacity 0) ---
             g.selectAll("line").data(links).enter().append("line")
-                .attr("class", "network-link") // CHANGED: Added class for selection
+                .attr("class", "network-link") 
                 .attr("x1", d => d.x1).attr("y1", d => d.y1)
                 .attr("x2", d => d.x2).attr("y2", d => d.y2)
-                .attr("stroke", "#ffffff").attr("stroke-width", 3).attr("opacity", 0.99);
+                .attr("stroke", "#ffffff").attr("stroke-width", 3).attr("opacity", 0);
             
             // Draw Nodes
-            const nodeG = g.selectAll(".node-group").data(nodes).enter().append("g")
+            const nodeG = g.selectAll(".node-group").data(sortedNodes).enter().append("g")
                 .attr("class", "node-group")
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
                     d3.select(e.currentTarget).raise(); 
-                    d3.select("#tooltip").style("opacity", 1).html(`<b>${d.school}</b><br>Year: ${d.year}`)
+                    // --- CHANGED: Added Trope Count to Tooltip ---
+                    d3.select("#tooltip").style("opacity", 1)
+                        .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 
-            nodeG.append("circle")
+            const circleGroup = nodeG.append("g");
+
+            // 1. The Circle Background (Colored by Tropes)
+            circleGroup.append("circle")
                 .attr("r", radius)
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#fff").attr("stroke-width", 1)
                 .attr("data-school", d => d.school)
-                // If this node is currently selected, highlight it immediately
                 .classed("highlighted", d => d.school === (currentIndex > -1 ? sortedData[currentIndex].school : ""))
                 .classed("dimmed", d => currentIndex > -1 && d.school !== sortedData[currentIndex].school);
 
-            nodeG.append("text")
-                .text(d => d.trope_count)
-                .attr("text-anchor", "middle").attr("dy", ".3em")
-                .style("font-size", (radius * 0.7) + "px") 
-                .style("fill", "#fff").style("font-weight", "bold").style("pointer-events", "none")
-                .style("text-shadow", "0 0 2px black");
+            // 2. --- NEW: Logo Overlay ---
+            // We use clipPath to make the image circular, or just overlay it.
+            // A simple overlay with a slightly smaller dimension often looks cleanest 
+            // without complex clip-paths.
+            
+            circleGroup.append("image")
+                .attr("xlink:href", d => `logos/${getSlug(d.school)}.png`)
+                .attr("x", -radius * 0.7) // Centered
+                .attr("y", -radius * 0.7)
+                .attr("width", radius * 1.4)
+                .attr("height", radius * 1.4)
+                .style("pointer-events", "none") // Let clicks pass to the group/circle
+                .on("error", function() { d3.select(this).style("display", "none"); }); // Hide if missing
 
             // --- LEGEND ---
             const lRect = legendDiv.node().getBoundingClientRect();
@@ -885,24 +873,26 @@ function drawTropeDashboard(d) {
 
             const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
 
-            // Apply baseFS and smallFS instead of fixed "10px" or "9px"
-    legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
-    legG.append("rect").attr("y", 10).attr("width", legW - 30).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
-    legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
-    legG.append("text").text("8").attr("y", 35).attr("x", legW - 30).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
+            legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
+            legG.append("rect").attr("y", 10).attr("width", legW - 30).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
+            legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
+            legG.append("text").text("8").attr("y", 35).attr("x", legW - 30).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
 
             const sectionYearY = 55;
             legG.append("text").text("NODE LABELS").attr("y", sectionYearY).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             const sampleG = legG.append("g").attr("transform", `translate(15, ${sectionYearY + 25})`);
+            // Show Logo concept in legend
             sampleG.append("circle").attr("r", 12).attr("fill", "#004400").attr("stroke", "#fff");
-            sampleG.append("text").text("#").attr("text-anchor", "middle").attr("dy", 3).attr("fill", "#fff").style("font-size", smallFS + "px").style("font-weight","bold");
-            legG.append("text").text("Num. of Tropes").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", smallFS + "px");
+            // Add a generic "Logo" text or icon to represent the logo
+            sampleG.append("text").text("LOGO").attr("text-anchor","middle").attr("dy",3).attr("fill","#fff").style("font-size","6px");
+            
+            legG.append("text").text("School Logo").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", smallFS + "px");
 
             const sectionConnY = 105;
             legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             
             const exG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
-            exG.append("line").attr("x1", 20).attr("y1", 0).attr("x2", 60).attr("y2", 0).attr("stroke", "#fff").attr("stroke-width", 2).attr("opacity", 0.6);
+            exG.append("line").attr("x1", 20).attr("y1", 0).attr("x2", 60).attr("y2", 0).attr("stroke", "#aaa").attr("stroke-width", 2);
             exG.append("circle").attr("cx", 20).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
             exG.append("circle").attr("cx", 60).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
             
@@ -912,13 +902,11 @@ function drawTropeDashboard(d) {
                 .attr("width", legW - 10)
                 .attr("height", 100)
                 .append("xhtml:div")
-                // 2. Add explicit "+ 'px'" unit
                 .style("font-size", smallFS + "px") 
                 .style("color", "#ccc")
                 .style("line-height", "1.2")
-                // 3. Ensure the div fills the foreignObject width to force wrapping
                 .style("width", "100%") 
-                .html("Lines connect schools with ≥75% trope similarity by Jaccard Index.");
+                .html("Click a node to reveal Jaccard connections (≥75% similarity).");
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
             legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
@@ -1188,6 +1176,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
