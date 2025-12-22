@@ -530,6 +530,13 @@
                 drawTropeDashboard(null);
                 if(showTopologyTooltip) showTopologyTooltip(null);
                 d3.selectAll(".legend-indicator").style("display", "none");
+
+                // Reset "No Fights" legend style
+                const nf = d3.select("#no-fights-group");
+                nf.style("opacity", 0.5);
+                nf.select("circle").attr("stroke", "#000").attr("stroke-width", 1).attr("fill", "#666");
+                nf.select("text").style("fill", "#ccc").style("font-weight", "normal");
+                
                 return;
             }
 
@@ -639,38 +646,43 @@
             drawTropeDashboard(d);
             if(showTopologyTooltip) showTopologyTooltip(d);
            // 7. Update Legend Indicators
-            // A. Trope Indicator (0 to 8 range)
+            // A. Trope Indicator
             const tInd = d3.select("#trope-indicator");
             if (tInd.node()) {
                 tInd.style("display", "block");
                 const lRect = d3.select("#jaccard-web svg").node() ? d3.select("#jaccard-web svg").node().getBoundingClientRect() : null;
-                // If the chart isn't rendered yet, skip. Otherwise calculate scale.
                 if(lRect) {
-                    // Re-calculate the width used in drawViz4
                     const legDivW = d3.select("#jaccard-web > div:nth-child(2)").node().getBoundingClientRect().width;
                     const barWidth = legDivW - 30;
                     const scale = d3.scaleLinear().domain([0, 8]).range([0, barWidth]);
                     const xPos = scale(d.trope_count);
-                    
                     tInd.attr("transform", `translate(${xPos}, 0)`);
                     tInd.select("text").text(d.trope_count);
                 }
             }
 
-            // B. Fight Indicator (1 to 10 range)
+            // B. Fight Indicator (Logic Updated)
             const fInd = d3.select("#fight-indicator");
-            if (fInd.node()) {
-                if (d.number_fights === 0) {
-                     // Hide indicator if 0 (since it's the grey dot, not the bar)
-                     fInd.style("display", "none");
-                } else {
-                    fInd.style("display", "block");
-                    // Hardcoded width from drawViz3 is 70px
-                    const scale = d3.scaleLinear().domain([1, 10]).range([0, 70]).clamp(true);
-                    const xPos = scale(d.number_fights);
-                    
-                    fInd.attr("transform", `translate(${xPos}, 0)`);
-                    fInd.select("text").text(d.number_fights);
+            const noFightG = d3.select("#no-fights-group");
+            
+            if (d.number_fights === 0) {
+                 // CASE 1: No Fights -> Hide triangle, Highlight the "No Fights" legend item
+                 fInd.style("display", "none");
+                 noFightG.style("opacity", 1);
+                 noFightG.select("circle").attr("stroke", "#fff").attr("stroke-width", 2).attr("fill", "#888");
+                 noFightG.select("text").style("fill", "#fff").style("font-weight", "bold");
+            } else {
+                // CASE 2: Has Fights -> Show triangle, Dim the "No Fights" legend item
+                noFightG.style("opacity", 0.5);
+                noFightG.select("circle").attr("stroke", "#000").attr("stroke-width", 1).attr("fill", "#666");
+                noFightG.select("text").style("fill", "#ccc").style("font-weight", "normal");
+
+                fInd.style("display", "block");
+                const scale = d3.scaleLinear().domain([1, 10]).range([0, 70]).clamp(true);
+                const xPos = scale(d.number_fights);
+                
+                fInd.attr("transform", `translate(${xPos}, 0)`);
+                fInd.select("text").text(d.number_fights);
                 }
             }
         }
@@ -1071,7 +1083,9 @@ function drawTropeDashboard(d) {
 
             const leg = svg.append("g")
                 .attr("transform", `translate(${legX}, 20) scale(${legScale})`);
-            leg.append("text").text(`# of "Fight"s`).attr("y", 15).style("font-size","9px").style("fill","#FF4500");
+            
+            // Moved label up slightly to make room for the triangle number
+            leg.append("text").text(`# of "Fight"s`).attr("y", 10).style("font-size","9px").style("fill","#FF4500");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
             grad.append("stop").attr("offset", "0%").style("stop-color", "#8B0000");
@@ -1083,20 +1097,24 @@ function drawTropeDashboard(d) {
             leg.append("text").text("5").attr("y", 45).attr("x", 32);
             leg.append("text").text("10+").attr("y", 45).attr("x", 65);
 
-            // --- NEW: Fight Indicator (Hidden by default) ---
+            // --- Fight Indicator ---
             const fightInd = leg.append("g")
                 .attr("id", "fight-indicator")
                 .attr("class", "legend-indicator")
                 .style("display", "none");
             
-            // Triangle
+            // Triangle pointing down
             fightInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 25)");
-            // Text
-            fightInd.append("text").attr("y", 17).text("0");
+            // Text moved UP to y= -10 to sit above the bar and clear the title
+            fightInd.append("text").attr("y", -10).text("0");
 
-            // Add Grey Dot Legend
-            leg.append("circle").attr("r", 4).attr("cx", 5).attr("cy", 60).attr("fill", "#666").attr("stroke","#000");
-            leg.append("text").text(`No "Fight"s`).attr("x", 15).attr("y", 63).style("font-size", "9px").style("fill", "#ccc");
+            // --- No Fights Group (Added ID for selection) ---
+            const noFightsG = leg.append("g")
+                .attr("id", "no-fights-group") // <--- ADDED ID
+                .style("opacity", 0.5); // Default state
+                
+            noFightsG.append("circle").attr("r", 4).attr("cx", 5).attr("cy", 60).attr("fill", "#666").attr("stroke","#000");
+            noFightsG.append("text").text(`No "Fight"s`).attr("x", 15).attr("y", 63).style("font-size", "9px").style("fill", "#ccc");
             
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
         };
@@ -1253,6 +1271,7 @@ document.addEventListener('keydown', (event) => {
 </script>
 </body>
 </html>
+
 
 
 
