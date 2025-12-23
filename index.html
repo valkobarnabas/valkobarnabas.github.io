@@ -344,7 +344,7 @@
 <body>
 
     <div id="viz1" class="viz-container">
-        <h3>Tropes <span style="font-size:0.7em; color:#666;">Cliché make-up</span></h3>
+        <h3>Trope-o-meter <span style="font-size:0.7em; color:#666;">Cliché make-up</span></h3>
         <div class="chart-area" id="lyrical-panel" style="display:flex; height: 100%;">
             <div id="logo-grid" style="flex: 0 0 55%; overflow: hidden; padding-right: 10px;"></div>
             <div id="trope-dashboard" style="flex: 1; border-left: 1px solid #333; padding-left: 10px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
@@ -392,7 +392,7 @@
     </div>
 
     <div id="viz3" class="viz-container">
-        <h3>Tune Topology <span style="font-size:0.7em; color:#666;">Tempo & Duration</span></h3>
+        <h3>Song Topology <span style="font-size:0.7em; color:#666;">Tempo & Duration</span></h3>
         <div class="chart-area" id="topology-map"></div>
     </div>
 
@@ -933,7 +933,7 @@ function drawTropeDashboard(d) {
             } else {
                 // *** DEFAULT GRID MODE: STRICT FITTING ***
                 
-                const specialSchools = ["Wake Forest", "Stanford", "Florida", "Georgia Tech", "Rutgers", "Virginia", "Northwestern", "Washington", "Maryland"];
+                const specialSchools = ["Wake Forest", "Stanford", "Florida", "Georgia Tech", "Rutgers", "Virginia", "Northwestern", "Washington", "Maryland", "Ohio State", "Miami", "Indiana"];
                 const superSpecial = ["South Carolina"];
 
                 nodeG.append("text")
@@ -1055,7 +1055,7 @@ function drawTropeDashboard(d) {
                 .style("color", "#ccc")
                 .style("line-height", "1.2")
                 .style("width", "100%") 
-                .html("Click a node to reveal connections (≥75% trope similarity).");
+                .html("Click a node to reveal connections to songs with ≥75% trope similarity.");
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
             legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
@@ -1324,6 +1324,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
