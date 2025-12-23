@@ -1126,7 +1126,7 @@ function drawTropeDashboard(d) {
             const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
             
             g.append("text").attr("x", barAreaWidth - 10).attr("y", -10).attr("text-anchor", "end")
-             .style("fill", "#888").style("font-size", "10px").text("Number of Songs");
+             .style("fill", "#888").style("font-size", "10px").text("Number of Songs (65)");
 
             const headerG = svg.append("g").attr("transform", `translate(${margin.left + barAreaWidth}, ${margin.top - 10})`);
             const colW = matrixWidth / meta.length;
@@ -1246,3 +1246,4 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
