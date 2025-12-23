@@ -790,11 +790,10 @@ function drawTropeDashboard(d) {
                     }
                 }
             }
-            // Manual overrides for visual completeness (Hardcode as 100% for visual weight if desired, or calculated)
+            // Manual overrides 
             [["Michigan", "Tennessee"], ["Tennessee", "Boston College"], ["Boston College", "Michigan"]].forEach(pair => {
-                // Check if link exists
                 if(!links.find(l => (l.source===pair[0] && l.target===pair[1]) || (l.source===pair[1] && l.target===pair[0]))) {
-                    links.push({ source: pair[0], target: pair[1], similarity: 1.0 }); // Hardcoded high similarity
+                    links.push({ source: pair[0], target: pair[1], similarity: 1.0 }); 
                 }
             });
 
@@ -824,11 +823,10 @@ function drawTropeDashboard(d) {
                 
                 const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
                 
-                // --- NO NEIGHBORS LOGIC (UPDATED) ---
+                // --- NO NEIGHBORS LOGIC ---
                 if(neighborNodes.length === 0) {
                     g.append("text")
                         .attr("x", w/2)
-                        // Center Y + Center Radius (3r) + Padding (25)
                         .attr("y", h/2 + (r*3) + 25) 
                         .attr("text-anchor", "middle")
                         .style("fill", "#888")
@@ -876,7 +874,6 @@ function drawTropeDashboard(d) {
                     .attr("x1", d => d.x1).attr("y1", d => d.y1)
                     .attr("x2", d => d.x2).attr("y2", d => d.y2)
                     .attr("stroke", "#ffffff")
-                    // BOLD IF 100% (approx 0.99 for float safety)
                     .attr("stroke-width", d => d.similarity >= 0.99 ? 4 : 1)
                     .attr("opacity", d => d.similarity >= 0.99 ? 1 : 0.6);
             }
@@ -889,7 +886,7 @@ function drawTropeDashboard(d) {
                 .on("mouseover", (e, d) => {
                     d3.select(e.currentTarget).raise(); 
                     d3.select("#tooltip").style("opacity", 1)
-                        .html(`<b>${d.school}</b><br>Tropes: ${d.trope_count}<br>Year: ${d.year}`)
+                        .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
@@ -899,14 +896,37 @@ function drawTropeDashboard(d) {
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#000").attr("stroke-width", 1) 
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
-                
-            // --- TEXT LABELS ---
+
+            // --- PERCENTAGE LABELS (NEW) ---
             if (focusNode) {
-                // 1. CENTER NODE (WITH QUOTES)
+                 nodeG.filter(d => d.school !== focusNode.school)
+                    .append("text")
+                    .attr("text-anchor", "middle")
+                    .attr("dy", "0.35em") // Vertically center
+                    .style("pointer-events", "none") // Let clicks pass through
+                    .style("fill", "#fff")
+                    .style("font-weight", "bold")
+                    .style("font-size", (r * 0.65) + "px") // Scaled to fit in circle
+                    // Black outline for contrast against any node color
+                    .style("stroke", "#000")
+                    .style("stroke-width", "2px")
+                    .style("paint-order", "stroke")
+                    .text(d => {
+                        const link = renderLinks.find(l => 
+                            (l.source === focusNode.school && l.target === d.school) || 
+                            (l.target === focusNode.school && l.source === d.school)
+                        );
+                        return link ? Math.round(link.similarity * 100) : "";
+                    });
+            }
+                
+            // --- TEXT LABELS (SONG NAMES) ---
+            if (focusNode) {
+                // 1. CENTER NODE
                 const centerG = nodeG.filter(d => d.school === focusNode.school);
                 
                 centerG.append("text")
-                    .text(d => `"${d.song_name}"`) // Added Quotes
+                    .text(d => `"${d.song_name}"`) 
                     .attr("text-anchor", "middle")
                     .attr("dy", "0.35em") 
                     .style("fill", "#fff")
@@ -914,7 +934,7 @@ function drawTropeDashboard(d) {
                     .style("font-weight", "800")
                     .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); 
 
-                // 2. NEIGHBORS (WITH QUOTES & DIRECTIONAL LOGIC)
+                // 2. NEIGHBORS (DIRECTIONAL LOGIC)
                 nodeG.filter(d => d.school !== focusNode.school)
                     .append("text")
                     .text(d => `"${d.song_name}"`)
@@ -926,41 +946,29 @@ function drawTropeDashboard(d) {
                         const cy = h/2;
                         const cx = w/2;
                         
-                        // --- Directional Booleans ---
                         const isVertical = Math.abs(d.x - cx) < 10;
                         const isHorizontal = Math.abs(d.y - cy) < 10;
                         const isLeft = d.x < cx;
                         const isRight = d.x > cx;
                         const isAbove = d.y < cy;
                         
-                        // --- 1. Horizontal Positioning (Anchor & X) ---
                         if (isVertical) {
                             sel.attr("text-anchor", "middle").attr("x", 0);
                         } else if (isLeft) {
-                            // Left Node -> Flush Right (end) -> Anchor at Left Outer Edge
                             sel.attr("text-anchor", "end").attr("x", r + 4);
                         } else {
-                            // Right Node -> Flush Left (start) -> Anchor at Right Outer Edge
                             sel.attr("text-anchor", "start").attr("x", -r - 4);
                         }
 
-                        // --- 2. Vertical Positioning (Y & Baseline) ---
                         let goUp = false;
-                        
-                        // Rule: Horizontal Left -> Up
                         if (isHorizontal && isLeft) goUp = true;
-                        // Rule: Horizontal Right -> Down
                         else if (isHorizontal && isRight) goUp = false;
-                        // Rule: General Above -> Up
                         else if (isAbove) goUp = true;
-                        // Rule: General Below -> Down
                         else goUp = false;
 
                         if (goUp) {
-                            // Position ABOVE node (baseline at -r-5)
                             sel.attr("y", -r - 5).attr("dominant-baseline", "auto"); 
                         } else {
-                            // Position BELOW node (hanging from r+5)
                             sel.attr("y", r + 5).attr("dominant-baseline", "hanging");
                         }
                     });
@@ -1328,6 +1336,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
