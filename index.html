@@ -1163,7 +1163,13 @@ function drawTropeDashboard(d) {
                      if(showTopologyTooltip) showTopologyTooltip(d);
                 })
                 .on("mouseout", () => {
-                     if(showTopologyTooltip) showTopologyTooltip(null);
+                     // If a school is selected (currentIndex is valid), revert tooltip to that school
+                     if (currentIndex > -1 && sortedData[currentIndex]) {
+                         showTopologyTooltip(sortedData[currentIndex]);
+                     } else {
+                         // Otherwise, hide the tooltip completely
+                         if(showTopologyTooltip) showTopologyTooltip(null);
+                     }
                 })
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
 
@@ -1378,6 +1384,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
