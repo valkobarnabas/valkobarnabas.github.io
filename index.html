@@ -270,7 +270,7 @@
         }
         
         .logo-dimmed { opacity: 0.3; filter: grayscale(100%); } 
-        .logo-highlighted { filter: drop-shadow(0 0 8px var(--highlight)); transform: scale(1.1); opacity: 1; z-index: 10; }
+        .logo-highlighted { filter: drop-shadow(0 0 8px var(--accent)); transform: scale(1.1); opacity: 1; z-index: 10; }
 
         /* Rect Highlight */
         rect { transition: fill 0.2s; }
@@ -811,7 +811,6 @@ function drawTropeDashboard(d) {
                 });
                 
                 renderNodes = sortedNodes.filter(n => n.school === focusNode.school || neighbors.includes(n.school));
-                // Only keep links connected to center
                 renderLinks = links.filter(l => (l.source === focusNode.school && neighbors.includes(l.target)) || (l.target === focusNode.school && neighbors.includes(l.source)));
                 
                 // Base radius
@@ -824,26 +823,17 @@ function drawTropeDashboard(d) {
                 
                 const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
                 
-                // --- NO NEIGHBORS LOGIC ---
+                // --- NO NEIGHBORS LOGIC (UPDATED) ---
                 if(neighborNodes.length === 0) {
-                    // Draw the "No Match" indicator
-                    const noMatchG = g.append("g").attr("transform", `translate(${w/2 + (r*3) + 20}, ${h/2})`);
-                    
-                    noMatchG.append("line")
-                        .attr("x1", 0).attr("y1", 0)
-                        .attr("x2", 40).attr("y2", 0)
-                        .attr("stroke", "#666").attr("stroke-width", 2).attr("stroke-dasharray", "4,4");
-                    
-                    noMatchG.append("text")
-                        .attr("x", 45).attr("y", 0).attr("dy", "0.35em")
-                        .style("fill", "#888").style("font-size", "12px").style("font-style", "italic")
-                        .text("No songs with ≥ 75% trope similarity");
-                    
-                    noMatchG.append("text")
-                        .attr("x", 20).attr("y", -8)
+                    g.append("text")
+                        .attr("x", w/2)
+                        // Center Y + Center Radius (3r) + Padding (25)
+                        .attr("y", h/2 + (r*3) + 25) 
                         .attr("text-anchor", "middle")
-                        .style("fill", "#ff0000").style("font-size", "14px").style("font-weight", "bold")
-                        .text("×");
+                        .style("fill", "#888")
+                        .style("font-size", "12px")
+                        .style("font-style", "italic")
+                        .text("No songs with ≥ 75% trope similarity");
                 }
 
                 const circleRadius = Math.min(w, h) * 0.35;
@@ -1337,6 +1327,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
