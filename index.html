@@ -234,14 +234,14 @@
         .node circle { stroke: #fff; stroke-width: 1px; cursor: pointer; transition: all 0.2s; }
         
         /* Highlight States */
-        /* 1. Standard Dim (Used in Grid/Viz1) - Dark and Faint */
+        /* 1. Standard Dim */
         .dimmed { 
             fill: #222 !important; 
             opacity: 0.3 !important; 
             stroke: #333 !important; 
         }
         
-        /* 2. Soft Dim (Used in Topology/Viz3) - Keeps color, just lowers opacity */
+        /* 2. Soft Dim */
         .dimmed-soft {
             opacity: 0.3 !important;
             stroke: none !important;
@@ -264,7 +264,7 @@
             filter: drop-shadow(0 0 8px var(--accent)) !important;
         }
         
-        /* --- FIX: Black outline for highlighted nodes in Viz 4 to match white text --- */
+        /* --- FIX: Black outline for highlighted nodes in Viz 4 --- */
         .node-group circle.highlighted {
             stroke: #000 !important;
         }
@@ -493,7 +493,7 @@
         });
 
        function updateSelection(schoolName) {
-            // FORCE TOOLTIP HIDE ON UPDATE
+            // FIX: Always hide tooltip on new selection to prevent "sticking"
             d3.select("#tooltip").style("opacity", 0);
 
             if (!schoolName) {
@@ -630,18 +630,17 @@
             // --- VIZ 4 UPDATE: Radial Layout ---
             drawViz4(d);
 
-            // --- VIZ 4 LEGEND INDICATOR (MUST BE CALLED AFTER DRAWVIZ4 REBUILDS THE DOM) ---
+            // --- VIZ 4 LEGEND INDICATOR (MUST BE CALLED AFTER DRAWVIZ4) ---
              const tInd = d3.select("#trope-indicator");
             if (tInd.node()) {
                 tInd.style("display", "block");
-                // The Legend SVG width is roughly 20% of the container, but we used relative calcs.
-                // We need to match the scale used inside drawViz4.
-                // Re-selecting the exact bar width is hard without scope, but we know logic:
                 const legDivW = d3.select("#jaccard-web > div:nth-child(2)").node().getBoundingClientRect().width;
                 const barWidth = legDivW - 30;
                 const scale = d3.scaleLinear().domain([0, 8]).range([0, barWidth]);
                 const xPos = scale(d.trope_count);
-                tInd.attr("transform", `translate(${xPos}, 25)`); // 25 is barY
+                
+                // CORRECT: Translate GROUP to xPos, 0. Path inside handles Y.
+                tInd.attr("transform", `translate(${xPos}, 0)`); 
                 tInd.select("text").text(d.trope_count);
             }
         }
@@ -736,7 +735,7 @@ function drawTropeDashboard(d) {
 
        // --- VIZ 4: Trope Network ---
         drawViz4 = (focusNode) => {
-            // FIX: RESET CENTER FLAGS ON EVERY DRAW so resetting works
+            // FIX: RESET CENTER FLAGS
             data.forEach(n => n.isCenter = false);
 
             const container = d3.select("#jaccard-web");
@@ -813,7 +812,7 @@ function drawTropeDashboard(d) {
                 const centerNode = renderNodes.find(n => n.school === focusNode.school);
                 centerNode.x = w/2; 
                 centerNode.y = h/2;
-                centerNode.isCenter = true; // Flag for center node
+                centerNode.isCenter = true; 
                 
                 const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
                 const circleRadius = Math.min(w, h) * 0.35;
@@ -862,6 +861,7 @@ function drawTropeDashboard(d) {
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
+                    // FIX: Allow tooltip but ensure we raise
                     d3.select(e.currentTarget).raise(); 
                     d3.select("#tooltip").style("opacity", 1)
                         .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
@@ -903,20 +903,27 @@ function drawTropeDashboard(d) {
 
             } else {
                 // *** DEFAULT GRID MODE: STRICT FITTING ***
-                // Fit text inside circle of radius r
                 
+                // Specific schools needing 4 lines
+                const specialSchools = ["Wake Forest", "Stanford", "Florida", "Georgia Tech", "South Carolina", "Rutgers", "Virginia"];
+
                 nodeG.append("text")
-                    .style("font-size", (r * 0.4) + "px") // Base font size
+                    .style("font-size", d => {
+                        // Smaller font for special schools
+                        return (specialSchools.includes(d.school) ? r * 0.3 : r * 0.4) + "px";
+                    })
                     .style("fill", "#fff")
                     .style("text-anchor", "middle")
                     .style("pointer-events", "none")
                     .style("text-shadow", "0 0 2px #000")
                     .each(function(d) {
                         const words = d.song_name.split(/\s+/);
-                        const maxLines = 3; 
+                        const isSpecial = specialSchools.includes(d.school);
+                        const maxLines = isSpecial ? 4 : 3; 
                         
                         // Approximation: char width ~ font-size * 0.6
-                        const charW = (r * 0.4) * 0.6; 
+                        const fontSize = isSpecial ? r * 0.3 : r * 0.4;
+                        const charW = fontSize * 0.6; 
                         
                         let lines = [];
                         let currentLine = [];
@@ -932,7 +939,7 @@ function drawTropeDashboard(d) {
                         }
                         if(currentLine.length > 0) lines.push(currentLine.join(" "));
                         
-                        // Truncate to 3 lines
+                        // Truncate
                         if(lines.length > maxLines) {
                             lines = lines.slice(0, maxLines);
                         }
@@ -965,7 +972,8 @@ function drawTropeDashboard(d) {
             legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             
             const barWidth = legW - 30;
-            const barY = 25; 
+            // Increased barY to 35 to allow space for triangle text above
+            const barY = 35; 
             
             legG.append("rect").attr("y", barY).attr("width", barWidth).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
             legG.append("text").text("0").attr("y", barY + 25).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
@@ -977,12 +985,14 @@ function drawTropeDashboard(d) {
                 .attr("class", "legend-indicator")
                 .style("display", "none"); 
             
+            // Triangle points DOWN to barY
             tropeInd.append("path")
-                .attr("d", "M -4 -6 L 4 -6 L 0 0 Z") 
-                .attr("transform", `translate(0, ${barY})`); 
+                .attr("d", "M -4 -6 L 4 -6 L 0 0 Z") // Tip at 0,0
+                .attr("transform", `translate(0, ${barY})`); // Tip touches 35
             
+            // Text above the triangle
             tropeInd.append("text")
-                .attr("y", barY - 8) 
+                .attr("y", barY - 8) // ~27
                 .text("0");
 
             const sectionConnY = 80; 
