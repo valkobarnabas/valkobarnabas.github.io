@@ -686,7 +686,6 @@
         
         keys.forEach(key => {
             const totalCount = data.filter(r => r[key] === 'Yes').length;
-            // --- NEW: Calculate Percentage ---
             const percent = ((totalCount / data.length) * 100).toFixed(1);
 
             const hasTrope = d ? (d[key] === 'Yes') : false;
@@ -698,30 +697,46 @@
                 .style("cursor", "pointer") 
                 // --- MOUSEOVER ---
                 .on("mouseover", (e) => {
-                    // 1. Tooltip (Updated with Percentage)
+                    // 1. Tooltip
                     d3.select("#tooltip")
                         .style("opacity", 1)
-                        .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:#00f2ff">${totalCount}</span> schools have this trope <span style="color:#00f2ff">(${percent}%)</span>.`)
+                        .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:#00f2ff">${totalCount} (${percent}%)</span> schools have this trope.`)
                         .style("left", (e.pageX + 10) + "px")
                         .style("top", (e.pageY - 10) + "px");
 
-                    // 2. GLOW EFFECT ON GRID LOGOS
-                    const matchingSchools = data.filter(r => r[key] === 'Yes').map(r => r.school);
+                    // 2. LOGO HIGHLIGHT/DIM LOGIC
+                    // Only run if NO school is selected (!d)
+                    if (!d) {
+                        const matchingSchools = data.filter(r => r[key] === 'Yes').map(r => r.school);
 
-                    d3.selectAll(".school-logo")
-                        .filter(function() {
-                            return matchingSchools.includes(d3.select(this).attr("data-school"));
-                        })
-                        .style("filter", "drop-shadow(0 0 6px #00f2ff) grayscale(0%)")
-                        .style("opacity", 1);
+                        d3.selectAll(".school-logo")
+                            .style("transition", "opacity 0.2s, filter 0.2s") // Smooth transition
+                            .each(function() {
+                                const school = d3.select(this).attr("data-school");
+                                const isMatch = matchingSchools.includes(school);
+
+                                if (isMatch) {
+                                    // Highlight Match
+                                    d3.select(this)
+                                        .style("opacity", 1)
+                                        .style("filter", "drop-shadow(0 0 6px #00f2ff) grayscale(0%)");
+                                } else {
+                                    // Dim Non-Match
+                                    d3.select(this)
+                                        .style("opacity", 0.2)
+                                        .style("filter", "grayscale(100%)");
+                                }
+                            });
+                    }
                 })
                 // --- MOUSEOUT ---
                 .on("mouseout", () => {
                     d3.select("#tooltip").style("opacity", 0);
 
+                    // Revert all styles to null so CSS classes take over
                     d3.selectAll(".school-logo")
-                        .style("filter", null)
-                        .style("opacity", null);
+                        .style("opacity", null)
+                        .style("filter", null);
                 });
 
             cell.append("div")
@@ -1352,28 +1367,47 @@
                     .attr("y", centerY - 8).attr("width", barScale(d.count)).attr("height", 16)
                     .attr("fill", "#444") 
                     .attr("data-schools", JSON.stringify(d.schools))
-                    // --- UPDATED MOUSEOVER ---
+                    // --- MOUSEOVER ---
                     .on("mouseover", function(e) { 
+                         // Bar highlight
                          if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
+                         
                          const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
                          tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
                                 .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                         
-                         // GLOW EFFECT
-                         d3.selectAll(".school-logo")
-                            .filter(function() { return d.schools.includes(d3.select(this).attr("data-school")); })
-                            .style("filter", "drop-shadow(0 0 6px #00f2ff) grayscale(0%)")
-                            .style("opacity", 1);
+                         // LOGO HIGHLIGHT/DIM LOGIC
+                         // Only run if global selection is empty (default mode)
+                         if (currentIndex === -1) {
+                             d3.selectAll(".school-logo")
+                                .style("transition", "opacity 0.2s, filter 0.2s")
+                                .each(function() {
+                                    const school = d3.select(this).attr("data-school");
+                                    const isMatch = d.schools.includes(school);
+
+                                    if (isMatch) {
+                                        // Highlight Match
+                                        d3.select(this)
+                                            .style("opacity", 1)
+                                            .style("filter", "drop-shadow(0 0 6px #00f2ff) grayscale(0%)");
+                                    } else {
+                                        // Dim Non-Match
+                                        d3.select(this)
+                                            .style("opacity", 0.2)
+                                            .style("filter", "grayscale(100%)");
+                                    }
+                                });
+                         }
                     })
-                    // --- UPDATED MOUSEOUT ---
+                    // --- MOUSEOUT ---
                     .on("mouseout", function() { 
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
                         tooltip.style("opacity", 0);
 
-                        // REMOVE GLOW
+                        // REVERT ALL LOGOS
                         d3.selectAll(".school-logo")
-                            .style("filter", null)
-                            .style("opacity", null);
+                            .style("opacity", null)
+                            .style("filter", null);
                     })
                     .on("click", (e) => {
                         e.stopPropagation();
@@ -1444,6 +1478,7 @@
 </script>
 </body>
 </html>
+
 
 
 
