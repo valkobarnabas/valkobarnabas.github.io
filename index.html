@@ -702,34 +702,46 @@ function drawTropeDashboard(d) {
 
     
         // --- VIZ 1: Grid (11x6) ---
-        function initViz1() {
-            const gridDiv = d3.select("#logo-grid");
-            gridDiv.html("");
+            function initViz1() {
+                const gridDiv = d3.select("#logo-grid");
+                gridDiv.html("");
+                
+                const container = gridDiv.append("div")
+                    .style("display", "grid")
+                    .style("grid-template-columns", "repeat(11, 1fr)")
+                    .style("grid-template-rows", "repeat(6, 1fr)")
+                    .style("width", "100%")
+                    .style("height", "100%")
+                    .style("gap", "2px");
             
-            const container = gridDiv.append("div")
-                .style("display", "grid")
-                .style("grid-template-columns", "repeat(11, 1fr)")
-                .style("grid-template-rows", "repeat(6, 1fr)")
-                .style("width", "100%")
-                .style("height", "100%")
-                .style("gap", "2px");
-
-            const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
-
-            container.selectAll("div")
-                .data(sortedData)
-                .enter().append("div")
-                .style("display", "flex").style("align-items", "center").style("justify-content", "center")
-                .append("img")
-                .attr("src", d => `logos/${getSlug(d.school)}.png`)
-                .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
-                .attr("class", "school-logo")
-                .attr("data-school", d => d.school)
-                .attr("title", d => d.school)
-                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
-                .on("error", function() { this.style.display='none'; });
-            drawTropeDashboard(null);
-        }
+                const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
+            
+                container.selectAll("div")
+                    .data(sortedData)
+                    .enter().append("div")
+                    .style("display", "flex").style("align-items", "center").style("justify-content", "center")
+                    .append("img")
+                    .attr("src", d => `logos/${getSlug(d.school)}.png`)
+                    .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
+                    .attr("class", "school-logo")
+                    .attr("data-school", d => d.school)
+                    // REMOVED: .attr("title", d => d.school) 
+                    // ADDED: Custom Tooltip Events
+                    .on("mouseover", function(e, d) {
+                        d3.select("#tooltip")
+                            .style("opacity", 1)
+                            .html(`<b>${d.school}</b>`)
+                            .style("left", (e.pageX + 10) + "px")
+                            .style("top", (e.pageY - 10) + "px");
+                    })
+                    .on("mouseout", function() {
+                        d3.select("#tooltip").style("opacity", 0);
+                    })
+                    .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
+                    .on("error", function() { this.style.display='none'; });
+                    
+                drawTropeDashboard(null);
+            }
         
         initViz1();
 
@@ -1363,6 +1375,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
