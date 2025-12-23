@@ -889,7 +889,7 @@ function drawTropeDashboard(d) {
                 .on("mouseover", (e, d) => {
                     d3.select(e.currentTarget).raise(); 
                     d3.select("#tooltip").style("opacity", 1)
-                        .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
+                        .html(`<b>${d.school}</b><br>Tropes: ${d.trope_count}<br>Year: ${d.year}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
@@ -1328,6 +1328,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
