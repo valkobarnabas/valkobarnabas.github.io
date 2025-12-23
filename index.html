@@ -475,6 +475,9 @@
         data = data.filter(d => d.school && d.school.trim() !== "");
         data.forEach(d => {
             for(let key in d) { if(typeof d[key] === 'string') d[key] = d[key].trim(); }
+            if (d.school === "South Carolina") {
+                d.song_name = "The Fighting Gamecocks Lead the Way";
+            }
             d.bpm = +d.bpm;
             d.sec_duration = +d.sec_duration;
             d.number_fights = +d.number_fights;
@@ -1386,6 +1389,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
