@@ -1036,71 +1036,7 @@ function drawTropeDashboard(d) {
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
             legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
-        };
             }
-
-            // --- LEGEND ---
-            const lRect = legendDiv.node().getBoundingClientRect();
-            const legW = lRect.width;
-            const legH = lRect.height;
-            const legSvg = legendDiv.append("svg").attr("width", legW).attr("height", legH);
-            const baseFS = Math.max(9, Math.min(13, legW / 10)); 
-            const smallFS = Math.max(8, Math.min(11, legW / 12));
-            const defs = legSvg.append("defs");
-            const linearGradient = defs.append("linearGradient").attr("id", "trope-gradient");
-            linearGradient.append("stop").attr("offset", "0%").attr("stop-color", "#000055");
-            linearGradient.append("stop").attr("offset", "100%").attr("stop-color", "#00ff00");
-            const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
-
-            legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
-            
-            const barWidth = legW - 30;
-            // Increased barY to 35 to allow space for triangle text above
-            const barY = 35; 
-            
-            legG.append("rect").attr("y", barY).attr("width", barWidth).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
-            legG.append("text").text("0").attr("y", barY + 25).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
-            legG.append("text").text("8").attr("y", barY + 25).attr("x", barWidth).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
-
-            // --- TRIANGLE INDICATOR ---
-            const tropeInd = legG.append("g")
-                .attr("id", "trope-indicator")
-                .attr("class", "legend-indicator")
-                .style("display", "none"); 
-            
-            // Triangle points DOWN to barY
-            tropeInd.append("path")
-                .attr("d", "M -4 -6 L 4 -6 L 0 0 Z") // Tip at 0,0
-                .attr("transform", `translate(0, ${barY})`); // Tip touches 35
-            
-            // Text above the triangle
-            tropeInd.append("text")
-                .attr("y", barY - 8) // ~27
-                .text("0");
-
-            const sectionConnY = 80; 
-            legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
-            
-            const exG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
-            exG.append("line").attr("x1", 20).attr("y1", 0).attr("x2", 60).attr("y2", 0).attr("stroke", "#aaa").attr("stroke-width", 2);
-            exG.append("circle").attr("cx", 20).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
-            exG.append("circle").attr("cx", 60).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
-            
-            legG.append("foreignObject")
-                .attr("x", 0)
-                .attr("y", sectionConnY + 35)
-                .attr("width", legW - 10)
-                .attr("height", 100)
-                .append("xhtml:div")
-                .style("font-size", smallFS + "px") 
-                .style("color", "#ccc")
-                .style("line-height", "1.2")
-                .style("width", "100%") 
-                .html("Click a node to reveal connections (≥75% trope similarity).");
-
-            svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
-            legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
-        };
         drawViz4(null); 
 
 
@@ -1365,6 +1301,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
