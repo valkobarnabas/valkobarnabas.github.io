@@ -474,6 +474,7 @@
             d.number_fights = +d.number_fights;
             d.trope_count = +d.trope_count;
             d.id = d.school;
+            d.isCenter = false; // Initialize center flag
         });
 
         // Sort data alphabetically once for consistent navigation
@@ -731,6 +732,9 @@ function drawTropeDashboard(d) {
 
        // --- VIZ 4: Trope Network ---
         drawViz4 = (focusNode) => {
+            // FIX: RESET CENTER FLAGS ON EVERY DRAW
+            data.forEach(n => n.isCenter = false);
+
             const container = d3.select("#jaccard-web");
             container.html(""); 
 
@@ -867,7 +871,8 @@ function drawTropeDashboard(d) {
             const circle = nodeG.append("circle")
                 .attr("r", d => d.isCenter ? r * 3 : r) // CENTER IS 3X BIGGER
                 .attr("fill", d => tropeColorScale(d.trope_count))
-                .attr("stroke", "#fff").attr("stroke-width", 1)
+                // CHANGED: Black stroke for better contrast
+                .attr("stroke", "#000").attr("stroke-width", 1) 
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
                 
             // --- TEXT LABELS ---
@@ -878,20 +883,21 @@ function drawTropeDashboard(d) {
                 centerG.append("text")
                     .text(d => d.song_name)
                     .attr("text-anchor", "middle")
-                    .attr("dy", "0.35em") // Centered vertically
+                    .attr("dy", "0.35em") 
                     .style("fill", "#fff")
-                    .style("font-size", "16px") // Large text for large node
+                    .style("font-size", "16px") 
                     .style("font-weight", "800")
-                    .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); // Drop shadow for visibility
+                    .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); 
 
-                // 2. NEIGHBORS: Simple text below
+                // 2. NEIGHBORS: Text CENTERED inside the node
                  nodeG.filter(d => d.school !== focusNode.school)
                     .append("text")
                     .text(d => d.song_name)
-                    .attr("dy", r + 12)
+                    // Centered vertically (0.35em) and horizontally (text-anchor: middle)
+                    .attr("dy", "0.35em") 
                     .attr("text-anchor", "middle")
                     .style("fill", "#fff")
-                    .style("font-size", "10px")
+                    .style("font-size", "8px") // Slightly smaller to fit inside
                     .style("text-shadow", "0 0 2px #000");
 
             } else {
@@ -906,30 +912,16 @@ function drawTropeDashboard(d) {
                     .style("text-shadow", "0 0 2px #000")
                     .each(function(d) {
                         const words = d.song_name.split(/\s+/);
-                        const maxLines = 3; // MAX 3 LINES
-                        const lineHeight = r * 0.5; // Estimated line height in pixels
+                        const maxLines = 3; 
                         
-                        // Helper: check if a line of text fits at a specific Y offset
-                        // Chord length at height y from center is 2 * sqrt(r^2 - y^2)
-                        // We approximate width checking.
-                        
-                        // Let's perform a simple packing
-                        let lines = [];
-                        let currentLine = [];
-                        
-                        // We will try to pack words. This is a greedy approach.
-                        // Ideally we measure text width, but Canvas measurement is expensive in loop.
                         // Approximation: char width ~ font-size * 0.6
                         const charW = (r * 0.4) * 0.6; 
                         
+                        let lines = [];
+                        let currentLine = [];
+                        
                         for (let w of words) {
-                            // Test if currentLine + w fits
-                            // We need to know which line # this is to know the width constraint
-                            // But line # depends on wrapping.
-                            // Let's assume standard wrapping first, then truncate.
-                            
                             let potentialLine = currentLine.concat(w).join(" ");
-                            // Max width for any line is 2*r. Let's be safe and say 1.8*r
                             if (potentialLine.length * charW < (r * 1.8)) {
                                 currentLine.push(w);
                             } else {
@@ -942,12 +934,9 @@ function drawTropeDashboard(d) {
                         // Truncate to 3 lines
                         if(lines.length > maxLines) {
                             lines = lines.slice(0, maxLines);
-                            // Add ellipsis to last line? 
-                            // lines[maxLines-1] += ".."; 
                         }
                         
                         // Vertical Centering
-                        // Total height = lines.length * 1.1em
                         const startDy = -((lines.length - 1) * 1.1 / 2);
 
                         d3.select(this).selectAll("tspan")
@@ -975,7 +964,7 @@ function drawTropeDashboard(d) {
             legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             
             const barWidth = legW - 30;
-            const barY = 25; // Push bar down to make room for triangle text below header
+            const barY = 25; 
             
             legG.append("rect").attr("y", barY).attr("width", barWidth).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
             legG.append("text").text("0").attr("y", barY + 25).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
@@ -987,18 +976,12 @@ function drawTropeDashboard(d) {
                 .attr("class", "legend-indicator")
                 .style("display", "none"); 
             
-            // Triangle tip at barY (25), pointing down
-            // Actually usually pointers point to value. 
-            // If I want text BELOW "Trope Count" but ABOVE bar:
-            // Trope Count y=0. Bar y=25. Gap is 25px.
-            // Put text at y=12. Put triangle tip at y=25.
-            
             tropeInd.append("path")
                 .attr("d", "M -4 -6 L 4 -6 L 0 0 Z") 
-                .attr("transform", `translate(0, ${barY})`); // Tip touches top of bar
+                .attr("transform", `translate(0, ${barY})`); 
             
             tropeInd.append("text")
-                .attr("y", barY - 8) // Sits above triangle
+                .attr("y", barY - 8) 
                 .text("0");
 
             const sectionConnY = 80; 
@@ -1161,7 +1144,8 @@ function drawTropeDashboard(d) {
             });
             const sorted = Object.values(combos).sort((a,b) => b.count - a.count);
 
-            const margin = {top: 45, right: 10, bottom: 5, left: 10};
+            // CHANGED: Increased Top Margin to 65 to prevent icon clipping
+            const margin = {top: 65, right: 10, bottom: 5, left: 10};
             const rowH = (h - margin.top - margin.bottom) / sorted.length;
             const matrixWidth = w * 0.4; 
             const barAreaWidth = w * 0.6;
@@ -1170,13 +1154,13 @@ function drawTropeDashboard(d) {
 
             const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
             
+            // CHANGED LABEL TEXT
             g.append("text").attr("x", barAreaWidth - 10).attr("y", -10).attr("text-anchor", "end")
-             .style("fill", "#888").style("font-size", "10px").text("Number of Songs");
+             .style("fill", "#888").style("font-size", "10px").text("Number of Songs (65)");
 
             const headerG = svg.append("g").attr("transform", `translate(${margin.left + barAreaWidth}, ${margin.top - 10})`);
             const colW = matrixWidth / meta.length;
             
-            // Re-added Text Labels + Totals
             meta.forEach((m, i) => {
                 const x = i * colW + colW/2;
                 headerG.append("text").attr("x", x).attr("y", -25).attr("text-anchor", "middle")
