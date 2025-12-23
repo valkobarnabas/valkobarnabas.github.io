@@ -97,21 +97,21 @@
         .sub-top { font-size: 0.8em; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
         
         .main-title { 
-    font-size: clamp(0.8rem, 2.5vw, 2.2em); 
-    color: var(--highlight); 
-    font-weight: 800; 
-    line-height: 1.0; 
-    margin: 0; 
-    text-transform: uppercase; 
-    white-space: normal; 
-    overflow-wrap: break-word;
-}
+            font-size: clamp(0.8rem, 2.5vw, 2.2em); 
+            color: var(--highlight); 
+            font-weight: 800; 
+            line-height: 1.0; 
+            margin: 0; 
+            text-transform: uppercase; 
+            white-space: normal; 
+            overflow-wrap: break-word;
+        }
         
         .sub-bot { font-size: 1em; color: #fff; margin-top: 5px; font-weight: 300; display: flex; align-items: center; gap: 10px; }
         
         .about-link {
             font-size: 0.7em;
-            background: #d100d1; /* CHANGED: Dimmer Pink */
+            background: #d100d1; 
             padding: 2px 8px;
             border-radius: 10px;
             cursor: pointer;
@@ -121,11 +121,11 @@
             font-weight: 700;
         }
         .about-link:hover { 
-            background: var(--highlight); /* Cyan on hover */
+            background: var(--highlight); 
             color: #000; 
         }
 
-                /* --- Legend Indicators --- */
+        /* --- Legend Indicators --- */
         .legend-indicator { pointer-events: none; transition: transform 0.2s ease-out; }
         .legend-indicator path { fill: #fff; stroke: #000; stroke-width: 1px; }
         .legend-indicator text { fill: #fff; font-size: 10px; font-weight: bold; text-anchor: middle; text-shadow: 0 0 3px #000; }
@@ -135,18 +135,6 @@
             height: 100%;
             position: relative;
             overflow: hidden;
-        }
-
-        #reset-hint {
-            position: absolute;
-            top: 8px;
-            right: 20px;
-            color: var(--dim);
-            font-size: 0.75em;
-            letter-spacing: 0.5px;
-            pointer-events: none; /* Let clicks pass through */
-            text-transform: uppercase;
-            z-index: 50;
         }
 
         #placeholder-msg {
@@ -160,112 +148,114 @@
         }
 
         #active-content {
-            display: none; /* Hidden by default */
+            display: none; 
             width: 100%;
             height: 100%;
             display: flex; 
         }
 
         #song-info-panel {
-    flex: 1; 
-    padding: clamp(10px, 2vh, 25px) 30px; 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start; 
-    text-align: left;        
-    min-width: 0; 
-    /* Responsive Gap: Scales with window height to prevent overflow */
-    gap: clamp(2px, 1.5vh, 10px);
-    /* Safety: prevents rendering outside the box */
-    overflow: hidden; 
-}
+            flex: 1; 
+            padding: clamp(10px, 2vh, 25px) 30px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start; 
+            text-align: left;        
+            min-width: 0; 
+            gap: clamp(2px, 1.5vh, 10px);
+            overflow: hidden; 
+        }
 
         #spotify-panel {
-    flex: 1 1 0px; 
-    max-width: 450px;
-    background: #000;
-    border-left: 1px solid var(--dim);
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    box-sizing: border-box;
-}
+            flex: 1 1 0px; 
+            max-width: 450px;
+            background: #000;
+            border-left: 1px solid var(--dim);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
 
         iframe { width: 100%; height: 152px; border: none; border-radius: 12px; }
 
         #si-school { 
-    font-size: clamp(1.2rem, 3vw, 2.2em); 
-    font-weight: 800; 
-    color: #fff; 
-    line-height: 1.1; 
-    text-shadow: 0 0 10px var(--highlight), 0 0 20px var(--highlight);
-}
+            font-size: clamp(1.2rem, 3vw, 2.2em); 
+            font-weight: 800; 
+            color: #fff; 
+            line-height: 1.1; 
+            text-shadow: 0 0 10px var(--highlight), 0 0 20px var(--highlight);
+        }
         #si-conf { font-size: clamp(0.5em, 1vw, 0.9em); color: #666; font-style: italic; font-weight: 400; margin-left: 10px;}
         #si-title { 
-    font-size: clamp(0.9rem, 2vw, 1.3em); 
-    color: var(--accent); 
-    margin: 0; /* CHANGED: Let the parent 'gap' handle the spacing */
-    font-style: italic; 
-    line-height: 1.2; /* Tighter line height helps fit content */
-}
+            font-size: clamp(0.9rem, 2vw, 1.3em); 
+            color: var(--accent); 
+            margin: 0; 
+            font-style: italic; 
+            line-height: 1.2; 
+        }
         
         .badges { 
-                display: flex; 
-                gap: 10px; 
-                margin: 0; /* CHANGED: Removed margin-bottom */
-                flex-wrap: wrap; 
-                justify-content: flex-start; 
-            }
+            display: flex; 
+            gap: 10px; 
+            margin: 0; 
+            flex-wrap: wrap; 
+            justify-content: flex-start; 
+        }
         .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #ccc; display: flex; align-items: center; gap: 5px; }
         .badge i { color: var(--highlight); }
 
         /* --- Viz 4 Specific Styles --- */
-            .network-logo {
-                filter: grayscale(100%) drop-shadow(0 0 1px rgba(255,255,255,0.5));
-                transition: all 0.2s;
-                pointer-events: none; /* Let clicks pass through to the circle/group */
-            }
-            
-            /* Ensure the group keeps the image on top */
-            .node-group image {
-                z-index: 999;
-            }
+        .network-logo {
+            filter: grayscale(100%) drop-shadow(0 0 1px rgba(255,255,255,0.5));
+            transition: all 0.2s;
+            pointer-events: none; 
+        }
+        
+        .node-group image {
+            z-index: 999;
+        }
 
         .stats-row { 
-                display: flex; 
-                gap: 20px; 
-                font-size: 0.9em; 
-                color: #aaa; 
-                justify-content: flex-start; 
-                margin: 0; /* CHANGED: Removed margin-top */
-                white-space: nowrap; 
-            }
+            display: flex; 
+            gap: 20px; 
+            font-size: 0.9em; 
+            color: #aaa; 
+            justify-content: flex-start; 
+            margin: 0; 
+            white-space: nowrap; 
+        }
         .stats-row b { color: #fff; }
 
         /* --- Viz Elements --- */
         .node circle { stroke: #fff; stroke-width: 1px; cursor: pointer; transition: all 0.2s; }
         
         /* Highlight States */
-        /* 1. Make the "non-connected" nodes darker/fainter */
-            .dimmed { 
-                fill: #222 !important; 
-                opacity: 0.3 !important; 
-                stroke: #333 !important; 
-            }
-            
-            /* 2. New Class for Connected Neighbors (Light Grey) */
-            .neighbor {
-                fill: #aaa !important; 
-                stroke: #fff !important; 
-                stroke-width: 2px !important;
-                opacity: 1 !important;
-            }
-            
-            /* 3. Ensure lines transition smoothly */
-            line { transition: all 0.3s; }
+        /* 1. Standard Dim (Used in Grid/Viz1) - Dark and Faint */
+        .dimmed { 
+            fill: #222 !important; 
+            opacity: 0.3 !important; 
+            stroke: #333 !important; 
+        }
+        
+        /* 2. Soft Dim (Used in Topology/Viz3) - Keeps color, just lowers opacity */
+        .dimmed-soft {
+            opacity: 0.3 !important;
+            stroke: none !important;
+        }
+
+        .neighbor {
+            fill: #aaa !important; 
+            stroke: #fff !important; 
+            stroke-width: 2px !important;
+            opacity: 1 !important;
+        }
+        
+        line { transition: all 0.3s; }
+        
         .highlighted { 
             fill: var(--accent) !important; 
             stroke: #fff !important; 
@@ -274,7 +264,6 @@
             filter: drop-shadow(0 0 8px var(--accent)) !important;
         }
         
-        /* Logo Visibility */
         .logo-dimmed { opacity: 0.3; filter: grayscale(100%); } 
         .logo-highlighted { filter: drop-shadow(0 0 8px var(--highlight)); transform: scale(1.1); opacity: 1; z-index: 10; }
 
@@ -338,21 +327,13 @@
 
         text { fill: #aaa; font-size: 11px; }
         .axis-label { font-size: 12px; font-weight: bold; fill: #fff; }
+        
+        a { color: var(--highlight); text-decoration: none; border-bottom: 1px dotted var(--highlight); }
+        a:hover { color: #fff; }
 
-        #lyrical-panel {
-    overflow: visible !important; 
-}
-
-/* Ensure the grid and its children don't clip content */
-#logo-grid, #logo-grid > div {
-    overflow: visible !important; 
-    z-index: 10; /* Keep logos above other elements */
-}
-
-/* Ensure tooltips or large nodes don't get cut off in the Network viz */
-#jaccard-web {
-    overflow: visible !important;
-}
+        #lyrical-panel { overflow: visible !important; }
+        #logo-grid, #logo-grid > div { overflow: visible !important; z-index: 10; }
+        #jaccard-web { overflow: visible !important; }
     </style>
 </head>
 <body>
@@ -420,20 +401,24 @@
    <div id="about-modal" onclick="if(event.target === this) this.style.display='none'">
     <div class="modal-content">
         <span class="close-btn" onclick="document.getElementById('about-modal').style.display='none'">×</span>
-        <h2 style="color:var(--highlight); margin-top:0;">ABOUT THIS DASHBOARD:</h2>
-        <p>Click any logo or node at any time to analyze that school's fight song. Best viewed in fullscreen (press <b>F</b>).</p>
+        <h2 style="color:var(--highlight); margin-top:0;">ABOUT THIS DASHBOARD</h2>
+        <p>This visualization explores the lyrical and musical patterns of 65 major college fight songs.</p>
         <ul>
-            <li><strong>Tropes:</strong> Does the song say "fight," "victory," "win" or "won," "rah," or nonsense syllables? Does it mention colors, a group of men, any opponents, or does it spell any words?</li>
-            <li><strong>Jaccard Network:</strong> Which songs are linked by similar tropes?</li>
-            <li><strong>Tune Topology:</strong> What are the tempos and durations of songs? How many times is the word "fight" actually said?</li>
-            <li><strong>Origin Story:</strong> How was the song created?</li>
+            <li><strong>Tropes (Top Left):</strong> Which lyrical clichés (e.g., "fight", "win", spelling out the name) appear in the song?</li>
+            <li><strong>Jaccard Network (Top Right):</strong> A network graph connecting schools whose lyrics share at least 75% similarity in tropes.</li>
+            <li><strong>Tune Topology (Bottom Left):</strong> A scatter plot of Tempo (BPM) vs. Duration. The color indicates how many times the word "Fight" is sung.</li>
+            <li><strong>Origin Story (Bottom Right):</strong> An "UpSet" plot showing how songs were created (Student Writer, Contest Winner, or Official adoption).</li>
         </ul>
-        <p style="font-size:0.9em; color:#888;">
+        
+        <p><strong>Data Sources:</strong></p>
+        <ul style="font-size:0.9em; color:#ccc;">
+            <li><a href="https://github.com/fivethirtyeight/data/blob/master/fight-songs/fight-songs.csv" target="_blank">FiveThirtyEight Fight Songs Dataset</a></li>
+            <li><a href="https://btaa.org/docs/default-source/research-data/readme-data-description.pdf?sfvrsn=f13148d3_1" target="_blank">Data Description (PDF)</a></li>
+        </ul>
+
+        <p style="font-size:0.9em; color:#888; margin-top:20px;">
             Built with D3.js by Barnabás Valkó (UW-Madison Math/Stats 2027).<br>
-            GitHub: <a href="https://github.com/valkobarnabas" target="_blank" style="color:var(--highlight); text-decoration:none;">valkobarnabas</a>
-        </p>
-        <p style="font-size:0.66em; color:#555; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-            All logos are copyright their respective universities.
+            GitHub: <a href="https://github.com/valkobarnabas" target="_blank">valkobarnabas</a>
         </p>
     </div>
 </div>
@@ -453,7 +438,7 @@
     const iconLabels = {
         'fight': 'Fight', 'victory': 'Victory', 'win_won': 'Win', 
         'rah': 'Rah', 'nonsense': 'Nonsense', 'colors': 'Colors', 
-        'men': 'Men', 'opponents': 'Opponents', 'spelling': 'Spelling',
+        'men': 'Men', 'opponents': 'Foes', 'spelling': 'Spell',
         'student_writer': 'Student Author', 'official_song': 'Official Song', 'contest': 'Contest Winner'
     };
     
@@ -470,16 +455,13 @@
         .domain([0, 8])
         .range(["#000055", "#00ff00"]);
 
-    const confColors = d3.scaleOrdinal()
-        .domain(['Big 12', 'Big Ten', 'ACC', 'SEC', 'Pac-12', 'Independent'])
-        .range(["#FF00FF", "#00FFFF", "#FFFF00", "#FF4400", "#00FF00", "#FFFFFF"]);
-
     let showTopologyTooltip = null; // Global reference
+    let drawViz4 = null; // Global reference
+    let viz4ForceSimulation = null; // Simulation reference
 
     // Global state for navigation
     let sortedData = [];
     let currentIndex = -1; 
-    const COLS = 11; // Matches your CSS grid
 
     d3.csv("fight-songs.csv").then(data => {
         data = data.filter(d => d.school && d.school.trim() !== "");
@@ -508,6 +490,7 @@
                 
                 // Reset Visuals
                 d3.selectAll(".dimmed").classed("dimmed", false);
+                d3.selectAll(".dimmed-soft").classed("dimmed-soft", false);
                 d3.selectAll(".neighbor").classed("neighbor", false);
                 d3.selectAll(".highlighted").classed("highlighted", false);
                 d3.selectAll(".logo-dimmed").classed("logo-dimmed", false);
@@ -515,9 +498,6 @@
                 
                 // Reset Links (Hide them)
                 d3.selectAll(".network-link").style("opacity", 0); 
-
-                // --- FIX 1: Force all Viz 4 images to top on reset ---
-                d3.selectAll("#jaccard-web image").raise();
 
                 d3.selectAll("rect").classed("highlighted", false).classed("dimmed", false).attr("fill", "#444");
                 d3.selectAll(".upset-dot").classed("dimmed", false).style("fill", function() { return d3.select(this).classed("active") ? "#888" : "#333"; });
@@ -529,6 +509,8 @@
                 
                 drawTropeDashboard(null);
                 if(showTopologyTooltip) showTopologyTooltip(null);
+                
+                // Reset Indicators
                 d3.selectAll(".legend-indicator").style("display", "none");
 
                 // Reset "No Fights" Legend
@@ -536,66 +518,26 @@
                 nf.style("opacity", 0.5); // Back to default opacity
                 d3.select("#no-fights-check").style("display", "none"); // Hide check
                 
+                // --- VIZ 4 RESET: Show Grid with Tiny Text ---
+                drawViz4(null);
+
                 return;
             }
 
             currentIndex = sortedData.findIndex(d => d.school === schoolName);
             const d = data.find(r => r.school === schoolName);
 
-            // 1. Visual States (Dim Everything first)
-            d3.selectAll("circle").classed("dimmed", true).classed("highlighted", false).classed("neighbor", false);
+            // 1. Viz 1 & Viz 2 (Standard Dim)
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
             d3.selectAll("rect").classed("dimmed", true).classed("highlighted", false);
+            
+            // 2. Viz 3 (Soft Dim - Keep Colors)
+            d3.selectAll(".scatter-node").classed("dimmed-soft", true).classed("highlighted", false);
 
-            // 2. Identify Neighbors & Handle Links
-            const neighbors = [];
-            d3.selectAll(".network-link")
-                .style("opacity", 0) 
-                .filter(l => l.source === schoolName || l.target === schoolName)
-                .style("opacity", 1) 
-                .style("stroke", "#aaa") 
-                .each(l => {
-                    neighbors.push(l.source === schoolName ? l.target : l.source);
-                });
-
-            // 3. Highlight Circles (Viz 4 & 3)
-            d3.selectAll(`circle`).each(function(cd) {
-                if(!cd || !cd.school) return;
-
-                const circle = d3.select(this);
-                const parent = this.parentNode;
-                const grandParent = parent ? parent.parentNode : null;
-
-                // --- FIX 2: Correctly detect Viz 4 structure (Group -> Group -> Circle) ---
-                const isViz4 = grandParent && grandParent.tagName === 'g' && grandParent.getAttribute("class") === "node-group";
-                
-                if (cd.school === schoolName) {
-                    // --- SELECTED NODE ---
-                    circle.classed("dimmed", false).classed("highlighted", true);
-                    
-                    if (isViz4) {
-                        d3.select(grandParent).raise(); // Bring whole node to front of SVG
-                        d3.select(parent).select("image").raise(); // Bring LOGO to front of Node
-                    } else {
-                        circle.raise();
-                    }
-                } else if (neighbors.includes(cd.school)) {
-                    // --- NEIGHBOR NODE ---
-                    circle.classed("dimmed", false).classed("neighbor", true);
-                    
-                    if (isViz4) {
-                        d3.select(grandParent).raise(); 
-                        d3.select(parent).select("image").raise(); // Bring LOGO to front of Node
-                    } else {
-                        circle.raise();
-                    }
-                }
-            });
-
-            // 4. Highlight Logo (Viz 1)
+            // 3. Highlight Logo (Viz 1)
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
 
-            // 5. Highlight Origin Bars
+            // 4. Highlight Origin Bars (Viz 2)
             d3.selectAll("#upset-origin rect").each(function() {
                 const schools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
                 if (schools.includes(schoolName)) {
@@ -606,6 +548,12 @@
             d3.selectAll("rect.dimmed").each(function() {
                  d3.select(this.parentNode).selectAll(".upset-dot").classed("dimmed", true);
             });
+            
+            // 5. Highlight Scatter Node (Viz 3)
+            d3.selectAll(`.scatter-node[data-school="${schoolName}"]`)
+                .classed("dimmed-soft", false)
+                .classed("highlighted", true)
+                .raise();
 
             // 6. Update Middle Panel
             d3.select("#placeholder-msg").style("display", "none");
@@ -644,8 +592,8 @@
 
             drawTropeDashboard(d);
             if(showTopologyTooltip) showTopologyTooltip(d);
-           // 7. Update Legend Indicators
-            // A. Trope Indicator
+            
+            // 7. Update Legend Indicators
             const tInd = d3.select("#trope-indicator");
             if (tInd.node()) {
                 tInd.style("display", "block");
@@ -666,14 +614,12 @@
             const nfCheck = d3.select("#no-fights-check");
             
             if (d.number_fights === 0) {
-                 // CASE 1: No Fights -> Show Checkmark
                  fInd.style("display", "none");
-                 noFightG.style("opacity", 1); // Full opacity
-                 nfCheck.style("display", "block"); // Show Check
+                 noFightG.style("opacity", 1); 
+                 nfCheck.style("display", "block"); 
             } else {
-                // CASE 2: Has Fights -> Hide Checkmark
-                noFightG.style("opacity", 0.3); // Dimmed
-                nfCheck.style("display", "none"); // Hide Check
+                noFightG.style("opacity", 0.3); 
+                nfCheck.style("display", "none"); 
 
                 fInd.style("display", "block");
                 const scale = d3.scaleLinear().domain([1, 10]).range([0, 70]).clamp(true);
@@ -681,25 +627,18 @@
                 
                 fInd.attr("transform", `translate(${xPos}, 0)`);
                 fInd.select("text").text(d.number_fights);
-                }
             }
+
+            // --- VIZ 4 UPDATE: Radial Layout ---
+            drawViz4(d);
+        }
         
     
         // --- GLOBAL RESET HANDLER ---
         d3.select("body").on("click", function(e) {
-            // 1. Ignore clicks inside the "About" Modal
             if (e.target.closest(".modal-content")) return;
-            
-            // 2. Ignore clicks on the "About" link button
             if (e.target.closest(".about-link")) return;
-
-            // 3. Ignore clicks on the Zoom/Spotify controls (if any)
             if (e.target.closest("iframe")) return;
-
-            // 4. Since your interactive elements (Logos, Dots) have 
-            //    e.stopPropagation() in their specific handlers, they 
-            //    won't reach this body listener.
-            //    Therefore, anything that reaches here is a "background" click.
             updateSelection(null);
         });
         
@@ -707,9 +646,7 @@ function drawTropeDashboard(d) {
     const container = d3.select("#trope-dashboard");
     container.html(""); 
 
-    // 1. Measure the available width
     const rect = container.node().getBoundingClientRect();
-    // 2. Calculate dynamic size (max 22px, min 10px)
     const size = Math.max(10, Math.min(22, rect.width / 16)); 
 
     const wrapper = container.append("div")
@@ -727,17 +664,17 @@ function drawTropeDashboard(d) {
 
             cell.append("div")
                 .style("font-family", "FontAwesome")
-                .style("font-size", size + "px") // <--- Use dynamic size
+                .style("font-size", size + "px") 
                 .style("color", "#00f2ff").style("margin-bottom", "5px")
                 .text(icons[key]);
             
             cell.append("div")
-                .style("font-size", (size * 0.45) + "px") // <--- Scale label too
+                .style("font-size", (size * 0.45) + "px") 
                 .style("color", "#aaa").style("margin-bottom", "5px")
                 .text(iconLabels[key]);
 
             const circle = cell.append("div")
-                .style("width", size + "px").style("height", size + "px") // <--- Scale circle
+                .style("width", size + "px").style("height", size + "px") 
                 .style("border-radius", "50%")
                 .style("border", "2px solid " + (hasTrope ? "#00f2ff" : "#444"))
                 .style("background", hasTrope ? "rgba(0, 242, 255, 0.2)" : "transparent")
@@ -784,8 +721,8 @@ function drawTropeDashboard(d) {
         initViz1();
 
 
-       // --- VIZ 4: Trope Network (Sorted Grid) ---
-        const drawViz4 = () => {
+       // --- VIZ 4: Trope Network ---
+        drawViz4 = (focusNode) => {
             const container = d3.select("#jaccard-web");
             container.html(""); 
 
@@ -805,44 +742,22 @@ function drawTropeDashboard(d) {
             const rect = chartDiv.node().getBoundingClientRect();
             const w = rect.width;
             const h = rect.height;
-            
             const svg = chartDiv.append("svg").attr("width", w).attr("height", h).style("overflow", "visible");
-            
-            // --- NEW: Sorting Logic ---
-            // 1. Trope Count (Descending)
-            // 2. Year (Ascending - older first)
-            // 3. Alphabetical
+            const g = svg.append("g");
+
+            // --- Sorting Logic ---
             let sortedNodes = [...data].sort((a,b) => {
                 if (b.trope_count !== a.trope_count) return b.trope_count - a.trope_count;
                 if (a.year !== b.year) return a.year - b.year; 
                 return a.school.localeCompare(b.school);
             });
 
-            // --- NEW: Dynamic Grid Layout ---
-            const cols = 13; // Keep the same density
-            // Calculate rows needed (Math.ceil)
-            const rows = Math.ceil(sortedNodes.length / cols);
-            
-            const cellW = w / cols;
-            const cellH = h / rows;
-            const radius = Math.min(cellW, cellH) * 0.4; 
-
-            // Assign X/Y based on sorted index
-            sortedNodes.forEach((d, i) => {
-                const col = i % cols;
-                const row = Math.floor(i / cols);
-                d.x = (col * cellW) + cellW/2;
-                d.y = (row * cellH) + cellH/2;
-            });
-            
-            const nodeMap = {}; 
-            sortedNodes.forEach(d => { nodeMap[d.id] = d; });
-
-            // --- LINKS ---
+            // --- CALCULATE NEIGHBORS ---
+            // Calculate links for everyone first
             const links = [];
             const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
-            
-            // Standard Jaccard Links
+            const nodeMap = {}; sortedNodes.forEach(d=>nodeMap[d.id]=d);
+
             for(let i=0; i<sortedNodes.length; i++) {
                 for(let j=i+1; j<sortedNodes.length; j++) {
                     const n1 = sortedNodes[i];
@@ -853,118 +768,157 @@ function drawTropeDashboard(d) {
                         if(a||b) union++; if(a&&b) intersect++; 
                     });
                     if(union > 0 && (intersect/union) > 0.74) {
-                        links.push({ 
-                            source: n1.school, target: n2.school, 
-                            x1: n1.x, y1: n1.y, x2: n2.x, y2: n2.y 
-                        });
+                        links.push({ source: n1.school, target: n2.school });
                     }
                 }
             }
-
-            // Manual Links
-            const manualLinks = [["Michigan", "Tennessee"], ["Tennessee", "Boston College"], ["Boston College", "Michigan"]];
-            manualLinks.forEach(pair => {
-                if(nodeMap[pair[0]] && nodeMap[pair[1]]) {
-                    links.push({ 
-                        source: pair[0], target: pair[1],
-                        x1: nodeMap[pair[0]].x, y1: nodeMap[pair[0]].y, 
-                        x2: nodeMap[pair[1]].x, y2: nodeMap[pair[1]].y 
-                    });
-                }
+            // Manual links
+            [["Michigan", "Tennessee"], ["Tennessee", "Boston College"], ["Boston College", "Michigan"]].forEach(pair => {
+                links.push({ source: pair[0], target: pair[1] });
             });
 
-            const g = svg.append("g");
-            
-            // --- CHANGED: Links hidden by default (opacity 0) ---
-            g.selectAll("line").data(links).enter().append("line")
-                .attr("class", "network-link") 
-                .attr("x1", d => d.x1).attr("y1", d => d.y1)
-                .attr("x2", d => d.x2).attr("y2", d => d.y2)
-                .attr("stroke", "#ffffff").attr("stroke-width", 3).attr("opacity", 0);
-            
-            // Draw Nodes
-            const nodeG = g.selectAll(".node-group").data(sortedNodes).enter().append("g")
+            // --- LAYOUT LOGIC ---
+            let renderNodes = [];
+            let renderLinks = [];
+            let r = 0;
+
+            if (focusNode) {
+                // *** FOCUSED MODE (Radial) ***
+                // 1. Identify neighbors
+                const neighbors = [];
+                links.forEach(l => {
+                    if (l.source === focusNode.school) neighbors.push(l.target);
+                    else if (l.target === focusNode.school) neighbors.push(l.source);
+                });
+                
+                // 2. Filter nodes
+                renderNodes = sortedNodes.filter(n => n.school === focusNode.school || neighbors.includes(n.school));
+                renderLinks = links.filter(l => (l.source === focusNode.school && neighbors.includes(l.target)) || (l.target === focusNode.school && neighbors.includes(l.source)));
+                
+                // 3. Position
+                const centerNode = renderNodes.find(n => n.school === focusNode.school);
+                centerNode.x = w/2; 
+                centerNode.y = h/2;
+                
+                // Arrange neighbors in circle
+                const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
+                const circleRadius = Math.min(w, h) * 0.35;
+                const angleStep = (2 * Math.PI) / neighborNodes.length;
+                
+                neighborNodes.forEach((n, i) => {
+                    const angle = i * angleStep - Math.PI/2;
+                    n.x = (w/2) + Math.cos(angle) * circleRadius;
+                    n.y = (h/2) + Math.sin(angle) * circleRadius;
+                });
+                
+                // 4. Update Link Coords
+                renderLinks.forEach(l => {
+                    const s = renderNodes.find(n => n.school === l.source);
+                    const t = renderNodes.find(n => n.school === l.target);
+                    if(s && t) { l.x1=s.x; l.y1=s.y; l.x2=t.x; l.y2=t.y; }
+                });
+                
+                r = Math.min(w, h) * 0.08; // Bigger nodes in focus mode
+
+            } else {
+                // *** DEFAULT MODE (Grid) ***
+                renderNodes = sortedNodes;
+                const cols = 13;
+                const rows = Math.ceil(renderNodes.length / cols);
+                const cellW = w / cols;
+                const cellH = h / rows;
+                r = Math.min(cellW, cellH) * 0.4; 
+
+                renderNodes.forEach((d, i) => {
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    d.x = (col * cellW) + cellW/2;
+                    d.y = (row * cellH) + cellH/2;
+                });
+            }
+
+            // --- RENDER LINKS ---
+            // Only draw links in focused mode
+            if (focusNode) {
+                 g.selectAll("line").data(renderLinks).enter().append("line")
+                    .attr("x1", d => d.x1).attr("y1", d => d.y1)
+                    .attr("x2", d => d.x2).attr("y2", d => d.y2)
+                    .attr("stroke", "#ffffff").attr("stroke-width", 2).attr("opacity", 0.6);
+            }
+
+            // --- RENDER NODES ---
+            const nodeG = g.selectAll(".node-group").data(renderNodes).enter().append("g")
                 .attr("class", "node-group")
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
                     d3.select(e.currentTarget).raise(); 
-                    // --- CHANGED: Added Trope Count to Tooltip ---
                     d3.select("#tooltip").style("opacity", 1)
                         .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 
-            const circleGroup = nodeG.append("g");
-
-            // 1. The Circle Background (Colored by Tropes)
-            circleGroup.append("circle")
-                .attr("r", radius)
+            nodeG.append("circle")
+                .attr("r", r)
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#fff").attr("stroke-width", 1)
-                .attr("data-school", d => d.school)
-                .classed("highlighted", d => d.school === (currentIndex > -1 ? sortedData[currentIndex].school : ""))
-                .classed("dimmed", d => currentIndex > -1 && d.school !== sortedData[currentIndex].school);
+                // In Radial Mode: Center node is highlighted, Neighbors are just visible
+                .classed("highlighted", d => focusNode && d.school === focusNode.school);
 
-            // 2. --- NEW: Logo Overlay ---
-            // We use clipPath to make the image circular, or just overlay it.
-            // A simple overlay with a slightly smaller dimension often looks cleanest 
-            // without complex clip-paths.
+            // Text Label (Tiny white text default, or larger in focus)
+            const fontSize = focusNode ? "11px" : "6px";
+            const fontWeight = focusNode ? "bold" : "normal";
             
-            circleGroup.append("image")
-                .attr("xlink:href", d => `logos/${getSlug(d.school)}.png`)
-                .attr("class", "network-logo")
-                .attr("x", -radius * 0.7) // Centered
-                .attr("y", -radius * 0.7)
-                .attr("width", radius * 1.4)
-                .attr("height", radius * 1.4)
-                .style("pointer-events", "none") // Let clicks pass to the group/circle
-                .on("error", function() { d3.select(this).style("display", "none"); }); // Hide if missing
+            // For tiny labels, use song name or school name? User asked for song name.
+            nodeG.append("text")
+                .text(d => d.song_name)
+                .attr("dy", 2)
+                .attr("text-anchor", "middle")
+                .style("fill", "#fff")
+                .style("font-size", fontSize)
+                .style("font-weight", fontWeight)
+                .style("pointer-events", "none")
+                .style("text-shadow", "0 0 2px #000")
+                .each(function(d) {
+                    // Simple truncation if too long
+                    const self = d3.select(this);
+                    const len = self.text().length;
+                    if (!focusNode && len > 15) {
+                        self.text(self.text().substring(0, 12) + "...");
+                    }
+                });
 
             // --- LEGEND ---
             const lRect = legendDiv.node().getBoundingClientRect();
             const legW = lRect.width;
             const legH = lRect.height;
             const legSvg = legendDiv.append("svg").attr("width", legW).attr("height", legH);
-
             const baseFS = Math.max(9, Math.min(13, legW / 10)); 
             const smallFS = Math.max(8, Math.min(11, legW / 12));
-
             const defs = legSvg.append("defs");
             const linearGradient = defs.append("linearGradient").attr("id", "trope-gradient");
             linearGradient.append("stop").attr("offset", "0%").attr("stop-color", "#000055");
             linearGradient.append("stop").attr("offset", "100%").attr("stop-color", "#00ff00");
-
             const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
 
             legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             
-            // The Bar
             const barWidth = legW - 30;
             legG.append("rect").attr("y", 10).attr("width", barWidth).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
             legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
             legG.append("text").text("8").attr("y", 35).attr("x", barWidth).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
 
-            // --- NEW: Trope Indicator (Hidden by default) ---
             const tropeInd = legG.append("g")
                 .attr("id", "trope-indicator")
                 .attr("class", "legend-indicator")
-                .style("display", "none"); // Hidden initially
+                .style("display", "none"); 
             
-            // Triangle pointing down
             tropeInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 10)");
+            // Fix: Number BELOW triangle (triangle tip at 10, so text at ~22)
+            tropeInd.append("text").attr("y", 22).text("0");
 
-            const sectionYearY = 55;
-            legG.append("text").text("NODE LABELS").attr("y", sectionYearY).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
-            const sampleG = legG.append("g").attr("transform", `translate(15, ${sectionYearY + 25})`);
-            
-            sampleG.append("circle").attr("r", 12).attr("fill", "#004400").attr("stroke", "#fff");
-            sampleG.append("text").text("LOGO").attr("text-anchor","middle").attr("dy",3).attr("fill","#fff").style("font-size","6px");
-            
-            legG.append("text").text("School Logo").attr("x", 40).attr("y", sectionYearY + 28).attr("fill", "#ccc").style("font-size", smallFS + "px");
-
-            const sectionConnY = 105;
+            const sectionConnY = 60; // Moved up since Node Labels are gone
             legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             
             const exG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
@@ -982,18 +936,17 @@ function drawTropeDashboard(d) {
                 .style("color", "#ccc")
                 .style("line-height", "1.2")
                 .style("width", "100%") 
-                .html("Click a node to reveal connections to songs with ≥75% trope similarity.");
+                .html("Click a node to reveal connections (≥75% trope similarity).");
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
             legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
         };
-        drawViz4();
+        drawViz4(null); // Initial Call
 
 
-        // --- VIZ 3: Topology (0 Fights = Grey) ---
+        // --- VIZ 3: Topology ---
         const drawViz3 = () => {
             const container = document.getElementById('topology-map');
-            // Clear for resize
             d3.select("#topology-map").html("");
             
             const w = container.clientWidth;
@@ -1022,29 +975,18 @@ function drawTropeDashboard(d) {
             g.append("text").attr("class", "axis-label").attr("x", iw).attr("y", ih - 5).attr("text-anchor", "end").text("Duration (sec)");
             g.append("text").attr("class", "axis-label").attr("x", 10).attr("y", 15).text("BPM");
 
-            // Dots
+            // Dots (Added class scatter-node)
             g.selectAll("circle").data(data).enter().append("circle")
+                .attr("class", "scatter-node")
                 .attr("cx", d => x(d.sec_duration))
                 .attr("cy", d => y(d.bpm))
                 .attr("r", 6)
-                // 0 Fights = Grey, otherwise Scale
                 .attr("fill", d => d.number_fights === 0 ? "#666" : fightColorScale(d.number_fights))
                 .attr("stroke", "#000")
                 .attr("data-school", d => d.school)
                 .on("mouseover", (e, d) => {
                      d3.select(e.currentTarget).raise();
-                     // Use persistent tooltip logic
                      if(showTopologyTooltip) showTopologyTooltip(d);
-                })
-                .on("mouseout", () => {
-                    // Only hide if we aren't currently selecting a specific school
-                    // (The persistent logic handles the "clicked" state separately)
-                    if(!d3.select(e.currentTarget).classed("highlighted")) {
-                        // Actually, the persistent tooltip function takes care of hiding 
-                        // if we pass null, but we don't want to hide on mouseout if a school is selected.
-                        // Ideally, we just rely on click. But for hover effects:
-                        // Let's just update the global tooltip for a second
-                    }
                 })
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
 
@@ -1058,14 +1000,12 @@ function drawTropeDashboard(d) {
             tText.append("tspan").attr("id", "pt-dur").attr("x", 15).attr("dy", 12);
             tText.append("tspan").attr("id", "pt-fight").attr("x", 15).attr("dy", 12);
 
-            // Update Global Tooltip Function
             showTopologyTooltip = function(d) {
                 if(!d) {
                     pTip.style("display", "none");
                 } else {
                     const cx = x(d.sec_duration);
                     const cy = y(d.bpm);
-                    
                     pTip.style("display", "block").attr("transform", `translate(${cx}, ${cy})`).raise();
                     pTip.select("#pt-school").text(d.school);
                     pTip.select("#pt-bpm").text(`BPM: ${d.bpm}`);
@@ -1094,7 +1034,6 @@ function drawTropeDashboard(d) {
             leg.append("text").text("5").attr("y", 45).attr("x", 32);
             leg.append("text").text("10+").attr("y", 45).attr("x", 65);
 
-            // --- Fight Indicator Triangle ---
             const fightInd = leg.append("g")
                 .attr("id", "fight-indicator")
                 .attr("class", "legend-indicator")
@@ -1103,28 +1042,13 @@ function drawTropeDashboard(d) {
             fightInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 25)");
             fightInd.append("text").attr("y", 15).text("0");
 
-            // --- NEW: No Fights Box & Checkmark ---
             const noFightsG = leg.append("g")
                 .attr("id", "no-fights-group") 
                 .style("opacity", 0.5); 
             
-            // 1. The Grey Box
-            noFightsG.append("rect")
-                .attr("x", 0).attr("y", 55)
-                .attr("width", 12).attr("height", 12)
-                .attr("fill", "#666").attr("stroke", "#000");
-
-            // 2. The White Checkmark (Hidden by default)
-            noFightsG.append("path")
-                .attr("id", "no-fights-check")
-                .attr("d", "M 2 6 L 5 9 L 10 2") // Simple check shape
-                .attr("transform", "translate(1, 56)") // Position inside box
-                .attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 2)
-                .style("display", "none");
-
-            noFightsG.append("text").text(`No "Fight"s`)
-                .attr("x", 18).attr("y", 65)
-                .style("font-size", "9px").style("fill", "#ccc");
+            noFightsG.append("rect").attr("x", 0).attr("y", 55).attr("width", 12).attr("height", 12).attr("fill", "#666").attr("stroke", "#000");
+            noFightsG.append("path").attr("id", "no-fights-check").attr("d", "M 2 6 L 5 9 L 10 2").attr("transform", "translate(1, 56)").attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 2).style("display", "none");
+            noFightsG.append("text").text(`No "Fight"s`).attr("x", 18).attr("y", 65).style("font-size", "9px").style("fill", "#ccc");
             
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
         };
@@ -1134,7 +1058,6 @@ function drawTropeDashboard(d) {
         // --- VIZ 2: Origin Story ---
         const drawViz2 = () => {
             d3.select("#upset-origin").html("");
-            
             const container = document.getElementById('upset-origin');
             const w = container.clientWidth;
             const h = container.clientHeight;
@@ -1142,8 +1065,15 @@ function drawTropeDashboard(d) {
 
             const meta = ['official_song', 'student_writer', 'contest'];
             const combos = {};
+            
+            // Calculate totals for header icons
+            const totals = { 'official_song': 0, 'student_writer': 0, 'contest': 0 };
+
             data.forEach(d => {
-                const sig = meta.map(t => d[t] === 'Yes' ? '1' : '0').join("");
+                const sig = meta.map(t => {
+                    if (d[t] === 'Yes') { totals[t]++; return '1'; }
+                    return '0';
+                }).join("");
                 if (!combos[sig]) combos[sig] = { count: 0, sig: sig, schools: [] };
                 combos[sig].count++;
                 combos[sig].schools.push(d.school);
@@ -1168,12 +1098,10 @@ function drawTropeDashboard(d) {
                 const x = i * colW + colW/2;
                 headerG.append("text").attr("x", x).attr("y", -20).attr("text-anchor", "middle")
                     .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
-                const labelWords = iconLabels[m].split(" ");
-                labelWords.forEach((word, idx) => {
-                    headerG.append("text").attr("x", x).attr("y", -8 + (idx*9)).attr("text-anchor", "middle")
-                        .style("font-size", "9px").style("fill", "#bbb").text(word);
-                });
                 
+                // Add Total Count
+                headerG.append("text").attr("x", x).attr("y", -8).attr("text-anchor", "middle")
+                    .style("font-size", "10px").style("fill", "#fff").style("font-weight", "bold").text(totals[m]);
             });
 
             sorted.forEach((d, i) => {
@@ -1195,6 +1123,33 @@ function drawTropeDashboard(d) {
                     .on("mouseout", function() { 
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
                         tooltip.style("opacity", 0);
+                    })
+                    // --- CLICK ACTION FOR VIZ 2 ---
+                    .on("click", (e) => {
+                        e.stopPropagation();
+                        // If only 1 school in this group, select it
+                        if (d.schools.length === 1) {
+                            updateSelection(d.schools[0]);
+                        } else {
+                            // If multiple, just highlight the dots in Viz 3 (don't select a specific one)
+                            updateSelection(null); // Reset first to clear previous
+                            d.schools.forEach(s => {
+                                d3.selectAll(`.scatter-node[data-school="${s}"]`)
+                                    .classed("dimmed-soft", false)
+                                    .classed("highlighted", true)
+                                    .raise();
+                                // Highlight Origin Bars
+                                d3.selectAll("#upset-origin rect").each(function() {
+                                    const rectSchools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
+                                    if (rectSchools.includes(s)) {
+                                        d3.select(this).classed("dimmed", false).classed("highlighted", true); 
+                                    }
+                                });
+                            });
+                             // Dim others
+                             d3.selectAll(".scatter-node:not(.highlighted)").classed("dimmed-soft", true);
+                             d3.selectAll("rect:not(.highlighted)").classed("dimmed", true);
+                        }
                     });
                 
                 rowG.append("text").attr("x", barAreaWidth - barScale(d.count) - 15).attr("y", centerY + 4).attr("text-anchor", "end").text(d.count);
@@ -1211,131 +1166,54 @@ function drawTropeDashboard(d) {
         };
         drawViz2();
 
-        // --- Window Resize Handler ---
-window.addEventListener("resize", () => {
-    // 1. Redraw all visualizations to fit new window size
-    initViz1(); 
-    drawViz2(); 
-    drawViz3(); 
-    drawViz4();
-
-    // 2. Refit Middle Strip Text (Right Side)
-    // If a song is currently active (currentIndex > -1), we must re-run 
-    // updateSelection. This forces the "while" loop inside it to calculate 
-    // the new container width and shrink the font size accordingly.
-    if (currentIndex > -1 && sortedData[currentIndex]) {
-         updateSelection(sortedData[currentIndex].school);
-    }
-});
+        window.addEventListener("resize", () => {
+            initViz1(); 
+            drawViz2(); 
+            drawViz3(); 
+            // Re-draw Viz 4 in current mode (grid or radial)
+            if (currentIndex > -1) {
+                 drawViz4(sortedData[currentIndex]);
+                 updateSelection(sortedData[currentIndex].school);
+            } else {
+                 drawViz4(null);
+            }
+        });
 
         document.addEventListener('keydown', (e) => {
-            // Ignore if modal is open
             const modal = document.getElementById('about-modal');
             if (modal && modal.style.display === 'flex') {
                 if(e.key === "Escape") modal.style.display = 'none';
                 return;
             }
-
             if (e.key === "Escape") {
                 updateSelection(null);
                 return;
             }
+            if (e.key === 'f' || e.key === 'F') {
+                toggleFullScreen();
+            }
         });
 
-
-function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        // Enter fullscreen mode
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
-        } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
-            document.documentElement.webkitRequestFullscreen();
-        } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
-            document.documentElement.msRequestFullscreen();
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { 
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { 
+                    document.msExitFullscreen();
+                }
+            }
         }
-    } else {
-        // Exit fullscreen mode
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) { /* Safari */
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) { /* IE11 */
-            document.msExitFullscreen();
-        }
-    }
-}
-
-    
-document.addEventListener('keydown', (event) => {
-    // Check if the pressed key is 'f' or 'F'
-    if (event.key === 'f' || event.key === 'F') {
-        toggleFullScreen();
-    }
-});
-
     });
-
-
-
-    
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
