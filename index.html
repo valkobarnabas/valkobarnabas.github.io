@@ -407,22 +407,23 @@
     <div class="modal-content">
         <span class="close-btn" onclick="document.getElementById('about-modal').style.display='none'">×</span>
         <h2 style="color:var(--highlight); margin-top:0;">ABOUT THIS DASHBOARD</h2>
-        <p>This visualization explores the lyrical and musical patterns of 65 major college fight songs.</p>
+        <p>This interactive visualization explores the lyrical and musical patterns of 65 major college fight songs.</p>
         <ul>
-            <li><strong>Tropes (Top Left):</strong> Which lyrical clichés (e.g., "fight", "win", spelling out the name) appear in the song?</li>
-            <li><strong>Jaccard Network (Top Right):</strong> A network graph connecting schools whose lyrics share at least 75% similarity in tropes.</li>
-            <li><strong>Tune Topology (Bottom Left):</strong> A scatter plot of Tempo (BPM) vs. Duration. The color indicates how many times the word "Fight" is sung.</li>
-            <li><strong>Origin Story (Bottom Right):</strong> An "UpSet" plot showing how songs were created (Student Writer, Contest Winner, or Official adoption).</li>
+            <li><strong>Trope-O-Meter (Top Left):</strong> Click any node or logo to view that song's lyrical clichés. From left to right: do the words "fight," "victory," "win" or "won," or "rah" show up?
+            Does the song have nonsense syllables, mention any colors, groups of men, or opponents? Does it spell anything?</li>
+            <li><strong>Jaccard Network (Top Right):</strong> A network graph connecting songs whose lyrics share at least 75% similarity in tropes.</li>
+            <li><strong>Song Topology (Bottom Left):</strong> A scatter plot of Tempo (BPM) vs. Duration (sec) with added densities. The color indicates how many times the word "Fight" is sung.</li>
+            <li><strong>Origin Story (Bottom Right):</strong> An UpSet plot showing how songs were created (Student Writer, Contest Winner, or Official Adoption).</li>
         </ul>
         
         <p><strong>Data Sources:</strong></p>
         <ul style="font-size:0.9em; color:#ccc;">
             <li><a href="https://github.com/fivethirtyeight/data/blob/master/fight-songs/fight-songs.csv" target="_blank">FiveThirtyEight Fight Songs Dataset</a></li>
-            <li><a href="https://btaa.org/docs/default-source/research-data/readme-data-description.pdf?sfvrsn=f13148d3_1" target="_blank">Data Description (PDF)</a></li>
+            <li><a href="https://btaa.org/docs/default-source/research-data/readme-data-description.pdf?sfvrsn=f13148d3_1" target="_blank">BTAA Data Description (PDF)</a></li>
         </ul>
 
         <p style="font-size:0.9em; color:#888; margin-top:20px;">
-            Built with D3.js by Barnabás Valkó (UW-Madison Math/Stats 2027).<br>
+            Built with D3.js by Barnabás Valkó (UW-Madison Math/Stats 2027).
             GitHub: <a href="https://github.com/valkobarnabas" target="_blank">valkobarnabas</a>
         </p>
         <p style="font-size:0.66em; color:#555; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
@@ -444,9 +445,9 @@
     };
     
     const iconLabels = {
-        'fight': 'Fight', 'victory': 'Victory', 'win_won': 'Win', 
+        'fight': 'Fight', 'victory': 'Victory', 'win_won': 'Win/Won', 
         'rah': 'Rah', 'nonsense': 'Nonsense', 'colors': 'Colors', 
-        'men': 'Men', 'opponents': 'Foes', 'spelling': 'Spell',
+        'men': 'Men', 'opponents': 'Opponents', 'spelling': 'Spelling',
         'student_writer': 'Student Author', 'official_song': 'Official Song', 'contest': 'Contest Winner'
     };
     
@@ -1327,6 +1328,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
