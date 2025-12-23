@@ -264,6 +264,11 @@
             filter: drop-shadow(0 0 8px var(--accent)) !important;
         }
         
+        /* --- FIX: Black outline for highlighted nodes in Viz 4 to match white text --- */
+        .node-group circle.highlighted {
+            stroke: #000 !important;
+        }
+        
         .logo-dimmed { opacity: 0.3; filter: grayscale(100%); } 
         .logo-highlighted { filter: drop-shadow(0 0 8px var(--highlight)); transform: scale(1.1); opacity: 1; z-index: 10; }
 
@@ -474,7 +479,7 @@
             d.number_fights = +d.number_fights;
             d.trope_count = +d.trope_count;
             d.id = d.school;
-            d.isCenter = false; // Initialize center flag
+            d.isCenter = false; 
         });
 
         // Sort data alphabetically once for consistent navigation
@@ -537,7 +542,6 @@
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
             
             // 2. Viz 2 (Data Bars Only)
-            // Fix: Only dim .upset-row rects (data bars), not all rects (which hits legends)
             d3.selectAll(".upset-row rect").classed("dimmed", true).classed("highlighted", false);
             
             // 3. Viz 3 (Soft Dim - Keep Colors)
@@ -602,22 +606,7 @@
             drawTropeDashboard(d);
             if(showTopologyTooltip) showTopologyTooltip(d);
             
-            // 8. Update Legend Indicators
-            const tInd = d3.select("#trope-indicator");
-            if (tInd.node()) {
-                tInd.style("display", "block");
-                const lRect = d3.select("#jaccard-web svg").node() ? d3.select("#jaccard-web svg").node().getBoundingClientRect() : null;
-                if(lRect) {
-                    const legDivW = d3.select("#jaccard-web > div:nth-child(2)").node().getBoundingClientRect().width;
-                    const barWidth = legDivW - 30;
-                    const scale = d3.scaleLinear().domain([0, 8]).range([0, barWidth]);
-                    const xPos = scale(d.trope_count);
-                    tInd.attr("transform", `translate(${xPos}, 0)`);
-                    tInd.select("text").text(d.trope_count);
-                }
-            }
-
-            // B. Fight Indicator
+            // B. Fight Indicator (Viz 3)
             const fInd = d3.select("#fight-indicator");
             const noFightG = d3.select("#no-fights-group");
             const nfCheck = d3.select("#no-fights-check");
@@ -640,6 +629,21 @@
 
             // --- VIZ 4 UPDATE: Radial Layout ---
             drawViz4(d);
+
+            // --- VIZ 4 LEGEND INDICATOR (MUST BE CALLED AFTER DRAWVIZ4 REBUILDS THE DOM) ---
+             const tInd = d3.select("#trope-indicator");
+            if (tInd.node()) {
+                tInd.style("display", "block");
+                // The Legend SVG width is roughly 20% of the container, but we used relative calcs.
+                // We need to match the scale used inside drawViz4.
+                // Re-selecting the exact bar width is hard without scope, but we know logic:
+                const legDivW = d3.select("#jaccard-web > div:nth-child(2)").node().getBoundingClientRect().width;
+                const barWidth = legDivW - 30;
+                const scale = d3.scaleLinear().domain([0, 8]).range([0, barWidth]);
+                const xPos = scale(d.trope_count);
+                tInd.attr("transform", `translate(${xPos}, 25)`); // 25 is barY
+                tInd.select("text").text(d.trope_count);
+            }
         }
         
     
@@ -732,7 +736,7 @@ function drawTropeDashboard(d) {
 
        // --- VIZ 4: Trope Network ---
         drawViz4 = (focusNode) => {
-            // FIX: RESET CENTER FLAGS ON EVERY DRAW
+            // FIX: RESET CENTER FLAGS ON EVERY DRAW so resetting works
             data.forEach(n => n.isCenter = false);
 
             const container = d3.select("#jaccard-web");
@@ -858,9 +862,6 @@ function drawTropeDashboard(d) {
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                    // FIX: DISABLE TOOLTIP IF A NODE IS FOCUSED (HIGHLIGHT MODE)
-                    if (focusNode) return; 
-
                     d3.select(e.currentTarget).raise(); 
                     d3.select("#tooltip").style("opacity", 1)
                         .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
@@ -871,13 +872,13 @@ function drawTropeDashboard(d) {
             const circle = nodeG.append("circle")
                 .attr("r", d => d.isCenter ? r * 3 : r) // CENTER IS 3X BIGGER
                 .attr("fill", d => tropeColorScale(d.trope_count))
-                // CHANGED: Black stroke for better contrast
+                // CHANGED: Black stroke for all nodes in Viz 4
                 .attr("stroke", "#000").attr("stroke-width", 1) 
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
                 
             // --- TEXT LABELS ---
             if (focusNode) {
-                // 1. CENTER NODE: Plain Text, No Background Pill, Large Size
+                // 1. CENTER NODE
                 const centerG = nodeG.filter(d => d.school === focusNode.school);
                 
                 centerG.append("text")
