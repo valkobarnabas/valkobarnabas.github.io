@@ -896,29 +896,6 @@ function drawTropeDashboard(d) {
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#000").attr("stroke-width", 1) 
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
-
-                // --- PERCENTAGE LABELS (UPDATED with %) ---
-            if (focusNode) {
-                 nodeG.filter(d => d.school !== focusNode.school)
-                    .append("text")
-                    .attr("text-anchor", "middle")
-                    .attr("dy", "0.35em") // Vertically center
-                    .style("pointer-events", "none") // Let clicks pass through
-                    .style("fill", "#fff")
-                    .style("font-weight", "bold")
-                    .style("font-size", (r * 0.5) + "px") // Scaled down to fit %
-                    .style("stroke", "#000")
-                    .style("stroke-width", "2px")
-                    .style("paint-order", "stroke")
-                    .text(d => {
-                        const link = renderLinks.find(l => 
-                            (l.source === focusNode.school && l.target === d.school) || 
-                            (l.target === focusNode.school && l.source === d.school)
-                        );
-                        // Append % sign here
-                        return link ? Math.round(link.similarity * 100) + "%" : "";
-                    });
-            }
             
             // --- TEXT LABELS (SONG NAMES) ---
             if (focusNode) {
@@ -1336,6 +1313,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
