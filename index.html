@@ -892,7 +892,7 @@ function drawTropeDashboard(d) {
                     .style("font-weight", "800")
                     .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); 
 
-                // 2. NEIGHBORS: Text Alignment
+                // 2. NEIGHBORS: Complex Alignment Logic
                 nodeG.filter(d => d.school !== focusNode.school)
                     .append("text")
                     .text(d => d.song_name)
@@ -900,32 +900,36 @@ function drawTropeDashboard(d) {
                     .style("font-size", "12px")
                     .style("text-shadow", "0 0 2px #000")
                     .attr("text-anchor", d => {
-                        // Check if effectively vertical (within 10px of center)
+                        // Vertical Axis Check (within 10px)
                         if (Math.abs(d.x - w/2) < 10) return "middle";
                         
-                        // Otherwise, standard Left/Right logic
+                        // Left nodes = Flush Right (end)
+                        // Right nodes = Flush Left (start)
                         return d.x < w/2 ? "end" : "start";
                     })
                     .attr("x", d => {
-                        // If vertical, center it (x=0 relative to node)
                         if (Math.abs(d.x - w/2) < 10) return 0;
                         
-                        // Left node: Align to right edge (r)
-                        // Right node: Align to left edge (-r)
-                        return d.x < w/2 ? r + 5 : -r - 5; 
+                        // Left nodes: Align to the Rightmost point (r)
+                        // Right nodes: Align to the Leftmost point (-r)
+                        return d.x < w/2 ? r : -r; 
                     })
                     .attr("dy", d => {
-                        // VERTICAL CASE:
-                        // If vertical, we need to push the text Up or Down so it doesn't overlap the center.
-                        if (Math.abs(d.x - w/2) < 10) {
-                            // If node is at the top (y < h/2), push text up (-r - 5)
-                            // If node is at the bottom (y > h/2), push text down (r + 15)
-                            return d.y < h/2 ? -r - 5 : r + 15;
-                        }
+                        const cy = h/2;
+                        const isHorizontal = Math.abs(d.y - cy) < 10;
+                        const isLeft = d.x < w/2;
                         
-                        // SIDE CASE:
-                        // Keep text vertically centered
-                        return "0.35em";
+                        // LOGIC:
+                        // 1. If strictly Above -> UP
+                        // 2. If Horizontal AND Left -> UP
+                        // 3. Everyone else (Below or Horizontal-Right) -> DOWN
+                        
+                        let goUp = false;
+                        if (d.y < cy - 10) goUp = true;       // Strictly Above
+                        else if (isHorizontal && isLeft) goUp = true; // Horizontal & Left
+                        
+                        // Shift: -r-5 (Above) or r+15 (Below)
+                        return goUp ? -r - 5 : r + 15;
                     });
 
             } else {
@@ -1322,6 +1326,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
