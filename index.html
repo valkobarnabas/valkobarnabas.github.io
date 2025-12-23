@@ -816,7 +816,7 @@ function drawTropeDashboard(d) {
                     if(s && t) { l.x1=s.x; l.y1=s.y; l.x2=t.x; l.y2=t.y; }
                 });
                 
-                // Reduced Size (0.08 -> 0.06)
+                // Reduced Size
                 r = Math.min(w, h) * 0.06; 
 
             } else {
@@ -850,7 +850,6 @@ function drawTropeDashboard(d) {
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                    // Only show tooltip if NOT clicking/selecting
                     if(!focusNode || d.school !== focusNode.school) {
                         d3.select(e.currentTarget).raise(); 
                         d3.select("#tooltip").style("opacity", 1)
@@ -866,41 +865,36 @@ function drawTropeDashboard(d) {
                 .attr("stroke", "#fff").attr("stroke-width", 1)
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
                 
-            // --- CURVED TEXT FOR CENTER NODE ---
+            // --- TEXT LABELS ---
             if (focusNode) {
-                // 1. Create invisible arc path for text to follow
-                // We want the text to arc over the TOP of the circle
-                // Path from 9 o'clock to 3 o'clock (sweeping clockwise)
+                // 1. CENTER NODE: Horizontal line with background pill
+                const centerG = nodeG.filter(d => d.school === focusNode.school);
                 
-                // Radius for text path (slightly larger than circle)
-                const tr = r * 1.2; 
-                
-                // Define unique ID for this node's path
-                const pathId = "textPath_" + focusNode.id.replace(/[^a-zA-Z0-9]/g, "");
-
-                // Draw arc: M -tr,0 A tr,tr 0 1,1 tr,0
-                // This draws a semi-circle from left to right over the top
-                nodeG.filter(d => d.school === focusNode.school)
-                    .append("path")
-                    .attr("id", pathId)
-                    .attr("d", `M -${tr},0 A ${tr},${tr} 0 1,1 ${tr},0`) 
-                    .style("fill", "none")
-                    .style("stroke", "none");
-                
-                // 2. Append text referencing that path
-                nodeG.filter(d => d.school === focusNode.school)
-                    .append("text")
-                    .append("textPath")
-                    .attr("xlink:href", "#" + pathId)
-                    .style("text-anchor", "middle")
-                    .attr("startOffset", "50%")
+                // Add text first to measure it
+                const labelText = centerG.append("text")
+                    .text(d => d.song_name)
+                    .attr("text-anchor", "middle")
+                    .attr("dy", "0.35em") // Vertical center
                     .style("fill", "#fff")
                     .style("font-size", "14px")
                     .style("font-weight", "bold")
-                    .style("text-shadow", "0 0 3px #000")
-                    .text(d => d.song_name);
+                    .style("text-shadow", "0 0 2px #000");
+                
+                // Add background rect sized to text
+                labelText.each(function(d) {
+                    const bbox = this.getBBox();
+                    const padding = 6;
+                    d3.select(this.parentNode).insert("rect", "text")
+                        .attr("x", bbox.x - padding)
+                        .attr("y", bbox.y - 1)
+                        .attr("width", bbox.width + (padding*2))
+                        .attr("height", bbox.height + 2)
+                        .attr("rx", 8) // Rounded corners
+                        .attr("fill", tropeColorScale(d.trope_count))
+                        .attr("stroke", "none");
+                });
 
-                // For Neighbors: Standard flat text below
+                // 2. NEIGHBORS: Simple text below
                  nodeG.filter(d => d.school !== focusNode.school)
                     .append("text")
                     .text(d => d.song_name)
@@ -911,20 +905,44 @@ function drawTropeDashboard(d) {
                     .style("text-shadow", "0 0 2px #000");
 
             } else {
-                // Default Grid Mode: Tiny text inside
+                // *** DEFAULT GRID MODE: Fit text inside circle ***
+                // Split words and create tspans
                 nodeG.append("text")
-                    .text(d => d.song_name)
-                    .attr("dy", 2)
-                    .attr("text-anchor", "middle")
+                    .style("font-size", d => Math.min(8, r * 0.45) + "px") // Dynamic sizing based on radius
                     .style("fill", "#fff")
-                    .style("font-size", "6px")
+                    .style("text-anchor", "middle")
                     .style("pointer-events", "none")
                     .style("text-shadow", "0 0 2px #000")
                     .each(function(d) {
-                        const self = d3.select(this);
-                        if (self.text().length > 15) {
-                            self.text(self.text().substring(0, 12) + "...");
-                        }
+                        const words = d.song_name.split(/\s+/);
+                        const maxLines = 4;
+                        const chunks = [];
+                        
+                        // Simple logic: grouped words to fit lines
+                        let currentLine = [];
+                        words.forEach(word => {
+                           if (currentLine.join(" ").length + word.length < 10) {
+                               currentLine.push(word);
+                           } else {
+                               chunks.push(currentLine.join(" "));
+                               currentLine = [word];
+                           }
+                        });
+                        if(currentLine.length > 0) chunks.push(currentLine.join(" "));
+                        
+                        // Truncate to max lines
+                        const lines = chunks.slice(0, maxLines);
+                        
+                        // Center vertically: Calculate offset based on number of lines
+                        const lineHeight = 1.1; // em
+                        const startDy = -((lines.length - 1) * lineHeight / 2);
+
+                        d3.select(this).selectAll("tspan")
+                            .data(lines)
+                            .enter().append("tspan")
+                            .text(line => line)
+                            .attr("x", 0)
+                            .attr("dy", (line, i) => i === 0 ? startDy + "em" : lineHeight + "em");
                     });
             }
 
@@ -1126,7 +1144,7 @@ function drawTropeDashboard(d) {
             const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
             
             g.append("text").attr("x", barAreaWidth - 10).attr("y", -10).attr("text-anchor", "end")
-             .style("fill", "#888").style("font-size", "10px").text("Number of Songs (65)");
+             .style("fill", "#888").style("font-size", "10px").text("Number of Songs");
 
             const headerG = svg.append("g").attr("transform", `translate(${margin.left + barAreaWidth}, ${margin.top - 10})`);
             const colW = matrixWidth / meta.length;
@@ -1174,10 +1192,6 @@ function drawTropeDashboard(d) {
                         if (d.schools.length === 1) {
                             updateSelection(d.schools[0]);
                         } else {
-                            // If user clicks a multi-school bar (e.g. Student+Contest), 
-                            // we just highlight dots but don't "select" a school fully
-                            // because updateSelection expects a single school name.
-                            // To properly highlight Texas A&M (the only one), we can just find it:
                              if (d.schools.length === 1) updateSelection(d.schools[0]);
                         }
                     });
@@ -1246,4 +1260,3 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
-
