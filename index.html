@@ -813,33 +813,21 @@ function drawTropeDashboard(d) {
                 renderNodes = sortedNodes.filter(n => n.school === focusNode.school || neighbors.includes(n.school));
                 renderLinks = links.filter(l => (l.source === focusNode.school && neighbors.includes(l.target)) || (l.target === focusNode.school && neighbors.includes(l.source)));
                 
-                // Base radius for neighbors
+                // Base radius
                 r = Math.min(w, h) * 0.05; 
 
                 const centerNode = renderNodes.find(n => n.school === focusNode.school);
-                centerNode.isCenter = true; 
                 centerNode.x = w/2; 
                 centerNode.y = h/2;
-
-                // --- DYNAMIC RECT CALCULATION ---
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-                ctx.font = "800 16px sans-serif"; 
-                const txt = `"${focusNode.song_name}"`;
-                const textWidth = ctx.measureText(txt).width;
+                centerNode.isCenter = true; 
                 
-                // SAFEGUARD 1: Clamp rectangle width to 80% of screen width max
-                const maxRectW = w * 0.8;
-                centerNode.rectW = Math.min(textWidth + 50, maxRectW);
-                centerNode.rectH = 40; 
-
                 const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
                 
                 // --- NO NEIGHBORS LOGIC ---
                 if(neighborNodes.length === 0) {
                     g.append("text")
                         .attr("x", w/2)
-                        .attr("y", h/2 + (centerNode.rectH/2) + 25) 
+                        .attr("y", h/2 + (r*3) + 25) 
                         .attr("text-anchor", "middle")
                         .style("fill", "#888")
                         .style("font-size", "12px")
@@ -847,30 +835,13 @@ function drawTropeDashboard(d) {
                         .text("No songs with ≥75% trope similarity");
                 }
 
-                // --- SAFE RADIUS CALCULATION ---
-                // 1. Ideal radius (based on rect corners)
-                const halfDiag = Math.sqrt(Math.pow(centerNode.rectW/2, 2) + Math.pow(centerNode.rectH/2, 2));
-                const idealMinR = halfDiag + r + 20; 
-                
-                // 2. Maximum safe radius (screen edge - neighbor radius - padding)
-                const maxSafeR = Math.min(w/2, h/2) - r - 10;
-                
-                // 3. Final Radius: Use ideal if it fits, otherwise cap it at maxSafeR
-                //    But ensure it's at least the default 35% if space allows
-                const defaultR = Math.min(w, h) * 0.35;
-                const circleRadius = Math.min(Math.max(defaultR, idealMinR), maxSafeR);
-
+                const circleRadius = Math.min(w, h) * 0.35;
                 const angleStep = (2 * Math.PI) / neighborNodes.length;
                 
                 neighborNodes.forEach((n, i) => {
                     const angle = i * angleStep - Math.PI/2;
                     n.x = (w/2) + Math.cos(angle) * circleRadius;
                     n.y = (h/2) + Math.sin(angle) * circleRadius;
-                    
-                    // SAFEGUARD 2: Hard Boundary Clamp
-                    // Force node to stay inside [radius+padding, width-radius-padding]
-                    n.x = Math.max(r + 5, Math.min(w - r - 5, n.x));
-                    n.y = Math.max(r + 5, Math.min(h - r - 5, n.y));
                 });
                 
                 renderLinks.forEach(l => {
@@ -920,28 +891,16 @@ function drawTropeDashboard(d) {
                 })
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 
-            // 1. Draw Neighbors (Circles)
-            nodeG.filter(d => !d.isCenter).append("circle")
-                .attr("r", r) 
+            const circle = nodeG.append("circle")
+                .attr("r", d => d.isCenter ? r * 3 : r) 
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#000").attr("stroke-width", 1) 
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
-
-            // 2. Draw Center Node (Rectangle)
-            nodeG.filter(d => d.isCenter).append("rect")
-                .attr("x", d => -d.rectW / 2)
-                .attr("y", d => -d.rectH / 2)
-                .attr("width", d => d.rectW)
-                .attr("height", d => d.rectH)
-                .attr("rx", 20) 
-                .attr("fill", d => tropeColorScale(d.trope_count))
-                .attr("stroke", "#000").attr("stroke-width", 2)
-                .classed("highlighted", true);
-
-            // --- TEXT LABELS ---
+            
+            // --- TEXT LABELS (SONG NAMES) ---
             if (focusNode) {
                 // 1. CENTER NODE
-                const centerG = nodeG.filter(d => d.isCenter);
+                const centerG = nodeG.filter(d => d.school === focusNode.school);
                 
                 centerG.append("text")
                     .text(d => `"${d.song_name}"`) 
@@ -950,11 +909,10 @@ function drawTropeDashboard(d) {
                     .style("fill", "#fff")
                     .style("font-size", "16px") 
                     .style("font-weight", "800")
-                    .style("pointer-events", "none") 
                     .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); 
 
-                // 2. NEIGHBORS (Directional Logic)
-                nodeG.filter(d => !d.isCenter)
+                // 2. NEIGHBORS (DIRECTIONAL LOGIC)
+                nodeG.filter(d => d.school !== focusNode.school)
                     .append("text")
                     .text(d => `"${d.song_name}"`)
                     .style("fill", "#fff")
@@ -1355,38 +1313,3 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
