@@ -1081,7 +1081,7 @@ function drawTropeDashboard(d) {
             
             legG.append("rect").attr("y", barY).attr("width", barWidth).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
             legG.append("text").text("0").attr("y", barY + 25).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
-            legG.append("text").text("9").attr("y", barY + 25).attr("x", barWidth).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
+            legG.append("text").text("8+").attr("y", barY + 25).attr("x", barWidth).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
 
             const tropeInd = legG.append("g").attr("id", "trope-indicator").attr("class", "legend-indicator").style("display", "none"); 
             tropeInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", `translate(0, ${barY})`); 
@@ -1384,5 +1384,6 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html> // on, wisconsin! hajrá magyarok!
+
 
 
