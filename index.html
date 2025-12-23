@@ -344,7 +344,7 @@
 <body>
 
     <div id="viz1" class="viz-container">
-        <h3>Trope-o-meter <span style="font-size:0.7em; color:#666;">Cliché make-up</span></h3>
+        <h3>Trope-O-Meter <span style="font-size:0.7em; color:#666;">Cliché make-up</span></h3>
         <div class="chart-area" id="lyrical-panel" style="display:flex; height: 100%;">
             <div id="logo-grid" style="flex: 0 0 55%; overflow: hidden; padding-right: 10px;"></div>
             <div id="trope-dashboard" style="flex: 1; border-left: 1px solid #333; padding-left: 10px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
@@ -411,9 +411,9 @@
         <ul>
             <li><strong style="color:var(--highlight)">Trope-O-Meter:</strong> Do the words "fight," "victory," "win" or "won," or "rah" show up?
             Does the song have nonsense syllables, mention any colors, groups of men, or opponents? Is anything spelled?</li>
-            <li><strong>Jaccard Network:</strong> A network graph connecting songs whose lyrics share at least 75% similarity in tropes. Calculated by Jaccard index.</li>
-            <li><strong>Song Topology:</strong> A scatter plot of Tempo (BPM) vs. Duration (sec) with added densities. The color indicates how many times the word "fight" is sung.</li>
-            <li><strong>Origin Story:</strong> An UpSet plot showing how songs were created (Student Author, Contest Winner, or Official Song).</li>
+            <li><strong style="color:var(--highlight)">Jaccard Network:</strong> A network graph connecting songs whose lyrics share at least 75% similarity in tropes. Calculated by Jaccard index.</li>
+            <li><strong style="color:var(--highlight)">Song Topology:</strong> A scatter plot of Tempo (BPM) vs. Duration (sec) with added densities. The color indicates how many times the word "fight" is sung.</li>
+            <li><strong style="color:var(--highlight)">Origin Story:</strong> An UpSet plot showing how songs were created (Student Author, Contest Winner, or Official Song).</li>
         </ul>
         
         <p><strong>Data Sources:</strong></p>
@@ -1363,6 +1363,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
