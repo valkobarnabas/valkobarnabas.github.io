@@ -923,22 +923,56 @@ function drawTropeDashboard(d) {
                     .style("font-weight", "800")
                     .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); 
 
-                // 2. NEIGHBORS (WITH QUOTES)
+                // 2. NEIGHBORS (WITH QUOTES & DIRECTIONAL LOGIC)
                 nodeG.filter(d => d.school !== focusNode.school)
                     .append("text")
-                    .text(d => `"${d.song_name}"`) // Added Quotes
+                    .text(d => `"${d.song_name}"`)
                     .style("fill", "#fff")
                     .style("font-size", "12px")
                     .style("text-shadow", "0 0 2px #000")
-                    .attr("text-anchor", d => {
-                        if (Math.abs(d.x - w/2) < 10) return "middle";
-                        return d.x < w/2 ? "end" : "start";
-                    })
-                    .attr("x", d => {
-                        if (Math.abs(d.x - w/2) < 10) return 0;
-                        return d.x < w/2 ? -r - 5 : r + 5; // Added slight padding
-                    })
-                    .attr("dy", "0.35em");
+                    .each(function(d) {
+                        const sel = d3.select(this);
+                        const cy = h/2;
+                        const cx = w/2;
+                        
+                        // --- Directional Booleans ---
+                        const isVertical = Math.abs(d.x - cx) < 10;
+                        const isHorizontal = Math.abs(d.y - cy) < 10;
+                        const isLeft = d.x < cx;
+                        const isRight = d.x > cx;
+                        const isAbove = d.y < cy;
+                        
+                        // --- 1. Horizontal Positioning (Anchor & X) ---
+                        if (isVertical) {
+                            sel.attr("text-anchor", "middle").attr("x", 0);
+                        } else if (isLeft) {
+                            // Left Node -> Flush Right (end) -> Anchor at Left Outer Edge
+                            sel.attr("text-anchor", "end").attr("x", -r - 8);
+                        } else {
+                            // Right Node -> Flush Left (start) -> Anchor at Right Outer Edge
+                            sel.attr("text-anchor", "start").attr("x", r + 8);
+                        }
+
+                        // --- 2. Vertical Positioning (Y & Baseline) ---
+                        let goUp = false;
+                        
+                        // Rule: Horizontal Left -> Up
+                        if (isHorizontal && isLeft) goUp = true;
+                        // Rule: Horizontal Right -> Down
+                        else if (isHorizontal && isRight) goUp = false;
+                        // Rule: General Above -> Up
+                        else if (isAbove) goUp = true;
+                        // Rule: General Below -> Down
+                        else goUp = false;
+
+                        if (goUp) {
+                            // Position ABOVE node (baseline at -r-5)
+                            sel.attr("y", -r - 5).attr("dominant-baseline", "auto"); 
+                        } else {
+                            // Position BELOW node (hanging from r+5)
+                            sel.attr("y", r + 5).attr("dominant-baseline", "hanging");
+                        }
+                    });
 
             } else {
                 // *** DEFAULT GRID MODE ***
@@ -1198,24 +1232,20 @@ function drawTropeDashboard(d) {
             meta.forEach((m, i) => {
                 const centerX = i * colW + colW/2;
                 
-                // 1. Icon (Centered, slightly higher)
-                headerG.append("text").attr("x", centerX).attr("y", -32).attr("text-anchor", "middle")
+                // 1. Icon (Top)
+                headerG.append("text").attr("x", centerX).attr("y", -38).attr("text-anchor", "middle")
                     .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
                 
-                // 2. Text (Left/Center aligned split lines)
+                // 2. Count (Middle - Large & Bold)
+                headerG.append("text").attr("x", centerX).attr("y", -22).attr("text-anchor", "middle")
+                    .style("font-size", "13px").style("fill", "#fff").style("font-weight", "bold").text(totals[m]);
+
+                // 3. Label (Bottom - Split Lines)
                 const labelWords = iconLabels[m].split(" ");
-                // Offset text to the left of center to make room for number
-                const textX = centerX - 10; 
-                
                 labelWords.forEach((word, idx) => {
-                    headerG.append("text").attr("x", textX).attr("y", -18 + (idx*9)).attr("text-anchor", "middle")
+                    headerG.append("text").attr("x", centerX).attr("y", -10 + (idx*9)).attr("text-anchor", "middle")
                         .style("font-size", "9px").style("fill", "#bbb").text(word);
                 });
-                
-                // 3. Number (Right of text, larger)
-                headerG.append("text").attr("x", centerX + 18).attr("y", -12) // vertically centered relative to 2-line text
-                    .attr("text-anchor", "middle")
-                    .style("font-size", "12px").style("fill", "#fff").style("font-weight", "bold").text(`(${totals[m]})`);
             });
 
             sorted.forEach((d, i) => {
@@ -1307,6 +1337,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
