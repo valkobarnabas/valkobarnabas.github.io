@@ -487,6 +487,9 @@
         });
 
        function updateSelection(schoolName) {
+            // FORCE TOOLTIP HIDE ON UPDATE
+            d3.select("#tooltip").style("opacity", 0);
+
             if (!schoolName) {
                 currentIndex = -1; 
                 
@@ -796,9 +799,13 @@ function drawTropeDashboard(d) {
                 renderNodes = sortedNodes.filter(n => n.school === focusNode.school || neighbors.includes(n.school));
                 renderLinks = links.filter(l => (l.source === focusNode.school && neighbors.includes(l.target)) || (l.target === focusNode.school && neighbors.includes(l.source)));
                 
+                // Base radius for neighbors
+                r = Math.min(w, h) * 0.05; 
+
                 const centerNode = renderNodes.find(n => n.school === focusNode.school);
                 centerNode.x = w/2; 
                 centerNode.y = h/2;
+                centerNode.isCenter = true; // Flag for center node
                 
                 const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
                 const circleRadius = Math.min(w, h) * 0.35;
@@ -815,9 +822,6 @@ function drawTropeDashboard(d) {
                     const t = renderNodes.find(n => n.school === l.target);
                     if(s && t) { l.x1=s.x; l.y1=s.y; l.x2=t.x; l.y2=t.y; }
                 });
-                
-                // Reduced Size
-                r = Math.min(w, h) * 0.06; 
 
             } else {
                 // *** DEFAULT MODE (Grid) ***
@@ -850,49 +854,35 @@ function drawTropeDashboard(d) {
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                    if(!focusNode || d.school !== focusNode.school) {
-                        d3.select(e.currentTarget).raise(); 
-                        d3.select("#tooltip").style("opacity", 1)
-                            .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
-                            .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
-                    }
+                    // FIX: DISABLE TOOLTIP IF A NODE IS FOCUSED (HIGHLIGHT MODE)
+                    if (focusNode) return; 
+
+                    d3.select(e.currentTarget).raise(); 
+                    d3.select("#tooltip").style("opacity", 1)
+                        .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
+                        .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 
             const circle = nodeG.append("circle")
-                .attr("r", r)
+                .attr("r", d => d.isCenter ? r * 3 : r) // CENTER IS 3X BIGGER
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#fff").attr("stroke-width", 1)
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
                 
             // --- TEXT LABELS ---
             if (focusNode) {
-                // 1. CENTER NODE: Horizontal line with background pill
+                // 1. CENTER NODE: Plain Text, No Background Pill, Large Size
                 const centerG = nodeG.filter(d => d.school === focusNode.school);
                 
-                // Add text first to measure it
-                const labelText = centerG.append("text")
+                centerG.append("text")
                     .text(d => d.song_name)
                     .attr("text-anchor", "middle")
-                    .attr("dy", "0.35em") // Vertical center
+                    .attr("dy", "0.35em") // Centered vertically
                     .style("fill", "#fff")
-                    .style("font-size", "14px")
-                    .style("font-weight", "bold")
-                    .style("text-shadow", "0 0 2px #000");
-                
-                // Add background rect sized to text
-                labelText.each(function(d) {
-                    const bbox = this.getBBox();
-                    const padding = 6;
-                    d3.select(this.parentNode).insert("rect", "text")
-                        .attr("x", bbox.x - padding)
-                        .attr("y", bbox.y - 1)
-                        .attr("width", bbox.width + (padding*2))
-                        .attr("height", bbox.height + 2)
-                        .attr("rx", 8) // Rounded corners
-                        .attr("fill", tropeColorScale(d.trope_count))
-                        .attr("stroke", "none");
-                });
+                    .style("font-size", "16px") // Large text for large node
+                    .style("font-weight", "800")
+                    .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); // Drop shadow for visibility
 
                 // 2. NEIGHBORS: Simple text below
                  nodeG.filter(d => d.school !== focusNode.school)
@@ -905,44 +895,67 @@ function drawTropeDashboard(d) {
                     .style("text-shadow", "0 0 2px #000");
 
             } else {
-                // *** DEFAULT GRID MODE: Fit text inside circle ***
-                // Split words and create tspans
+                // *** DEFAULT GRID MODE: STRICT FITTING ***
+                // Fit text inside circle of radius r
+                
                 nodeG.append("text")
-                    .style("font-size", d => Math.min(8, r * 0.45) + "px") // Dynamic sizing based on radius
+                    .style("font-size", (r * 0.4) + "px") // Base font size
                     .style("fill", "#fff")
                     .style("text-anchor", "middle")
                     .style("pointer-events", "none")
                     .style("text-shadow", "0 0 2px #000")
                     .each(function(d) {
                         const words = d.song_name.split(/\s+/);
-                        const maxLines = 4;
-                        const chunks = [];
+                        const maxLines = 3; // MAX 3 LINES
+                        const lineHeight = r * 0.5; // Estimated line height in pixels
                         
-                        // Simple logic: grouped words to fit lines
+                        // Helper: check if a line of text fits at a specific Y offset
+                        // Chord length at height y from center is 2 * sqrt(r^2 - y^2)
+                        // We approximate width checking.
+                        
+                        // Let's perform a simple packing
+                        let lines = [];
                         let currentLine = [];
-                        words.forEach(word => {
-                           if (currentLine.join(" ").length + word.length < 10) {
-                               currentLine.push(word);
-                           } else {
-                               chunks.push(currentLine.join(" "));
-                               currentLine = [word];
-                           }
-                        });
-                        if(currentLine.length > 0) chunks.push(currentLine.join(" "));
                         
-                        // Truncate to max lines
-                        const lines = chunks.slice(0, maxLines);
+                        // We will try to pack words. This is a greedy approach.
+                        // Ideally we measure text width, but Canvas measurement is expensive in loop.
+                        // Approximation: char width ~ font-size * 0.6
+                        const charW = (r * 0.4) * 0.6; 
                         
-                        // Center vertically: Calculate offset based on number of lines
-                        const lineHeight = 1.1; // em
-                        const startDy = -((lines.length - 1) * lineHeight / 2);
+                        for (let w of words) {
+                            // Test if currentLine + w fits
+                            // We need to know which line # this is to know the width constraint
+                            // But line # depends on wrapping.
+                            // Let's assume standard wrapping first, then truncate.
+                            
+                            let potentialLine = currentLine.concat(w).join(" ");
+                            // Max width for any line is 2*r. Let's be safe and say 1.8*r
+                            if (potentialLine.length * charW < (r * 1.8)) {
+                                currentLine.push(w);
+                            } else {
+                                if (currentLine.length > 0) lines.push(currentLine.join(" "));
+                                currentLine = [w];
+                            }
+                        }
+                        if(currentLine.length > 0) lines.push(currentLine.join(" "));
+                        
+                        // Truncate to 3 lines
+                        if(lines.length > maxLines) {
+                            lines = lines.slice(0, maxLines);
+                            // Add ellipsis to last line? 
+                            // lines[maxLines-1] += ".."; 
+                        }
+                        
+                        // Vertical Centering
+                        // Total height = lines.length * 1.1em
+                        const startDy = -((lines.length - 1) * 1.1 / 2);
 
                         d3.select(this).selectAll("tspan")
                             .data(lines)
                             .enter().append("tspan")
-                            .text(line => line)
+                            .text(l => l)
                             .attr("x", 0)
-                            .attr("dy", (line, i) => i === 0 ? startDy + "em" : lineHeight + "em");
+                            .attr("dy", (l, i) => i === 0 ? startDy + "em" : "1.1em");
                     });
             }
 
@@ -962,19 +975,33 @@ function drawTropeDashboard(d) {
             legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             
             const barWidth = legW - 30;
-            legG.append("rect").attr("y", 10).attr("width", barWidth).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
-            legG.append("text").text("0").attr("y", 35).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
-            legG.append("text").text("8").attr("y", 35).attr("x", barWidth).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
+            const barY = 25; // Push bar down to make room for triangle text below header
+            
+            legG.append("rect").attr("y", barY).attr("width", barWidth).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
+            legG.append("text").text("0").attr("y", barY + 25).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
+            legG.append("text").text("8").attr("y", barY + 25).attr("x", barWidth).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
 
+            // --- TRIANGLE INDICATOR ---
             const tropeInd = legG.append("g")
                 .attr("id", "trope-indicator")
                 .attr("class", "legend-indicator")
                 .style("display", "none"); 
             
-            tropeInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 10)");
-            tropeInd.append("text").attr("y", 22).text("0");
+            // Triangle tip at barY (25), pointing down
+            // Actually usually pointers point to value. 
+            // If I want text BELOW "Trope Count" but ABOVE bar:
+            // Trope Count y=0. Bar y=25. Gap is 25px.
+            // Put text at y=12. Put triangle tip at y=25.
+            
+            tropeInd.append("path")
+                .attr("d", "M -4 -6 L 4 -6 L 0 0 Z") 
+                .attr("transform", `translate(0, ${barY})`); // Tip touches top of bar
+            
+            tropeInd.append("text")
+                .attr("y", barY - 8) // Sits above triangle
+                .text("0");
 
-            const sectionConnY = 60; 
+            const sectionConnY = 80; 
             legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             
             const exG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
