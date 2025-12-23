@@ -322,7 +322,7 @@
             background: var(--card-bg);
             padding: 30px;
             border-radius: 10px;
-            max-width: 600px;
+            max-width: 900px;
             border: 2px solid var(--highlight);
             color: #fff;
             position: relative;
@@ -781,13 +781,20 @@ function drawTropeDashboard(d) {
                         const a = n1[k]==='Yes'; const b = n2[k]==='Yes';
                         if(a||b) union++; if(a&&b) intersect++; 
                     });
-                    if(union > 0 && (intersect/union) > 0.74) {
-                        links.push({ source: n1.school, target: n2.school });
+                    
+                    const sim = union === 0 ? 0 : intersect/union;
+
+                    if(sim > 0.74) {
+                        links.push({ source: n1.school, target: n2.school, similarity: sim });
                     }
                 }
             }
+            // Manual overrides for visual completeness (Hardcode as 100% for visual weight if desired, or calculated)
             [["Michigan", "Tennessee"], ["Tennessee", "Boston College"], ["Boston College", "Michigan"]].forEach(pair => {
-                links.push({ source: pair[0], target: pair[1] });
+                // Check if link exists
+                if(!links.find(l => (l.source===pair[0] && l.target===pair[1]) || (l.source===pair[1] && l.target===pair[0]))) {
+                    links.push({ source: pair[0], target: pair[1], similarity: 1.0 }); // Hardcoded high similarity
+                }
             });
 
             // --- LAYOUT LOGIC ---
@@ -804,9 +811,10 @@ function drawTropeDashboard(d) {
                 });
                 
                 renderNodes = sortedNodes.filter(n => n.school === focusNode.school || neighbors.includes(n.school));
+                // Only keep links connected to center
                 renderLinks = links.filter(l => (l.source === focusNode.school && neighbors.includes(l.target)) || (l.target === focusNode.school && neighbors.includes(l.source)));
                 
-                // Base radius for neighbors
+                // Base radius
                 r = Math.min(w, h) * 0.05; 
 
                 const centerNode = renderNodes.find(n => n.school === focusNode.school);
@@ -815,6 +823,29 @@ function drawTropeDashboard(d) {
                 centerNode.isCenter = true; 
                 
                 const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
+                
+                // --- NO NEIGHBORS LOGIC ---
+                if(neighborNodes.length === 0) {
+                    // Draw the "No Match" indicator
+                    const noMatchG = g.append("g").attr("transform", `translate(${w/2 + (r*3) + 20}, ${h/2})`);
+                    
+                    noMatchG.append("line")
+                        .attr("x1", 0).attr("y1", 0)
+                        .attr("x2", 40).attr("y2", 0)
+                        .attr("stroke", "#666").attr("stroke-width", 2).attr("stroke-dasharray", "4,4");
+                    
+                    noMatchG.append("text")
+                        .attr("x", 45).attr("y", 0).attr("dy", "0.35em")
+                        .style("fill", "#888").style("font-size", "12px").style("font-style", "italic")
+                        .text("No songs with ≥ 75% trope similarity");
+                    
+                    noMatchG.append("text")
+                        .attr("x", 20).attr("y", -8)
+                        .attr("text-anchor", "middle")
+                        .style("fill", "#ff0000").style("font-size", "14px").style("font-weight", "bold")
+                        .text("×");
+                }
+
                 const circleRadius = Math.min(w, h) * 0.35;
                 const angleStep = (2 * Math.PI) / neighborNodes.length;
                 
@@ -849,10 +880,14 @@ function drawTropeDashboard(d) {
 
             // --- RENDER LINKS ---
             if (focusNode) {
-                 g.selectAll("line").data(renderLinks).enter().append("line")
+                 g.selectAll("line.link").data(renderLinks).enter().append("line")
+                    .attr("class", "link")
                     .attr("x1", d => d.x1).attr("y1", d => d.y1)
                     .attr("x2", d => d.x2).attr("y2", d => d.y2)
-                    .attr("stroke", "#ffffff").attr("stroke-width", 2).attr("opacity", 0.6);
+                    .attr("stroke", "#ffffff")
+                    // BOLD IF 100% (approx 0.99 for float safety)
+                    .attr("stroke-width", d => d.similarity >= 0.99 ? 4 : 1)
+                    .attr("opacity", d => d.similarity >= 0.99 ? 1 : 0.6);
             }
 
             // --- RENDER NODES ---
@@ -861,7 +896,6 @@ function drawTropeDashboard(d) {
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                    
                     d3.select(e.currentTarget).raise(); 
                     d3.select("#tooltip").style("opacity", 1)
                         .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
@@ -870,19 +904,18 @@ function drawTropeDashboard(d) {
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 
             const circle = nodeG.append("circle")
-                .attr("r", d => d.isCenter ? r * 3 : r) // CENTER IS 3X BIGGER
+                .attr("r", d => d.isCenter ? r * 3 : r) 
                 .attr("fill", d => tropeColorScale(d.trope_count))
-                // CHANGED: Black stroke for all nodes in Viz 4
                 .attr("stroke", "#000").attr("stroke-width", 1) 
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
                 
             // --- TEXT LABELS ---
             if (focusNode) {
-                // 1. CENTER NODE
+                // 1. CENTER NODE (WITH QUOTES)
                 const centerG = nodeG.filter(d => d.school === focusNode.school);
                 
                 centerG.append("text")
-                    .text(d => d.song_name)
+                    .text(d => `"${d.song_name}"`) // Added Quotes
                     .attr("text-anchor", "middle")
                     .attr("dy", "0.35em") 
                     .style("fill", "#fff")
@@ -890,49 +923,25 @@ function drawTropeDashboard(d) {
                     .style("font-weight", "800")
                     .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); 
 
-                // 2. NEIGHBORS: Complex Alignment Logic
+                // 2. NEIGHBORS (WITH QUOTES)
                 nodeG.filter(d => d.school !== focusNode.school)
                     .append("text")
-                    .text(d => d.song_name)
+                    .text(d => `"${d.song_name}"`) // Added Quotes
                     .style("fill", "#fff")
                     .style("font-size", "12px")
                     .style("text-shadow", "0 0 2px #000")
                     .attr("text-anchor", d => {
-                        // Vertical Axis Check (within 10px)
                         if (Math.abs(d.x - w/2) < 10) return "middle";
-                        
-                        // Left nodes = Flush Right (end)
-                        // Right nodes = Flush Left (start)
                         return d.x < w/2 ? "end" : "start";
                     })
                     .attr("x", d => {
                         if (Math.abs(d.x - w/2) < 10) return 0;
-                        
-                        // Left nodes: Align to the Rightmost point (r)
-                        // Right nodes: Align to the Leftmost point (-r)
-                        return d.x < w/2 ? r : -r; 
+                        return d.x < w/2 ? -r - 5 : r + 5; // Added slight padding
                     })
-                    .attr("dy", d => {
-                        const cy = h/2;
-                        const isHorizontal = Math.abs(d.y - cy) < 10;
-                        const isLeft = d.x < w/2;
-                        
-                        // LOGIC:
-                        // 1. If strictly Above -> UP
-                        // 2. If Horizontal AND Left -> UP
-                        // 3. Everyone else (Below or Horizontal-Right) -> DOWN
-                        
-                        let goUp = false;
-                        if (d.y < cy - 10) goUp = true;       // Strictly Above
-                        else if (isHorizontal && isLeft) goUp = true; // Horizontal & Left
-                        
-                        // Shift: -r-5 (Above) or r+15 (Below)
-                        return goUp ? -r - 5 : r + 15;
-                    });
+                    .attr("dy", "0.35em");
 
             } else {
-                // *** DEFAULT GRID MODE: STRICT FITTING ***
-                
+                // *** DEFAULT GRID MODE ***
                 const specialSchools = ["Wake Forest", "Stanford", "Florida", "Georgia Tech", "Rutgers", "Virginia", "Northwestern", "Washington", "Maryland", "Ohio State", "Miami", "Indiana"];
                 const superSpecial = ["South Carolina"];
 
@@ -947,34 +956,18 @@ function drawTropeDashboard(d) {
                     .style("pointer-events", "none")
                     .style("text-shadow", "0 0 2px #000")
                     .each(function(d) {
-                        // NEW: Split on spaces OR hyphens (keep hyphens attached)
-                        // "Oskee-Wow-Wow" -> "Oskee- " "Wow- " "Wow"
                         const words = d.song_name.replace(/-/g, "- ").split(/\s+/);
-                        
                         let maxLines = 3;
                         let fontSize = r * 0.4;
+                        if (superSpecial.includes(d.school)) { maxLines = 5; fontSize = r * 0.3; } 
+                        else if (specialSchools.includes(d.school)) { maxLines = 4; fontSize = r * 0.3; }
                         
-                        if (superSpecial.includes(d.school)) {
-                            maxLines = 5;
-                            fontSize = r * 0.3;
-                        } else if (specialSchools.includes(d.school)) {
-                            maxLines = 4;
-                            fontSize = r * 0.3;
-                        }
-                        
-                        // Approximation: char width
                         const charW = fontSize * 0.6; 
-                        
                         let lines = [];
                         let currentLine = [];
                         
                         for (let w of words) {
-                            // Check if adding this word exceeds estimated chord width
-                            // We use a safe width of 1.8*r
                             let potentialLine = currentLine.concat(w).join(" ");
-                            
-                            // Remove trailing space added to hyphen for length check? 
-                            // Actually "Oskee- " needs to fit.
                             if (potentialLine.length * charW < (r * 1.8)) {
                                 currentLine.push(w);
                             } else {
@@ -983,7 +976,6 @@ function drawTropeDashboard(d) {
                             }
                         }
                         if(currentLine.length > 0) lines.push(currentLine.join(" "));
-                        
                         if(lines.length > maxLines) lines = lines.slice(0, maxLines);
                         
                         const lineHeightEm = 1.1; 
@@ -992,7 +984,7 @@ function drawTropeDashboard(d) {
                         d3.select(this).selectAll("tspan")
                             .data(lines)
                             .enter().append("tspan")
-                            .text(l => l.trim()) // Trim extra spaces from hyphen hack
+                            .text(l => l.trim())
                             .attr("x", 0)
                             .attr("dy", (l, i) => i === 0 ? startDy + "em" : lineHeightEm + "em");
                     });
@@ -1012,42 +1004,33 @@ function drawTropeDashboard(d) {
             const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
 
             legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
-            
             const barWidth = legW - 30;
-            // Bar Y at 30 to tighten space
             const barY = 30; 
             
             legG.append("rect").attr("y", barY).attr("width", barWidth).attr("height", 12).style("fill", "url(#trope-gradient)").style("stroke", "#444");
             legG.append("text").text("0").attr("y", barY + 25).attr("x", 0).attr("fill", "#aaa").attr("font-size", smallFS + "px");
             legG.append("text").text("8").attr("y", barY + 25).attr("x", barWidth).attr("text-anchor", "end").attr("fill", "#aaa").attr("font-size", smallFS + "px");
 
-            // --- TRIANGLE INDICATOR ---
-            const tropeInd = legG.append("g")
-                .attr("id", "trope-indicator")
-                .attr("class", "legend-indicator")
-                .style("display", "none"); 
-            
-            // Triangle points DOWN to barY (30)
-            tropeInd.append("path")
-                .attr("d", "M -4 -6 L 4 -6 L 0 0 Z") 
-                .attr("transform", `translate(0, ${barY})`); 
-            
-            // Text above the triangle (at ~22)
-            tropeInd.append("text")
-                .attr("y", barY - 8) 
-                .text("0");
+            const tropeInd = legG.append("g").attr("id", "trope-indicator").attr("class", "legend-indicator").style("display", "none"); 
+            tropeInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", `translate(0, ${barY})`); 
+            tropeInd.append("text").attr("y", barY - 8).text("0");
 
             const sectionConnY = 80; 
             legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             
             const exG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
-            exG.append("line").attr("x1", 20).attr("y1", 0).attr("x2", 60).attr("y2", 0).attr("stroke", "#aaa").attr("stroke-width", 2);
-            exG.append("circle").attr("cx", 20).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
-            exG.append("circle").attr("cx", 60).attr("cy", 0).attr("r", 4).attr("fill", "#004400").attr("stroke", "#fff");
             
+            // Standard Link
+            exG.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 30).attr("y2", 0).attr("stroke", "#aaa").attr("stroke-width", 1);
+            exG.append("text").attr("x", 35).attr("y", 3).text("≥ 75% Match").style("fill", "#aaa").style("font-size", smallFS+"px");
+
+            // Bold Link
+            exG.append("line").attr("x1", 0).attr("y1", 20).attr("x2", 30).attr("y2", 20).attr("stroke", "#fff").attr("stroke-width", 4);
+            exG.append("text").attr("x", 35).attr("y", 23).text("100% Match").style("fill", "#fff").style("font-size", smallFS+"px");
+
             legG.append("foreignObject")
                 .attr("x", 0)
-                .attr("y", sectionConnY + 35)
+                .attr("y", sectionConnY + 60)
                 .attr("width", legW - 10)
                 .attr("height", 100)
                 .append("xhtml:div")
@@ -1055,7 +1038,7 @@ function drawTropeDashboard(d) {
                 .style("color", "#ccc")
                 .style("line-height", "1.2")
                 .style("width", "100%") 
-                .html("Click a node to reveal connections to songs with ≥75% trope similarity.");
+                .html("Click a node to reveal connections.");
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
             legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
@@ -1197,7 +1180,6 @@ function drawTropeDashboard(d) {
             });
             const sorted = Object.values(combos).sort((a,b) => b.count - a.count);
 
-            // CHANGED: Increased Top Margin to 65 to prevent icon clipping
             const margin = {top: 65, right: 10, bottom: 5, left: 10};
             const rowH = (h - margin.top - margin.bottom) / sorted.length;
             const matrixWidth = w * 0.4; 
@@ -1207,7 +1189,6 @@ function drawTropeDashboard(d) {
 
             const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
             
-            // CHANGED LABEL TEXT
             g.append("text").attr("x", barAreaWidth - 10).attr("y", -10).attr("text-anchor", "end")
              .style("fill", "#888").style("font-size", "10px").text("Number of Songs (65)");
 
@@ -1215,19 +1196,26 @@ function drawTropeDashboard(d) {
             const colW = matrixWidth / meta.length;
             
             meta.forEach((m, i) => {
-                const x = i * colW + colW/2;
-                headerG.append("text").attr("x", x).attr("y", -25).attr("text-anchor", "middle")
+                const centerX = i * colW + colW/2;
+                
+                // 1. Icon (Centered, slightly higher)
+                headerG.append("text").attr("x", centerX).attr("y", -32).attr("text-anchor", "middle")
                     .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
                 
+                // 2. Text (Left/Center aligned split lines)
                 const labelWords = iconLabels[m].split(" ");
+                // Offset text to the left of center to make room for number
+                const textX = centerX - 10; 
+                
                 labelWords.forEach((word, idx) => {
-                    headerG.append("text").attr("x", x).attr("y", -12 + (idx*9)).attr("text-anchor", "middle")
+                    headerG.append("text").attr("x", textX).attr("y", -18 + (idx*9)).attr("text-anchor", "middle")
                         .style("font-size", "9px").style("fill", "#bbb").text(word);
                 });
                 
-                // Add Total in parens
-                headerG.append("text").attr("x", x).attr("y", -12 + (labelWords.length * 9)).attr("text-anchor", "middle")
-                    .style("font-size", "9px").style("fill", "#fff").style("font-weight", "bold").text(`(${totals[m]})`);
+                // 3. Number (Right of text, larger)
+                headerG.append("text").attr("x", centerX + 18).attr("y", -12) // vertically centered relative to 2-line text
+                    .attr("text-anchor", "middle")
+                    .style("font-size", "12px").style("fill", "#fff").style("font-weight", "bold").text(`(${totals[m]})`);
             });
 
             sorted.forEach((d, i) => {
@@ -1250,14 +1238,9 @@ function drawTropeDashboard(d) {
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
                         tooltip.style("opacity", 0);
                     })
-                    // Single School Selection Logic
                     .on("click", (e) => {
                         e.stopPropagation();
-                        if (d.schools.length === 1) {
-                            updateSelection(d.schools[0]);
-                        } else {
-                             if (d.schools.length === 1) updateSelection(d.schools[0]);
-                        }
+                        if (d.schools.length === 1) updateSelection(d.schools[0]);
                     });
                 
                 rowG.append("text").attr("x", barAreaWidth - barScale(d.count) - 15).attr("y", centerY + 4).attr("text-anchor", "end").text(d.count);
@@ -1324,6 +1307,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
