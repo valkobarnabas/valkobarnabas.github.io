@@ -822,15 +822,16 @@ function drawTropeDashboard(d) {
                 centerNode.y = h/2;
 
                 // --- DYNAMIC RECT CALCULATION ---
-                // Create a dummy canvas to measure text width
                 const canvas = document.createElement("canvas");
                 const ctx = canvas.getContext("2d");
-                ctx.font = "800 16px sans-serif"; // Match CSS font
+                ctx.font = "800 16px sans-serif"; 
                 const txt = `"${focusNode.song_name}"`;
                 const textWidth = ctx.measureText(txt).width;
                 
-                centerNode.rectW = textWidth + 50; // Text width + Padding
-                centerNode.rectH = 40; // Fixed height
+                // SAFEGUARD 1: Clamp rectangle width to 80% of screen width max
+                const maxRectW = w * 0.8;
+                centerNode.rectW = Math.min(textWidth + 50, maxRectW);
+                centerNode.rectH = 40; 
 
                 const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
                 
@@ -838,7 +839,6 @@ function drawTropeDashboard(d) {
                 if(neighborNodes.length === 0) {
                     g.append("text")
                         .attr("x", w/2)
-                        // Position below the rectangle
                         .attr("y", h/2 + (centerNode.rectH/2) + 25) 
                         .attr("text-anchor", "middle")
                         .style("fill", "#888")
@@ -847,12 +847,18 @@ function drawTropeDashboard(d) {
                         .text("No songs with ≥75% trope similarity");
                 }
 
-                // Dynamic Circle Radius: 
-                // Ensure neighbors are pushed out past the corners of the rectangle
+                // --- SAFE RADIUS CALCULATION ---
+                // 1. Ideal radius (based on rect corners)
                 const halfDiag = Math.sqrt(Math.pow(centerNode.rectW/2, 2) + Math.pow(centerNode.rectH/2, 2));
-                const minCircleR = halfDiag + r + 20; // diag + neighbor radius + padding
-                const defaultCircleR = Math.min(w, h) * 0.35;
-                const circleRadius = Math.max(defaultCircleR, minCircleR);
+                const idealMinR = halfDiag + r + 20; 
+                
+                // 2. Maximum safe radius (screen edge - neighbor radius - padding)
+                const maxSafeR = Math.min(w/2, h/2) - r - 10;
+                
+                // 3. Final Radius: Use ideal if it fits, otherwise cap it at maxSafeR
+                //    But ensure it's at least the default 35% if space allows
+                const defaultR = Math.min(w, h) * 0.35;
+                const circleRadius = Math.min(Math.max(defaultR, idealMinR), maxSafeR);
 
                 const angleStep = (2 * Math.PI) / neighborNodes.length;
                 
@@ -860,6 +866,11 @@ function drawTropeDashboard(d) {
                     const angle = i * angleStep - Math.PI/2;
                     n.x = (w/2) + Math.cos(angle) * circleRadius;
                     n.y = (h/2) + Math.sin(angle) * circleRadius;
+                    
+                    // SAFEGUARD 2: Hard Boundary Clamp
+                    // Force node to stay inside [radius+padding, width-radius-padding]
+                    n.x = Math.max(r + 5, Math.min(w - r - 5, n.x));
+                    n.y = Math.max(r + 5, Math.min(h - r - 5, n.y));
                 });
                 
                 renderLinks.forEach(l => {
@@ -909,7 +920,7 @@ function drawTropeDashboard(d) {
                 })
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 
-            // 1. Draw Neighbors & Grid Items (Circles)
+            // 1. Draw Neighbors (Circles)
             nodeG.filter(d => !d.isCenter).append("circle")
                 .attr("r", r) 
                 .attr("fill", d => tropeColorScale(d.trope_count))
@@ -922,22 +933,24 @@ function drawTropeDashboard(d) {
                 .attr("y", d => -d.rectH / 2)
                 .attr("width", d => d.rectW)
                 .attr("height", d => d.rectH)
-                .attr("rx", 20) // Rounded corners
+                .attr("rx", 20) 
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#000").attr("stroke-width", 2)
                 .classed("highlighted", true);
 
             // --- TEXT LABELS ---
             if (focusNode) {
-                // 1. CENTER NODE (Centered in Rect)
-                nodeG.filter(d => d.isCenter).append("text")
+                // 1. CENTER NODE
+                const centerG = nodeG.filter(d => d.isCenter);
+                
+                centerG.append("text")
                     .text(d => `"${d.song_name}"`) 
                     .attr("text-anchor", "middle")
                     .attr("dy", "0.35em") 
                     .style("fill", "#fff")
                     .style("font-size", "16px") 
                     .style("font-weight", "800")
-                    .style("pointer-events", "none") // Let clicks pass to rect
+                    .style("pointer-events", "none") 
                     .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); 
 
                 // 2. NEIGHBORS (Directional Logic)
@@ -1342,6 +1355,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
