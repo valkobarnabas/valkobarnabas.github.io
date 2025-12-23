@@ -897,7 +897,7 @@ function drawTropeDashboard(d) {
                 .attr("stroke", "#000").attr("stroke-width", 1) 
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
 
-            // --- PERCENTAGE LABELS (NEW) ---
+                // --- PERCENTAGE LABELS (UPDATED with %) ---
             if (focusNode) {
                  nodeG.filter(d => d.school !== focusNode.school)
                     .append("text")
@@ -906,8 +906,7 @@ function drawTropeDashboard(d) {
                     .style("pointer-events", "none") // Let clicks pass through
                     .style("fill", "#fff")
                     .style("font-weight", "bold")
-                    .style("font-size", (r * 0.65) + "px") // Scaled to fit in circle
-                    // Black outline for contrast against any node color
+                    .style("font-size", (r * 0.5) + "px") // Scaled down to fit %
                     .style("stroke", "#000")
                     .style("stroke-width", "2px")
                     .style("paint-order", "stroke")
@@ -916,10 +915,11 @@ function drawTropeDashboard(d) {
                             (l.source === focusNode.school && l.target === d.school) || 
                             (l.target === focusNode.school && l.source === d.school)
                         );
-                        return link ? Math.round(link.similarity * 100) : "";
+                        // Append % sign here
+                        return link ? Math.round(link.similarity * 100) + "%" : "";
                     });
             }
-                
+            
             // --- TEXT LABELS (SONG NAMES) ---
             if (focusNode) {
                 // 1. CENTER NODE
@@ -1336,6 +1336,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
