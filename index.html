@@ -1228,8 +1228,8 @@ function drawTropeDashboard(d) {
                     .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
                 
                 // 2. Count (Middle - Large & Bold)
-                headerG.append("text").attr("x", centerX).attr("y", -10).attr("text-anchor", "middle")
-                    .style("font-size", "13px").style("fill", "#fff").style("font-weight", "bold").text(totals[m]);
+                headerG.append("text").attr("x", centerX).attr("y", -1).attr("text-anchor", "middle")
+                    .style("font-size", "9px").style("fill", "#fff").style("font-weight", "bold").text(`"s${totals[m]}"`);
 
                 // 3. Label (Bottom - Split Lines)
                 const labelWords = iconLabels[m].split(" ");
@@ -1328,6 +1328,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
