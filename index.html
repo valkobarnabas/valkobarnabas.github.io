@@ -413,7 +413,7 @@
             Does the song have nonsense syllables, mention any colors, groups of men, or opponents? Is anything spelled?</li>
             <li><strong style="color:var(--highlight)">Jaccard Network:</strong> A network graph connecting songs whose lyrics share at least 75% similarity in tropes. Calculated by Jaccard index.</li>
             <li><strong style="color:var(--highlight)">Song Topology:</strong> A scatter plot of Tempo (BPM) vs. Duration (sec) with added densities. The color of a node indicates how many times the word "fight" is sung.</li>
-            <li><strong style="color:var(--highlight)">Origin Story:</strong> An UpSet plot showing how songs were created (Student Author, Contest Winner, or Official Song).</li>
+            <li><strong style="color:var(--highlight)">Origin Story:</strong> An UpSet plot showing how songs were created based off the powerset of {Student Author, Contest Winner, Official Song}.</li>
         </ul>
         
         <p><strong>Data Sources:</strong></p>
@@ -1363,6 +1363,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
