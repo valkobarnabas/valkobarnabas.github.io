@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1332,16 +1332,12 @@
             
             meta.forEach((m, i) => {
                 const centerX = i * colW + colW/2;
-                
-                // 1. Icon 
                 headerG.append("text").attr("x", centerX).attr("y", -38).attr("text-anchor", "middle")
                     .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
                 
-                // 2. Count 
                 headerG.append("text").attr("x", centerX).attr("y", -1).attr("text-anchor", "middle")
                     .style("font-size", "9px").style("fill", "#bbb").style("font-weight", "bold").text(`(${totals[m]})`);
 
-                // 3. Label 
                 const labelWords = iconLabels[m].split(" ");
                 labelWords.forEach((word, idx) => {
                     headerG.append("text").attr("x", centerX).attr("y", -22 + (idx*9)).attr("text-anchor", "middle")
@@ -1359,15 +1355,28 @@
                     .attr("y", centerY - 8).attr("width", barScale(d.count)).attr("height", 16)
                     .attr("fill", "#444") 
                     .attr("data-schools", JSON.stringify(d.schools))
+                    // --- UPDATED MOUSEOVER ---
                     .on("mouseover", function(e) { 
                          if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
                          const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
                          tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
                                 .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                        
+                         // GLOW EFFECT
+                         d3.selectAll(".school-logo")
+                            .filter(function() { return d.schools.includes(d3.select(this).attr("data-school")); })
+                            .style("filter", "drop-shadow(0 0 6px #00f2ff) grayscale(0%)")
+                            .style("opacity", 1);
                     })
+                    // --- UPDATED MOUSEOUT ---
                     .on("mouseout", function() { 
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
                         tooltip.style("opacity", 0);
+
+                        // REMOVE GLOW
+                        d3.selectAll(".school-logo")
+                            .style("filter", null)
+                            .style("opacity", null);
                     })
                     .on("click", (e) => {
                         e.stopPropagation();
@@ -1438,6 +1447,7 @@
 </script>
 </body>
 </html>
+
 
 
 
