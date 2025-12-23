@@ -493,7 +493,7 @@
         });
 
        function updateSelection(schoolName) {
-            // FIX: Always hide tooltip on new selection to prevent "sticking"
+            // FORCE TOOLTIP HIDE ON UPDATE
             d3.select("#tooltip").style("opacity", 0);
 
             if (!schoolName) {
@@ -639,7 +639,7 @@
                 const scale = d3.scaleLinear().domain([0, 8]).range([0, barWidth]);
                 const xPos = scale(d.trope_count);
                 
-                // CORRECT: Translate GROUP to xPos, 0. Path inside handles Y.
+                // Position group horizontally. Vertical pos is handled inside drawViz4 via path/text attrs.
                 tInd.attr("transform", `translate(${xPos}, 0)`); 
                 tInd.select("text").text(d.trope_count);
             }
@@ -1365,4 +1365,5 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
