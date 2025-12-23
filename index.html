@@ -947,10 +947,10 @@ function drawTropeDashboard(d) {
                             sel.attr("text-anchor", "middle").attr("x", 0);
                         } else if (isLeft) {
                             // Left Node -> Flush Right (end) -> Anchor at Left Outer Edge
-                            sel.attr("text-anchor", "end").attr("x", r + 8);
+                            sel.attr("text-anchor", "end").attr("x", r + 6);
                         } else {
                             // Right Node -> Flush Left (start) -> Anchor at Right Outer Edge
-                            sel.attr("text-anchor", "start").attr("x", -r - 8);
+                            sel.attr("text-anchor", "start").attr("x", -r - 6);
                         }
 
                         // --- 2. Vertical Positioning (Y & Baseline) ---
@@ -1337,6 +1337,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
