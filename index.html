@@ -657,13 +657,25 @@
             if (e.target.closest("iframe")) return;
             updateSelection(null);
         });
-        
-function drawTropeDashboard(d) {
+        function drawTropeDashboard(d) {
     const container = d3.select("#trope-dashboard");
     container.html(""); 
 
     const rect = container.node().getBoundingClientRect();
     const size = Math.max(10, Math.min(22, rect.width / 16)); 
+
+    // --- 1. Define Descriptions ---
+    const tropeDescriptions = {
+        'fight': 'Lyrics contain the word "Fight"',
+        'victory': 'Lyrics contain the word "Victory"',
+        'win_won': 'Lyrics contain "Win" or "Won"',
+        'rah': 'Lyrics contain the cheer "Rah"',
+        'nonsense': 'Lyrics contain nonsense syllables (e.g., "Sis Boom Bah")',
+        'colors': 'Lyrics mention the school colors',
+        'men': 'Lyrics refer to "Men" (e.g., "Men of [School]")',
+        'opponents': 'Lyrics mention the opponent or rival',
+        'spelling': 'Lyrics spell out the school name or mascot'
+    };
 
     const wrapper = container.append("div")
         .style("display", "flex").style("flex-direction", "column").style("gap", "20px").style("width", "100%");
@@ -673,10 +685,30 @@ function drawTropeDashboard(d) {
             .style("display", "flex").style("justify-content", "space-around").style("width", "100%");
         
         keys.forEach(key => {
+            // --- 2. Calculate Totals (Global context 'data' is available here) ---
+            const totalCount = data.filter(r => r[key] === 'Yes').length;
+            
+            // Logic: If 'd' exists, check if THAT school has it. If '!d', we are in default mode.
             const hasTrope = d ? (d[key] === 'Yes') : false;
+            
+            // Opacity: If school selected, dim unused. If default (!d), keep semi-visible (0.5) to read stats.
+            const opacity = d ? (hasTrope ? 1 : 0.2) : 0.5;
+            
             const cell = rowDiv.append("div")
                 .style("display", "flex").style("flex-direction", "column").style("align-items", "center")
-                .style("opacity", hasTrope ? 1 : 0.2);
+                .style("opacity", opacity)
+                .style("cursor", "pointer") // Add cursor to indicate hoverability
+                // --- 4. Tooltip Events ---
+                .on("mouseover", (e) => {
+                    d3.select("#tooltip")
+                        .style("opacity", 1)
+                        .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:#00f2ff">${totalCount}</span> schools have this trope.`)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 10) + "px");
+                })
+                .on("mouseout", () => {
+                    d3.select("#tooltip").style("opacity", 0);
+                });
 
             cell.append("div")
                 .style("font-family", "FontAwesome")
@@ -692,12 +724,21 @@ function drawTropeDashboard(d) {
             const circle = cell.append("div")
                 .style("width", size + "px").style("height", size + "px") 
                 .style("border-radius", "50%")
-                .style("border", "2px solid " + (hasTrope ? "#00f2ff" : "#444"))
-                .style("background", hasTrope ? "rgba(0, 242, 255, 0.2)" : "transparent")
+                // Border: Blue if active, dark grey if dimmed/default
+                .style("border", "2px solid " + ((!d || hasTrope) ? "#00f2ff" : "#444"))
+                // Background: Blue tint if active, transparent if default
+                .style("background", (d && hasTrope) ? "rgba(0, 242, 255, 0.2)" : "transparent")
                 .style("display", "flex").style("align-items", "center").style("justify-content", "center")
                 .style("font-size", (size * 0.5) + "px").style("color", "#fff").style("font-weight", "bold");
 
-            if (key === 'fight' && hasTrope) circle.text(d.number_fights);
+            // --- 3. Update Text Logic ---
+            if (d) {
+                // School Selected: Only show number for "fight" if they have it
+                if (key === 'fight' && hasTrope) circle.text(d.number_fights);
+            } else {
+                // Default Mode: Show total count of schools for ALL tropes
+                circle.text(totalCount);
+            }
         });
     };
     createRow(row1); createRow(row2); 
@@ -1387,6 +1428,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
