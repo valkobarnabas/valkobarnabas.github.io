@@ -1162,6 +1162,9 @@ function drawTropeDashboard(d) {
                      d3.select(e.currentTarget).raise();
                      if(showTopologyTooltip) showTopologyTooltip(d);
                 })
+                .on("mouseout", () => {
+                     if(showTopologyTooltip) showTopologyTooltip(null);
+                })
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
 
             // Persistent Tooltip Definition
@@ -1375,6 +1378,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
