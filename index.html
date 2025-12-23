@@ -813,21 +813,33 @@ function drawTropeDashboard(d) {
                 renderNodes = sortedNodes.filter(n => n.school === focusNode.school || neighbors.includes(n.school));
                 renderLinks = links.filter(l => (l.source === focusNode.school && neighbors.includes(l.target)) || (l.target === focusNode.school && neighbors.includes(l.source)));
                 
-                // Base radius
+                // Base radius for neighbors
                 r = Math.min(w, h) * 0.05; 
 
                 const centerNode = renderNodes.find(n => n.school === focusNode.school);
+                centerNode.isCenter = true; 
                 centerNode.x = w/2; 
                 centerNode.y = h/2;
-                centerNode.isCenter = true; 
+
+                // --- DYNAMIC RECT CALCULATION ---
+                // Create a dummy canvas to measure text width
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                ctx.font = "800 16px sans-serif"; // Match CSS font
+                const txt = `"${focusNode.song_name}"`;
+                const textWidth = ctx.measureText(txt).width;
                 
+                centerNode.rectW = textWidth + 50; // Text width + Padding
+                centerNode.rectH = 40; // Fixed height
+
                 const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
                 
                 // --- NO NEIGHBORS LOGIC ---
                 if(neighborNodes.length === 0) {
                     g.append("text")
                         .attr("x", w/2)
-                        .attr("y", h/2 + (r*3) + 25) 
+                        // Position below the rectangle
+                        .attr("y", h/2 + (centerNode.rectH/2) + 25) 
                         .attr("text-anchor", "middle")
                         .style("fill", "#888")
                         .style("font-size", "12px")
@@ -835,7 +847,13 @@ function drawTropeDashboard(d) {
                         .text("No songs with ≥75% trope similarity");
                 }
 
-                const circleRadius = Math.min(w, h) * 0.35;
+                // Dynamic Circle Radius: 
+                // Ensure neighbors are pushed out past the corners of the rectangle
+                const halfDiag = Math.sqrt(Math.pow(centerNode.rectW/2, 2) + Math.pow(centerNode.rectH/2, 2));
+                const minCircleR = halfDiag + r + 20; // diag + neighbor radius + padding
+                const defaultCircleR = Math.min(w, h) * 0.35;
+                const circleRadius = Math.max(defaultCircleR, minCircleR);
+
                 const angleStep = (2 * Math.PI) / neighborNodes.length;
                 
                 neighborNodes.forEach((n, i) => {
@@ -891,28 +909,39 @@ function drawTropeDashboard(d) {
                 })
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 
-            const circle = nodeG.append("circle")
-                .attr("r", d => d.isCenter ? r * 3 : r) 
+            // 1. Draw Neighbors & Grid Items (Circles)
+            nodeG.filter(d => !d.isCenter).append("circle")
+                .attr("r", r) 
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#000").attr("stroke-width", 1) 
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
-            
-            // --- TEXT LABELS (SONG NAMES) ---
+
+            // 2. Draw Center Node (Rectangle)
+            nodeG.filter(d => d.isCenter).append("rect")
+                .attr("x", d => -d.rectW / 2)
+                .attr("y", d => -d.rectH / 2)
+                .attr("width", d => d.rectW)
+                .attr("height", d => d.rectH)
+                .attr("rx", 20) // Rounded corners
+                .attr("fill", d => tropeColorScale(d.trope_count))
+                .attr("stroke", "#000").attr("stroke-width", 2)
+                .classed("highlighted", true);
+
+            // --- TEXT LABELS ---
             if (focusNode) {
-                // 1. CENTER NODE
-                const centerG = nodeG.filter(d => d.school === focusNode.school);
-                
-                centerG.append("text")
+                // 1. CENTER NODE (Centered in Rect)
+                nodeG.filter(d => d.isCenter).append("text")
                     .text(d => `"${d.song_name}"`) 
                     .attr("text-anchor", "middle")
                     .attr("dy", "0.35em") 
                     .style("fill", "#fff")
                     .style("font-size", "16px") 
                     .style("font-weight", "800")
+                    .style("pointer-events", "none") // Let clicks pass to rect
                     .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); 
 
-                // 2. NEIGHBORS (DIRECTIONAL LOGIC)
-                nodeG.filter(d => d.school !== focusNode.school)
+                // 2. NEIGHBORS (Directional Logic)
+                nodeG.filter(d => !d.isCenter)
                     .append("text")
                     .text(d => `"${d.song_name}"`)
                     .style("fill", "#fff")
@@ -1313,6 +1342,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
