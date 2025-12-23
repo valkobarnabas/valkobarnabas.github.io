@@ -1223,15 +1223,15 @@ function drawTropeDashboard(d) {
             meta.forEach((m, i) => {
                 const centerX = i * colW + colW/2;
                 
-                // 1. Icon (Top)
+                // 1. Icon 
                 headerG.append("text").attr("x", centerX).attr("y", -38).attr("text-anchor", "middle")
                     .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
                 
-                // 2. Count (Middle - Large & Bold)
+                // 2. Count 
                 headerG.append("text").attr("x", centerX).attr("y", -1).attr("text-anchor", "middle")
-                    .style("font-size", "9px").style("fill", "#fff").style("font-weight", "bold").text(`(${totals[m]})`);
+                    .style("font-size", "9px").style("fill", "#bbb").style("font-weight", "bold").text(`(${totals[m]})`);
 
-                // 3. Label (Bottom - Split Lines)
+                // 3. Label 
                 const labelWords = iconLabels[m].split(" ");
                 labelWords.forEach((word, idx) => {
                     headerG.append("text").attr("x", centerX).attr("y", -22 + (idx*9)).attr("text-anchor", "middle")
@@ -1328,6 +1328,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
