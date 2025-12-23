@@ -407,13 +407,13 @@
     <div class="modal-content">
         <span class="close-btn" onclick="document.getElementById('about-modal').style.display='none'">×</span>
         <h2 style="color:var(--highlight); margin-top:0;">ABOUT THIS DASHBOARD</h2>
-        <p>This interactive visualization explores the lyrical and musical patterns of 65 major college fight songs.</p>
+        <p>This interactive visualization explores the lyrical and musical patterns of 65 major college fight songs. Click any node or logo to analyze that school's fight song. Best viewed in fullscreen.</p>
         <ul>
-            <li><strong>Trope-O-Meter (Top Left):</strong> Click any node or logo to view that song's lyrical clichés. From left to right: do the words "fight," "victory," "win" or "won," or "rah" show up?
+            <li><strong>Trope-O-Meter:</strong> From left to right: do the words "fight," "victory," "win" or "won," or "rah" show up?
             Does the song have nonsense syllables, mention any colors, groups of men, or opponents? Does it spell anything?</li>
-            <li><strong>Jaccard Network (Top Right):</strong> A network graph connecting songs whose lyrics share at least 75% similarity in tropes.</li>
-            <li><strong>Song Topology (Bottom Left):</strong> A scatter plot of Tempo (BPM) vs. Duration (sec) with added densities. The color indicates how many times the word "Fight" is sung.</li>
-            <li><strong>Origin Story (Bottom Right):</strong> An UpSet plot showing how songs were created (Student Writer, Contest Winner, or Official Adoption).</li>
+            <li><strong>Jaccard Network:</strong> A network graph connecting songs whose lyrics share at least 75% similarity in tropes.</li>
+            <li><strong>Song Topology:</strong> A scatter plot of Tempo (BPM) vs. Duration (sec) with added densities. The color indicates how many times the word "Fight" is sung.</li>
+            <li><strong>Origin Story:</strong> An UpSet plot showing how songs were created (Student Writer, Contest Winner, or Official Adoption).</li>
         </ul>
         
         <p><strong>Data Sources:</strong></p>
@@ -1328,6 +1328,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
