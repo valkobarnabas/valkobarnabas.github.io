@@ -867,7 +867,7 @@ function drawTropeDashboard(d) {
                 });
             }
 
-            // --- RENDER LINKS ---
+            // --- RENDER LINKS (Permanent ones for Focus Mode) ---
             if (focusNode) {
                  g.selectAll("line.link").data(renderLinks).enter().append("line")
                     .attr("class", "link")
@@ -885,11 +885,61 @@ function drawTropeDashboard(d) {
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
                     d3.select(e.currentTarget).raise(); 
+                    
+                    // --- NEW FEATURE: Show Neighbor Lines ---
+                    // 1. Find all links connected to this node
+                    const activeLinks = links.filter(l => l.source === d.school || l.target === d.school);
+                    
+                    // 2. Identify neighbor names
+                    const neighborNames = activeLinks.map(l => l.source === d.school ? l.target : l.source);
+
+                    // 3. Find screen positions of neighbors (must be currently visible)
+                    const currentNodeMap = {};
+                    g.selectAll(".node-group").each(function(nd) {
+                        currentNodeMap[nd.school] = { x: nd.x, y: nd.y };
+                    });
+
+                    // 4. Calculate coordinates for temporary lines
+                    const linesToDraw = activeLinks.map(l => {
+                        const targetName = l.source === d.school ? l.target : l.source;
+                        const targetPos = currentNodeMap[targetName];
+                        if (!targetPos) return null; // Skip if neighbor is not visible (e.g. in radial view)
+                        return {
+                            x1: d.x, y1: d.y,
+                            x2: targetPos.x, y2: targetPos.y,
+                            similarity: l.similarity
+                        };
+                    }).filter(x => x);
+
+                    // 5. Draw the temporary lines (insert before nodes so they are behind)
+                    g.selectAll("line.temp-link")
+                        .data(linesToDraw)
+                        .enter().insert("line", ".node-group")
+                        .attr("class", "temp-link")
+                        .attr("x1", l => l.x1).attr("y1", l => l.y1)
+                        .attr("x2", l => l.x2).attr("y2", l => l.y2)
+                        .attr("stroke", "#fff")
+                        .attr("stroke-width", l => l.similarity >= 0.99 ? 3 : 1)
+                        .attr("opacity", 0.8)
+                        .style("pointer-events", "none");
+
+                    // 6. Highlight Neighbor Nodes
+                    g.selectAll(".node-group circle")
+                        .filter(nd => neighborNames.includes(nd.school))
+                        .classed("neighbor", true);
+                    // ----------------------------------------
+
                     d3.select("#tooltip").style("opacity", 1)
                         .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
                         .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                 })
-                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
+                .on("mouseout", () => {
+                    // --- CLEANUP ---
+                    g.selectAll("line.temp-link").remove();
+                    g.selectAll(".neighbor").classed("neighbor", false);
+                    
+                    d3.select("#tooltip").style("opacity", 0);
+                });
 
             const circle = nodeG.append("circle")
                 .attr("r", d => d.isCenter ? r * 3 : r) 
@@ -1313,4 +1363,5 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
