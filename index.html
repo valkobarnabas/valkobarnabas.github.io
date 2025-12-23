@@ -973,6 +973,8 @@ function drawTropeDashboard(d) {
                     .style("font-weight", "800")
                     .style("text-shadow", "0 2px 4px rgba(0,0,0,0.8)"); 
 
+                centerG.raise();
+
                 // 2. NEIGHBORS (DIRECTIONAL LOGIC)
                 nodeG.filter(d => d.school !== focusNode.school)
                     .append("text")
@@ -1384,6 +1386,7 @@ function drawTropeDashboard(d) {
 </script>
 </body>
 </html>
+
 
 
 
