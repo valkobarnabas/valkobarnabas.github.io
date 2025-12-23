@@ -420,6 +420,9 @@
             Built with D3.js by Barnabás Valkó (UW-Madison Math/Stats 2027).<br>
             GitHub: <a href="https://github.com/valkobarnabas" target="_blank">valkobarnabas</a>
         </p>
+        <p style="font-size:0.66em; color:#555; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
+            Logos and songs are copyright their respective universities.
+        </p>
     </div>
 </div>
 
@@ -457,7 +460,6 @@
 
     let showTopologyTooltip = null; // Global reference
     let drawViz4 = null; // Global reference
-    let viz4ForceSimulation = null; // Simulation reference
 
     // Global state for navigation
     let sortedData = [];
@@ -527,17 +529,20 @@
             currentIndex = sortedData.findIndex(d => d.school === schoolName);
             const d = data.find(r => r.school === schoolName);
 
-            // 1. Viz 1 & Viz 2 (Standard Dim)
+            // 1. Viz 1 (Standard Dim)
             d3.selectAll(".school-logo").classed("logo-dimmed", true).classed("logo-highlighted", false);
-            d3.selectAll("rect").classed("dimmed", true).classed("highlighted", false);
             
-            // 2. Viz 3 (Soft Dim - Keep Colors)
+            // 2. Viz 2 (Data Bars Only)
+            // Fix: Only dim .upset-row rects (data bars), not all rects (which hits legends)
+            d3.selectAll(".upset-row rect").classed("dimmed", true).classed("highlighted", false);
+            
+            // 3. Viz 3 (Soft Dim - Keep Colors)
             d3.selectAll(".scatter-node").classed("dimmed-soft", true).classed("highlighted", false);
 
-            // 3. Highlight Logo (Viz 1)
+            // 4. Highlight Logo (Viz 1)
             d3.selectAll(`.school-logo[data-school="${schoolName}"]`).classed("logo-dimmed", false).classed("logo-highlighted", true);
 
-            // 4. Highlight Origin Bars (Viz 2)
+            // 5. Highlight Origin Bars (Viz 2)
             d3.selectAll("#upset-origin rect").each(function() {
                 const schools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
                 if (schools.includes(schoolName)) {
@@ -549,13 +554,13 @@
                  d3.select(this.parentNode).selectAll(".upset-dot").classed("dimmed", true);
             });
             
-            // 5. Highlight Scatter Node (Viz 3)
+            // 6. Highlight Scatter Node (Viz 3)
             d3.selectAll(`.scatter-node[data-school="${schoolName}"]`)
                 .classed("dimmed-soft", false)
                 .classed("highlighted", true)
                 .raise();
 
-            // 6. Update Middle Panel
+            // 7. Update Middle Panel
             d3.select("#placeholder-msg").style("display", "none");
             d3.select("#active-content").style("display", "flex");
 
@@ -593,7 +598,7 @@
             drawTropeDashboard(d);
             if(showTopologyTooltip) showTopologyTooltip(d);
             
-            // 7. Update Legend Indicators
+            // 8. Update Legend Indicators
             const tInd = d3.select("#trope-indicator");
             if (tInd.node()) {
                 tInd.style("display", "block");
@@ -753,7 +758,6 @@ function drawTropeDashboard(d) {
             });
 
             // --- CALCULATE NEIGHBORS ---
-            // Calculate links for everyone first
             const links = [];
             const t = ['victory','win_won','rah','nonsense','colors','men','opponents','spelling'];
             const nodeMap = {}; sortedNodes.forEach(d=>nodeMap[d.id]=d);
@@ -772,7 +776,6 @@ function drawTropeDashboard(d) {
                     }
                 }
             }
-            // Manual links
             [["Michigan", "Tennessee"], ["Tennessee", "Boston College"], ["Boston College", "Michigan"]].forEach(pair => {
                 links.push({ source: pair[0], target: pair[1] });
             });
@@ -784,23 +787,19 @@ function drawTropeDashboard(d) {
 
             if (focusNode) {
                 // *** FOCUSED MODE (Radial) ***
-                // 1. Identify neighbors
                 const neighbors = [];
                 links.forEach(l => {
                     if (l.source === focusNode.school) neighbors.push(l.target);
                     else if (l.target === focusNode.school) neighbors.push(l.source);
                 });
                 
-                // 2. Filter nodes
                 renderNodes = sortedNodes.filter(n => n.school === focusNode.school || neighbors.includes(n.school));
                 renderLinks = links.filter(l => (l.source === focusNode.school && neighbors.includes(l.target)) || (l.target === focusNode.school && neighbors.includes(l.source)));
                 
-                // 3. Position
                 const centerNode = renderNodes.find(n => n.school === focusNode.school);
                 centerNode.x = w/2; 
                 centerNode.y = h/2;
                 
-                // Arrange neighbors in circle
                 const neighborNodes = renderNodes.filter(n => n.school !== focusNode.school);
                 const circleRadius = Math.min(w, h) * 0.35;
                 const angleStep = (2 * Math.PI) / neighborNodes.length;
@@ -811,14 +810,14 @@ function drawTropeDashboard(d) {
                     n.y = (h/2) + Math.sin(angle) * circleRadius;
                 });
                 
-                // 4. Update Link Coords
                 renderLinks.forEach(l => {
                     const s = renderNodes.find(n => n.school === l.source);
                     const t = renderNodes.find(n => n.school === l.target);
                     if(s && t) { l.x1=s.x; l.y1=s.y; l.x2=t.x; l.y2=t.y; }
                 });
                 
-                r = Math.min(w, h) * 0.08; // Bigger nodes in focus mode
+                // Reduced Size (0.08 -> 0.06)
+                r = Math.min(w, h) * 0.06; 
 
             } else {
                 // *** DEFAULT MODE (Grid) ***
@@ -838,7 +837,6 @@ function drawTropeDashboard(d) {
             }
 
             // --- RENDER LINKS ---
-            // Only draw links in focused mode
             if (focusNode) {
                  g.selectAll("line").data(renderLinks).enter().append("line")
                     .attr("x1", d => d.x1).attr("y1", d => d.y1)
@@ -852,42 +850,83 @@ function drawTropeDashboard(d) {
                 .attr("transform", d => `translate(${d.x},${d.y})`)
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
                 .on("mouseover", (e, d) => {
-                    d3.select(e.currentTarget).raise(); 
-                    d3.select("#tooltip").style("opacity", 1)
-                        .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
-                        .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                    // Only show tooltip if NOT clicking/selecting
+                    if(!focusNode || d.school !== focusNode.school) {
+                        d3.select(e.currentTarget).raise(); 
+                        d3.select("#tooltip").style("opacity", 1)
+                            .html(`<b>${d.school}</b><br>Trope Count: ${d.trope_count}<br>Year: ${d.year}`)
+                            .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                    }
                 })
                 .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 
-            nodeG.append("circle")
+            const circle = nodeG.append("circle")
                 .attr("r", r)
                 .attr("fill", d => tropeColorScale(d.trope_count))
                 .attr("stroke", "#fff").attr("stroke-width", 1)
-                // In Radial Mode: Center node is highlighted, Neighbors are just visible
                 .classed("highlighted", d => focusNode && d.school === focusNode.school);
+                
+            // --- CURVED TEXT FOR CENTER NODE ---
+            if (focusNode) {
+                // 1. Create invisible arc path for text to follow
+                // We want the text to arc over the TOP of the circle
+                // Path from 9 o'clock to 3 o'clock (sweeping clockwise)
+                
+                // Radius for text path (slightly larger than circle)
+                const tr = r * 1.2; 
+                
+                // Define unique ID for this node's path
+                const pathId = "textPath_" + focusNode.id.replace(/[^a-zA-Z0-9]/g, "");
 
-            // Text Label (Tiny white text default, or larger in focus)
-            const fontSize = focusNode ? "11px" : "6px";
-            const fontWeight = focusNode ? "bold" : "normal";
-            
-            // For tiny labels, use song name or school name? User asked for song name.
-            nodeG.append("text")
-                .text(d => d.song_name)
-                .attr("dy", 2)
-                .attr("text-anchor", "middle")
-                .style("fill", "#fff")
-                .style("font-size", fontSize)
-                .style("font-weight", fontWeight)
-                .style("pointer-events", "none")
-                .style("text-shadow", "0 0 2px #000")
-                .each(function(d) {
-                    // Simple truncation if too long
-                    const self = d3.select(this);
-                    const len = self.text().length;
-                    if (!focusNode && len > 15) {
-                        self.text(self.text().substring(0, 12) + "...");
-                    }
-                });
+                // Draw arc: M -tr,0 A tr,tr 0 1,1 tr,0
+                // This draws a semi-circle from left to right over the top
+                nodeG.filter(d => d.school === focusNode.school)
+                    .append("path")
+                    .attr("id", pathId)
+                    .attr("d", `M -${tr},0 A ${tr},${tr} 0 1,1 ${tr},0`) 
+                    .style("fill", "none")
+                    .style("stroke", "none");
+                
+                // 2. Append text referencing that path
+                nodeG.filter(d => d.school === focusNode.school)
+                    .append("text")
+                    .append("textPath")
+                    .attr("xlink:href", "#" + pathId)
+                    .style("text-anchor", "middle")
+                    .attr("startOffset", "50%")
+                    .style("fill", "#fff")
+                    .style("font-size", "14px")
+                    .style("font-weight", "bold")
+                    .style("text-shadow", "0 0 3px #000")
+                    .text(d => d.song_name);
+
+                // For Neighbors: Standard flat text below
+                 nodeG.filter(d => d.school !== focusNode.school)
+                    .append("text")
+                    .text(d => d.song_name)
+                    .attr("dy", r + 12)
+                    .attr("text-anchor", "middle")
+                    .style("fill", "#fff")
+                    .style("font-size", "10px")
+                    .style("text-shadow", "0 0 2px #000");
+
+            } else {
+                // Default Grid Mode: Tiny text inside
+                nodeG.append("text")
+                    .text(d => d.song_name)
+                    .attr("dy", 2)
+                    .attr("text-anchor", "middle")
+                    .style("fill", "#fff")
+                    .style("font-size", "6px")
+                    .style("pointer-events", "none")
+                    .style("text-shadow", "0 0 2px #000")
+                    .each(function(d) {
+                        const self = d3.select(this);
+                        if (self.text().length > 15) {
+                            self.text(self.text().substring(0, 12) + "...");
+                        }
+                    });
+            }
 
             // --- LEGEND ---
             const lRect = legendDiv.node().getBoundingClientRect();
@@ -915,10 +954,9 @@ function drawTropeDashboard(d) {
                 .style("display", "none"); 
             
             tropeInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 10)");
-            // Fix: Number BELOW triangle (triangle tip at 10, so text at ~22)
             tropeInd.append("text").attr("y", 22).text("0");
 
-            const sectionConnY = 60; // Moved up since Node Labels are gone
+            const sectionConnY = 60; 
             legG.append("text").text("CONNECTIONS").attr("y", sectionConnY + 5).attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
             
             const exG = legG.append("g").attr("transform", `translate(0, ${sectionConnY + 20})`);
@@ -941,7 +979,7 @@ function drawTropeDashboard(d) {
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
             legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
         };
-        drawViz4(null); // Initial Call
+        drawViz4(null); 
 
 
         // --- VIZ 3: Topology ---
@@ -1029,7 +1067,7 @@ function drawTropeDashboard(d) {
             grad.append("stop").attr("offset", "50%").style("stop-color", "#FF4500");
             grad.append("stop").attr("offset", "100%").style("stop-color", "#FFFF00");
             
-            leg.append("rect").attr("y", 25).attr("width", 70).attr("height", 8).style("fill", "url(#gradFight)");
+            leg.append("rect").attr("class", "legend-rect").attr("y", 25).attr("width", 70).attr("height", 8).style("fill", "url(#gradFight)");
             leg.append("text").text("1").attr("y", 45).attr("x", 0); 
             leg.append("text").text("5").attr("y", 45).attr("x", 32);
             leg.append("text").text("10+").attr("y", 45).attr("x", 65);
@@ -1046,7 +1084,7 @@ function drawTropeDashboard(d) {
                 .attr("id", "no-fights-group") 
                 .style("opacity", 0.5); 
             
-            noFightsG.append("rect").attr("x", 0).attr("y", 55).attr("width", 12).attr("height", 12).attr("fill", "#666").attr("stroke", "#000");
+            noFightsG.append("rect").attr("class", "legend-rect").attr("x", 0).attr("y", 55).attr("width", 12).attr("height", 12).attr("fill", "#666").attr("stroke", "#000");
             noFightsG.append("path").attr("id", "no-fights-check").attr("d", "M 2 6 L 5 9 L 10 2").attr("transform", "translate(1, 56)").attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 2).style("display", "none");
             noFightsG.append("text").text(`No "Fight"s`).attr("x", 18).attr("y", 65).style("font-size", "9px").style("fill", "#ccc");
             
@@ -1065,8 +1103,6 @@ function drawTropeDashboard(d) {
 
             const meta = ['official_song', 'student_writer', 'contest'];
             const combos = {};
-            
-            // Calculate totals for header icons
             const totals = { 'official_song': 0, 'student_writer': 0, 'contest': 0 };
 
             data.forEach(d => {
@@ -1094,14 +1130,22 @@ function drawTropeDashboard(d) {
 
             const headerG = svg.append("g").attr("transform", `translate(${margin.left + barAreaWidth}, ${margin.top - 10})`);
             const colW = matrixWidth / meta.length;
+            
+            // Re-added Text Labels + Totals
             meta.forEach((m, i) => {
                 const x = i * colW + colW/2;
-                headerG.append("text").attr("x", x).attr("y", -20).attr("text-anchor", "middle")
+                headerG.append("text").attr("x", x).attr("y", -25).attr("text-anchor", "middle")
                     .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
                 
-                // Add Total Count
-                headerG.append("text").attr("x", x).attr("y", -8).attr("text-anchor", "middle")
-                    .style("font-size", "10px").style("fill", "#fff").style("font-weight", "bold").text(totals[m]);
+                const labelWords = iconLabels[m].split(" ");
+                labelWords.forEach((word, idx) => {
+                    headerG.append("text").attr("x", x).attr("y", -12 + (idx*9)).attr("text-anchor", "middle")
+                        .style("font-size", "9px").style("fill", "#bbb").text(word);
+                });
+                
+                // Add Total in parens
+                headerG.append("text").attr("x", x).attr("y", -12 + (labelWords.length * 9)).attr("text-anchor", "middle")
+                    .style("font-size", "9px").style("fill", "#fff").style("font-weight", "bold").text(`(${totals[m]})`);
             });
 
             sorted.forEach((d, i) => {
@@ -1124,31 +1168,17 @@ function drawTropeDashboard(d) {
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
                         tooltip.style("opacity", 0);
                     })
-                    // --- CLICK ACTION FOR VIZ 2 ---
+                    // Single School Selection Logic
                     .on("click", (e) => {
                         e.stopPropagation();
-                        // If only 1 school in this group, select it
                         if (d.schools.length === 1) {
                             updateSelection(d.schools[0]);
                         } else {
-                            // If multiple, just highlight the dots in Viz 3 (don't select a specific one)
-                            updateSelection(null); // Reset first to clear previous
-                            d.schools.forEach(s => {
-                                d3.selectAll(`.scatter-node[data-school="${s}"]`)
-                                    .classed("dimmed-soft", false)
-                                    .classed("highlighted", true)
-                                    .raise();
-                                // Highlight Origin Bars
-                                d3.selectAll("#upset-origin rect").each(function() {
-                                    const rectSchools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
-                                    if (rectSchools.includes(s)) {
-                                        d3.select(this).classed("dimmed", false).classed("highlighted", true); 
-                                    }
-                                });
-                            });
-                             // Dim others
-                             d3.selectAll(".scatter-node:not(.highlighted)").classed("dimmed-soft", true);
-                             d3.selectAll("rect:not(.highlighted)").classed("dimmed", true);
+                            // If user clicks a multi-school bar (e.g. Student+Contest), 
+                            // we just highlight dots but don't "select" a school fully
+                            // because updateSelection expects a single school name.
+                            // To properly highlight Texas A&M (the only one), we can just find it:
+                             if (d.schools.length === 1) updateSelection(d.schools[0]);
                         }
                     });
                 
@@ -1170,7 +1200,6 @@ function drawTropeDashboard(d) {
             initViz1(); 
             drawViz2(); 
             drawViz3(); 
-            // Re-draw Viz 4 in current mode (grid or radial)
             if (currentIndex > -1) {
                  drawViz4(sortedData[currentIndex]);
                  updateSelection(sortedData[currentIndex].school);
