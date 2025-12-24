@@ -197,6 +197,36 @@
             font-style: italic; 
             line-height: 1.2; 
         }
+
+        /* --- Dynamic Text Sizing Overrides --- */
+            
+            /* Left Side: Allow wrapping, but constrain height */
+            #strip-left {
+                overflow: hidden; /* Hide overflow so JS can detect it */
+            }
+            .main-title {
+                /* Set a high default, JS will shrink it */
+                font-size: 2.2em; 
+                line-height: 1.0;
+                max-height: 100%; /* essential for detecting height overflow */
+                display: block;
+            }
+            
+            /* Right Side: Force single lines for metadata so we only manage width */
+            #si-school, #si-title, #placeholder-msg {
+                white-space: nowrap; 
+                overflow: hidden;
+                width: 100%;
+                display: block;
+                line-height: 1.2;
+            }
+            
+            /* Allow the writers row to shrink as a unit */
+            .stats-row {
+                white-space: nowrap;
+                overflow: hidden;
+                width: 100%;
+}
         
         .badges { 
             display: flex; 
@@ -471,6 +501,60 @@
     let sortedData = [];
     let currentIndex = -1; 
 
+    // --- Text Resizing Helpers ---
+
+    // 1. Fits single-line text to container WIDTH
+    function fitToWidth(selector, maxFontSize = 35) {
+        const el = d3.select(selector).node();
+        if (!el) return;
+        
+        let size = maxFontSize;
+        el.style.fontSize = size + "px";
+        
+        // Shrink while text is wider than its container
+        while (el.scrollWidth > el.clientWidth && size > 8) {
+            size -= 1;
+            el.style.fontSize = size + "px";
+        }
+    }
+
+    // 2. Fits multi-line text to container HEIGHT (for the main title)
+    function fitToHeight(selector, maxFontSize = 40) {
+        const el = d3.select(selector).node();
+        if (!el) return;
+        
+        // Reset to max
+        let size = maxFontSize;
+        el.style.fontSize = size + "px";
+        
+        const parent = el.parentElement;
+        
+        // Shrink while text is taller than the available parent space
+        // (We check parent height minus the space taken by subtitles)
+        while (el.scrollHeight > (parent.clientHeight - 40) && size > 8) {
+            size -= 1;
+            el.style.fontSize = size + "px";
+        }
+    }
+
+    // 3. Master function to resize everything in the strip
+    function resizeMiddleStrip() {
+        // Left Side Title (Height Constrained)
+        fitToHeight(".main-title", 45);
+        
+        // Right Side Placeholder (Width Constrained)
+        if (d3.select("#placeholder-msg").style("display") !== "none") {
+            fitToWidth("#placeholder-msg", 24);
+        }
+        
+        // Right Side Active Content (Width Constrained)
+        if (d3.select("#active-content").style("display") !== "none") {
+            fitToWidth("#si-school", 38);  // School Name
+            fitToWidth("#si-title", 22);   // Song Title
+            fitToWidth(".stats-row", 14);  // Writers/Year row
+        }
+    }
+
     d3.csv("fight-songs.csv").then(data => {
         data = data.filter(d => d.school && d.school.trim() !== "");
         data.forEach(d => {
@@ -535,7 +619,8 @@
                 
                 // --- VIZ 4 RESET: Show Grid with Tiny Text ---
                 drawViz4(null);
-
+                d3.select("#placeholder-msg").style("display", "flex"); // Ensure visible
+                resizeMiddleStrip();
                 return;
             }
 
@@ -581,18 +666,7 @@
             d3.select("#si-conf").text(`(${d.conference})`);
             d3.select("#si-title").text(`"${d.song_name}"`);
             d3.select("#si-year").text(d.year);
-
-            const wSpan = d3.select("#si-writers");
-            wSpan.text(d.writers).style("font-size", "1em");
-            
-            const rowNode = wSpan.node().closest(".stats-row");
-            const panelNode = document.getElementById("song-info-panel");
-            
-            let fs = 1.0;
-            while (rowNode.scrollWidth > (panelNode.clientWidth - 40) && fs > 0.5) {
-                fs -= 0.05;
-                wSpan.style("font-size", `${fs}em`);
-            }
+            d3.select("#si-writers").text(d.writers);
             
             let badgesHTML = "";
             if(d.official_song === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-check-circle"></i> Official</div>`;
@@ -630,6 +704,7 @@
                 fInd.attr("transform", `translate(${xPos}, 0)`);
                 fInd.select("text").text(d.number_fights);
             }
+           setTimeout(resizeMiddleStrip, 0);
 
             // --- VIZ 4 UPDATE: Radial Layout ---
             drawViz4(d);
@@ -647,6 +722,7 @@
                 tInd.attr("transform", `translate(${xPos}, 0)`); 
                 tInd.select("text").text(d.trope_count);
             }
+           
         }
         
     
@@ -1432,6 +1508,7 @@
             initViz1(); 
             drawViz2(); 
             drawViz3(); 
+            resizeMiddleStrip();
             if (currentIndex > -1) {
                  drawViz4(sortedData[currentIndex]);
                  updateSelection(sortedData[currentIndex].school);
@@ -1474,7 +1551,9 @@
                 }
             }
         }
+        resizeMiddleStrip()
     });
 </script>
 </body>
 </html>
+
