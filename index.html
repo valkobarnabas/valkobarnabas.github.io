@@ -88,19 +88,18 @@
 
         /* --- UPDATED CSS BLOCK --- */
         #strip-left {
-            padding: 0 15px; /* Reduced padding */
+            padding: 0 10px; /* Tight padding */
             border-right: 1px solid var(--dim);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: flex-start;
-            overflow: hidden; /* Prevent spillover */
-            min-width: 0; /* Allow flex item to shrink below content size */
+            overflow: hidden; 
+            min-width: 0;
         }
 
         .sub-top { 
-            /* Scale based on Viewport Height so it fits vertically */
-            font-size: clamp(8px, 1.5vh, 12px); 
+            font-size: clamp(8px, 1.4vh, 11px); 
             color: #888; 
             text-transform: uppercase; 
             letter-spacing: 1px; 
@@ -109,39 +108,38 @@
         }
         
         .main-title { 
-            /* Aggressive scaling: Min 10px, Max 32px, mostly based on height */
-            font-size: clamp(10px, 4vh, 32px); 
+            /* Smaller bounds, allow wrapping */
+            font-size: clamp(10px, 3vh, 26px); 
             color: var(--highlight); 
             font-weight: 800; 
-            line-height: 1.0; 
-            margin: 0; 
+            line-height: 0.95; /* Tighter line height for 2 lines */
+            margin: 2px 0; 
             text-transform: uppercase; 
-            white-space: nowrap; /* Keep on one line if possible */
-            overflow: hidden;
-            text-overflow: ellipsis; 
-            width: 100%;
+            white-space: normal; /* Allow text to wrap */
+            text-align: left;
         }
         
         .sub-bot { 
-            font-size: clamp(9px, 1.8vh, 14px); /* Scales with height */
+            font-size: clamp(9px, 1.6vh, 12px); 
             color: #fff; 
             margin-top: 4px; 
             font-weight: 300; 
             display: flex; 
             align-items: center; 
-            gap: 8px;
+            gap: 10px; /* Force space between Name and Button */
             white-space: nowrap;
         }
 
         .about-link {
-            font-size: 0.8em; /* Relative to sub-bot size */
+            font-size: 0.9em; 
             background: #d100d1; 
             padding: 1px 6px;
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
             color: #ffffff; 
             text-decoration: none;
             font-weight: 700;
+            white-space: nowrap;
         }
         .about-link:hover { 
             background: var(--highlight); 
@@ -384,7 +382,7 @@
     <div id="middle-strip">
         <div id="strip-left">
             <div class="sub-top">Bucky's Data Viz Challenge 2026</div>
-            <div class="main-title">The Geometry of College Fight Songs</div>
+            <div class="main-title">The Geometry of <br>College Fight Songs</div>
             <div class="sub-bot">
                 Barnabás Valkó
                 <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">ABOUT THIS PAGE</span>
@@ -795,15 +793,14 @@
             const gridDiv = d3.select("#logo-grid");
             gridDiv.html("");
             
-            // STRICT GRID CONTAINER
             const container = gridDiv.append("div")
                 .style("display", "grid")
-                // Force exactly 11 columns and 6 rows
-                .style("grid-template-columns", "repeat(11, 1fr)")
-                .style("grid-template-rows", "repeat(6, 1fr)")
+                // minmax(0, 1fr) prevents the grid from blowing out on small screens
+                .style("grid-template-columns", "repeat(11, minmax(0, 1fr))")
+                .style("grid-template-rows", "repeat(6, minmax(0, 1fr))")
                 .style("width", "100%")
                 .style("height", "100%")
-                .style("overflow", "hidden"); // Prevent any scrollbars
+                .style("overflow", "hidden"); 
 
             const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
 
@@ -813,13 +810,13 @@
                 .style("display", "flex")
                 .style("align-items", "center")
                 .style("justify-content", "center")
-                .style("width", "100%")  // Ensure cell fills grid area
-                .style("height", "100%") // Ensure cell fills grid area
+                .style("width", "100%") 
+                .style("height", "100%") 
                 .append("img")
                 .attr("src", d => `logos/${getSlug(d.school)}.png`)
-                // Make images responsive but contained within the cell
-                .style("width", "85%") 
-                .style("height", "85%") 
+                // Percentages here ensure they never exceed the cell size
+                .style("max-width", "85%") 
+                .style("max-height", "85%") 
                 .style("object-fit", "contain")
                 .attr("class", "school-logo")
                 .attr("data-school", d => d.school)
@@ -1508,6 +1505,7 @@
 </script>
 </body>
 </html>
+
 
 
 
