@@ -310,7 +310,7 @@
         
         /* Modal */
         #about-modal {
-            display: none;
+            display: flex;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8);
@@ -329,9 +329,6 @@
         }
         .close-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 1.5em; color: #888; }
         .close-btn:hover { color: #fff; }
-        .modal-first-view {
-            /* Used to track if modal has been closed before */
-        }
 
         text { fill: #aaa; font-size: 11px; }
         .axis-label { font-size: 12px; font-weight: bold; fill: #fff; }
@@ -1443,38 +1440,10 @@
             }
         });
 
-        let isFirstModalClose = !sessionStorage.getItem('modalClosedBefore');
-        
-        // Show modal on first load
-        const modal = document.getElementById('about-modal');
-        if (isFirstModalClose) {
-            modal.style.display = 'flex';
-        }
-        
-        function closeModalAndFullscreen() {
-            if (isFirstModalClose) {
-                isFirstModalClose = false;
-                sessionStorage.setItem('modalClosedBefore', 'true');
-                toggleFullScreen();
-            }
-            modal.style.display = 'none';
-        }
-        
-        // Close button handler
-        document.querySelector('.about-close').addEventListener('click', closeModalAndFullscreen);
-        
-        // Click outside modal handler
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModalAndFullscreen();
-            }
-        });
-        
         document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('about-modal');
             if (modal && modal.style.display === 'flex') {
-                if(e.key === "Escape") {
-                    closeModalAndFullscreen();
-                }
+                if(e.key === "Escape") modal.style.display = 'none';
                 return;
             }
             if (e.key === "Escape") {
@@ -1509,5 +1478,3 @@
 </script>
 </body>
 </html>
-
-
