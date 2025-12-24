@@ -1452,15 +1452,12 @@
         }
         
         function closeModalAndFullscreen() {
-            modal.style.display = 'none';
             if (isFirstModalClose) {
                 isFirstModalClose = false;
                 sessionStorage.setItem('modalClosedBefore', 'true');
-                // Trigger fullscreen after a brief delay
-                setTimeout(() => {
-                    toggleFullScreen();
-                }, 100);
+                toggleFullScreen();
             }
+            modal.style.display = 'none';
         }
         
         // Close button handler
@@ -1512,4 +1509,5 @@
 </script>
 </body>
 </html>
+
 
