@@ -86,38 +86,61 @@
             min-height: 0; 
         }
 
+        /* --- UPDATED CSS BLOCK --- */
         #strip-left {
-            padding: 0 30px;
+            padding: 0 15px; /* Reduced padding */
             border-right: 1px solid var(--dim);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: flex-start;
+            overflow: hidden; /* Prevent spillover */
+            min-width: 0; /* Allow flex item to shrink below content size */
         }
-        .sub-top { font-size: 0.8em; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+
+        .sub-top { 
+            /* Scale based on Viewport Height so it fits vertically */
+            font-size: clamp(8px, 1.5vh, 12px); 
+            color: #888; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 2px;
+            white-space: nowrap; 
+        }
         
         .main-title { 
-            font-size: clamp(0.8rem, 2.5vw, 2.2em); 
+            /* Aggressive scaling: Min 10px, Max 32px, mostly based on height */
+            font-size: clamp(10px, 4vh, 32px); 
             color: var(--highlight); 
             font-weight: 800; 
             line-height: 1.0; 
             margin: 0; 
             text-transform: uppercase; 
-            white-space: normal; 
-            overflow-wrap: break-word;
+            white-space: nowrap; /* Keep on one line if possible */
+            overflow: hidden;
+            text-overflow: ellipsis; 
+            width: 100%;
         }
         
-        .sub-bot { font-size: 1em; color: #fff; margin-top: 5px; font-weight: 300; display: flex; align-items: center; gap: 10px; }
-        
+        .sub-bot { 
+            font-size: clamp(9px, 1.8vh, 14px); /* Scales with height */
+            color: #fff; 
+            margin-top: 4px; 
+            font-weight: 300; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            white-space: nowrap;
+        }
+
         .about-link {
-            font-size: 0.7em;
+            font-size: 0.8em; /* Relative to sub-bot size */
             background: #d100d1; 
-            padding: 2px 8px;
-            border-radius: 10px;
+            padding: 1px 6px;
+            border-radius: 8px;
             cursor: pointer;
             color: #ffffff; 
             text-decoration: none;
-            transition: all 0.2s;
             font-weight: 700;
         }
         .about-link:hover { 
@@ -768,46 +791,53 @@
 
     
         // --- VIZ 1: Grid (11x6) ---
-            function initViz1() {
-                const gridDiv = d3.select("#logo-grid");
-                gridDiv.html("");
+        function initViz1() {
+            const gridDiv = d3.select("#logo-grid");
+            gridDiv.html("");
+            
+            // STRICT GRID CONTAINER
+            const container = gridDiv.append("div")
+                .style("display", "grid")
+                // Force exactly 11 columns and 6 rows
+                .style("grid-template-columns", "repeat(11, 1fr)")
+                .style("grid-template-rows", "repeat(6, 1fr)")
+                .style("width", "100%")
+                .style("height", "100%")
+                .style("overflow", "hidden"); // Prevent any scrollbars
+
+            const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
+
+            container.selectAll("div")
+                .data(sortedData)
+                .enter().append("div")
+                .style("display", "flex")
+                .style("align-items", "center")
+                .style("justify-content", "center")
+                .style("width", "100%")  // Ensure cell fills grid area
+                .style("height", "100%") // Ensure cell fills grid area
+                .append("img")
+                .attr("src", d => `logos/${getSlug(d.school)}.png`)
+                // Make images responsive but contained within the cell
+                .style("width", "85%") 
+                .style("height", "85%") 
+                .style("object-fit", "contain")
+                .attr("class", "school-logo")
+                .attr("data-school", d => d.school)
+                .on("mouseover", function(e, d) {
+                    d3.select("#tooltip")
+                        .style("opacity", 1)
+                        .html(`<b>${d.school}</b>`)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 10) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select("#tooltip").style("opacity", 0);
+                })
+                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
+                .on("error", function() { this.style.display='none'; });
                 
-                const container = gridDiv.append("div")
-                    .style("display", "grid")
-                    .style("grid-template-columns", "repeat(11, 1fr)")
-                    .style("grid-template-rows", "repeat(6, 1fr)")
-                    .style("width", "100%")
-                    .style("height", "100%")
-                    .style("gap", "2px");
-            
-                const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
-            
-                container.selectAll("div")
-                    .data(sortedData)
-                    .enter().append("div")
-                    .style("display", "flex").style("align-items", "center").style("justify-content", "center")
-                    .append("img")
-                    .attr("src", d => `logos/${getSlug(d.school)}.png`)
-                    .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
-                    .attr("class", "school-logo")
-                    .attr("data-school", d => d.school)
-                    // REMOVED: .attr("title", d => d.school) 
-                    // ADDED: Custom Tooltip Events
-                    .on("mouseover", function(e, d) {
-                        d3.select("#tooltip")
-                            .style("opacity", 1)
-                            .html(`<b>${d.school}</b>`)
-                            .style("left", (e.pageX + 10) + "px")
-                            .style("top", (e.pageY - 10) + "px");
-                    })
-                    .on("mouseout", function() {
-                        d3.select("#tooltip").style("opacity", 0);
-                    })
-                    .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
-                    .on("error", function() { this.style.display='none'; });
-                    
-                drawTropeDashboard(null);
-            }
+            drawTropeDashboard(null);
+        }
         
         initViz1();
 
@@ -1478,5 +1508,6 @@
 </script>
 </body>
 </html>
+
 
 
