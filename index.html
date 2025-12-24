@@ -320,15 +320,39 @@
         }
         .modal-content {
             background: var(--card-bg);
-            padding: 30px;
+            
+            /* Responsive Sizing & Text */
+            width: 90%;
+            max-width: 800px; 
+            max-height: 90vh; /* Prevents modal from going off-screen vertically */
+            overflow-y: auto; /* Adds scroll if text is too large for screen */
+            padding: clamp(20px, 5vmin, 50px); /* Padding scales with viewport */
+            font-size: clamp(12px, 2vmin, 18px); /* Text scales with viewport */
+            line-height: 1.6;
+
             border-radius: 10px;
-            max-width: 750px;
             border: 2px solid var(--highlight);
             color: #fff;
             position: relative;
         }
-        .close-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 1.5em; color: #888; }
-        .close-btn:hover { color: #fff; }
+        
+        /* Scale the Header */
+        .modal-content h2 {
+            font-size: clamp(1.5em, 5vmin, 2.5em);
+            margin-bottom: 0.5em;
+        }
+
+        /* Scale the Close Button */
+        .close-btn { 
+            position: absolute; 
+            top: clamp(10px, 2vmin, 20px); 
+            right: clamp(15px, 3vmin, 30px); 
+            cursor: pointer; 
+            font-size: clamp(1.5em, 5vmin, 3em); 
+            color: #888; 
+            line-height: 1;
+        }
+        .close-btn:hover { color: #fff; }}
 
         text { fill: #aaa; font-size: 11px; }
         .axis-label { font-size: 12px; font-weight: bold; fill: #fff; }
@@ -1478,6 +1502,7 @@
 </script>
 </body>
 </html>
+
 
 
 
