@@ -86,60 +86,39 @@
             min-height: 0; 
         }
 
-        /* --- UPDATED CSS BLOCK --- */
         #strip-left {
-            padding: 0 10px; /* Tight padding */
+            padding: 0 30px;
             border-right: 1px solid var(--dim);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: flex-start;
-            overflow: hidden; 
-            min-width: 0;
         }
-
-        .sub-top { 
-            font-size: clamp(8px, 1.4vh, 11px); 
-            color: #888; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            margin-bottom: 2px;
-            white-space: nowrap; 
-        }
+        .sub-top { font-size: 0.8em; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
         
         .main-title { 
-            /* Smaller bounds, allow wrapping */
-            font-size: clamp(10px, 3vh, 26px); 
+            font-size: clamp(0.8rem, 2.5vw, 2.2em); 
             color: var(--highlight); 
             font-weight: 800; 
-            line-height: 0.95; /* Tighter line height for 2 lines */
-            margin: 2px 0; 
+            line-height: 1.0; 
+            margin: 0; 
             text-transform: uppercase; 
-            white-space: normal; /* Allow text to wrap */
-            text-align: left;
+            white-space: normal; 
+            overflow-wrap: break-word;
         }
         
-        .sub-bot { 
-            font-size: clamp(9px, 1.6vh, 12px); 
-            color: #fff; 
-            margin-top: 4px; 
-            font-weight: 300; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; /* Force space between Name and Button */
-            white-space: nowrap;
-        }
-
+        .sub-bot { font-size: 1em; color: #fff; margin-top: 5px; font-weight: 300; display: flex; align-items: center; gap: 10px; }
+        
         .about-link {
-            font-size: 0.9em; 
+            font-size: 0.7em;
             background: #d100d1; 
-            padding: 1px 6px;
-            border-radius: 4px;
+            padding: 2px 8px;
+            border-radius: 10px;
             cursor: pointer;
             color: #ffffff; 
             text-decoration: none;
+            transition: all 0.2s;
             font-weight: 700;
-            white-space: nowrap;
         }
         .about-link:hover { 
             background: var(--highlight); 
@@ -382,7 +361,7 @@
     <div id="middle-strip">
         <div id="strip-left">
             <div class="sub-top">Bucky's Data Viz Challenge 2026</div>
-            <div class="main-title">The Geometry of <br>College Fight Songs</div>
+            <div class="main-title">The Geometry of College Fight Songs</div>
             <div class="sub-bot">
                 Barnabás Valkó
                 <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">ABOUT THIS PAGE</span>
@@ -789,52 +768,46 @@
 
     
         // --- VIZ 1: Grid (11x6) ---
-        function initViz1() {
-            const gridDiv = d3.select("#logo-grid");
-            gridDiv.html("");
-            
-            const container = gridDiv.append("div")
-                .style("display", "grid")
-                // minmax(0, 1fr) prevents the grid from blowing out on small screens
-                .style("grid-template-columns", "repeat(11, minmax(0, 1fr))")
-                .style("grid-template-rows", "repeat(6, minmax(0, 1fr))")
-                .style("width", "100%")
-                .style("height", "100%")
-                .style("overflow", "hidden"); 
-
-            const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
-
-            container.selectAll("div")
-                .data(sortedData)
-                .enter().append("div")
-                .style("display", "flex")
-                .style("align-items", "center")
-                .style("justify-content", "center")
-                .style("width", "100%") 
-                .style("height", "100%") 
-                .append("img")
-                .attr("src", d => `logos/${getSlug(d.school)}.png`)
-                // Percentages here ensure they never exceed the cell size
-                .style("max-width", "85%") 
-                .style("max-height", "85%") 
-                .style("object-fit", "contain")
-                .attr("class", "school-logo")
-                .attr("data-school", d => d.school)
-                .on("mouseover", function(e, d) {
-                    d3.select("#tooltip")
-                        .style("opacity", 1)
-                        .html(`<b>${d.school}</b>`)
-                        .style("left", (e.pageX + 10) + "px")
-                        .style("top", (e.pageY - 10) + "px");
-                })
-                .on("mouseout", function() {
-                    d3.select("#tooltip").style("opacity", 0);
-                })
-                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
-                .on("error", function() { this.style.display='none'; });
+            function initViz1() {
+                const gridDiv = d3.select("#logo-grid");
+                gridDiv.html("");
                 
-            drawTropeDashboard(null);
-        }
+                const container = gridDiv.append("div")
+                    .style("display", "grid")
+                    .style("grid-template-columns", "repeat(11, 1fr)")
+                    .style("grid-template-rows", "repeat(6, 1fr)")
+                    .style("width", "100%")
+                    .style("height", "100%")
+                    .style("gap", "2px");
+            
+                const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
+            
+                container.selectAll("div")
+                    .data(sortedData)
+                    .enter().append("div")
+                    .style("display", "flex").style("align-items", "center").style("justify-content", "center")
+                    .append("img")
+                    .attr("src", d => `logos/${getSlug(d.school)}.png`)
+                    .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
+                    .attr("class", "school-logo")
+                    .attr("data-school", d => d.school)
+                    // REMOVED: .attr("title", d => d.school) 
+                    // ADDED: Custom Tooltip Events
+                    .on("mouseover", function(e, d) {
+                        d3.select("#tooltip")
+                            .style("opacity", 1)
+                            .html(`<b>${d.school}</b>`)
+                            .style("left", (e.pageX + 10) + "px")
+                            .style("top", (e.pageY - 10) + "px");
+                    })
+                    .on("mouseout", function() {
+                        d3.select("#tooltip").style("opacity", 0);
+                    })
+                    .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
+                    .on("error", function() { this.style.display='none'; });
+                    
+                drawTropeDashboard(null);
+            }
         
         initViz1();
 
@@ -1505,7 +1478,3 @@
 </script>
 </body>
 </html>
-
-
-
-
