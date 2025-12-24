@@ -700,7 +700,7 @@
                     // 1. Tooltip
                     d3.select("#tooltip")
                         .style("opacity", 1)
-                        .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:#00f2ff">${totalCount} (${percent}%)</span> schools have this trope.`)
+                        .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:#00f2ff">${totalCount}</span> schools have this trope <span style="color:#00f2ff">(${percent}%)</span>.`)
                         .style("left", (e.pageX + 10) + "px")
                         .style("top", (e.pageY - 10) + "px");
 
@@ -1478,6 +1478,7 @@
 </script>
 </body>
 </html>
+
 
 
 
