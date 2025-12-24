@@ -31,14 +31,30 @@
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
             padding: 10px;
-            height: 100vh;
+            min-height: 100vh;
             display: grid;
-            /* Ratio: 3.5 (Top) : 2 (Strip) : 3.5 (Bottom) */
-            grid-template-rows: 3.5fr 2fr 3.5fr; 
+            grid-template-rows: minmax(300px, 3.5fr) minmax(150px, 2fr) minmax(300px, 3.5fr); 
             grid-template-columns: 1fr 1fr;
             gap: 15px;
-            overflow: hidden; 
+            overflow: auto;
         }
+
+        @media (max-width: 768px) {
+                body {
+                    grid-template-columns: 1fr;
+                    grid-template-rows: auto;
+                    height: auto;
+                }
+                #viz1 { grid-column: 1; grid-row: 1; }
+                #viz4 { grid-column: 1; grid-row: 2; }
+                #middle-strip { grid-column: 1; grid-row: 3; }
+                #viz3 { grid-column: 1; grid-row: 4; }
+                #viz2 { grid-column: 1; grid-row: 5; }
+                
+                .viz-container {
+                    min-height: 300px;
+                }
+            }
 
         /* --- Grid Areas --- */
         #viz1 { grid-column: 1 / 2; grid-row: 1 / 2; } 
@@ -57,7 +73,7 @@
             flex-direction: column;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             min-height: 0;
-            overflow: hidden;
+            overflow: visible;
         }
 
         h3 { 
@@ -73,7 +89,7 @@
             flex-shrink: 0;
         }
         
-        .chart-area { flex-grow: 1; position: relative; overflow: hidden; width: 100%; height: 100%; }
+        .chart-area { flex-grow: 1; position: relative; overflow: auto; width: 100%; height: 100%; }
 
         /* --- Middle Strip --- */
         #middle-strip {
@@ -82,7 +98,7 @@
             background: #08101c;
             border-top: 2px solid var(--highlight);
             border-bottom: 2px solid var(--highlight);
-            overflow: hidden;
+            overflow: auto;
             min-height: 0; 
         }
 
@@ -1478,6 +1494,7 @@
 </script>
 </body>
 </html>
+
 
 
 
