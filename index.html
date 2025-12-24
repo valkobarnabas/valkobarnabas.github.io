@@ -32,10 +32,9 @@
             margin: 0;
             padding: 10px;
             height: 100vh;
-            width: 100vw;
             display: grid;
             /* Ratio: 3.5 (Top) : 2 (Strip) : 3.5 (Bottom) */
-            grid-template-rows: 3.5fr minmax(130px, 2fr) 3.5fr; 
+            grid-template-rows: 3.5fr 2fr 3.5fr; 
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             overflow: hidden; 
@@ -59,7 +58,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             min-height: 0;
             overflow: hidden;
-            position: relative;
         }
 
         h3 { 
@@ -89,25 +87,17 @@
         }
 
         #strip-left {
-            padding: 10px 20px; /* Adjusted padding */
+            padding: 0 30px;
             border-right: 1px solid var(--dim);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: flex-start;
-            overflow: hidden; /* Prevent spill */
         }
-        
-        /* Strict Buffer Wrapper for Left Text */
-        .text-buffer-wrapper {
-            max-width: 100%;
-            padding: 0 5px; /* Strict internal buffer */
-        }
-
-        .sub-top { font-size: 0.8em; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sub-top { font-size: 0.8em; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
         
         .main-title { 
-            font-size: clamp(0.9rem, 2.2vw, 2.2em); 
+            font-size: clamp(0.8rem, 2.5vw, 2.2em); 
             color: var(--highlight); 
             font-weight: 800; 
             line-height: 1.0; 
@@ -115,10 +105,9 @@
             text-transform: uppercase; 
             white-space: normal; 
             overflow-wrap: break-word;
-            word-wrap: break-word;
         }
         
-        .sub-bot { font-size: 1em; color: #fff; margin-top: 5px; font-weight: 300; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .sub-bot { font-size: 1em; color: #fff; margin-top: 5px; font-weight: 300; display: flex; align-items: center; gap: 10px; }
         
         .about-link {
             font-size: 0.7em;
@@ -130,7 +119,6 @@
             text-decoration: none;
             transition: all 0.2s;
             font-weight: 700;
-            white-space: nowrap;
         }
         .about-link:hover { 
             background: var(--highlight); 
@@ -151,15 +139,12 @@
 
         #placeholder-msg {
             width: 100%;
-            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(1rem, 2vw, 1.5em); /* Force fit */
+            font-size: 1.5em;
             color: var(--dim);
             font-style: italic;
-            text-align: center;
-            padding: 0 20px; /* Buffer */
         }
 
         #active-content {
@@ -171,14 +156,14 @@
 
         #song-info-panel {
             flex: 1; 
-            padding: 10px 20px; /* Strict Buffer */
+            padding: clamp(10px, 2vh, 25px) 30px; 
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: flex-start; 
             text-align: left;        
             min-width: 0; 
-            gap: 5px;
+            gap: clamp(2px, 1.5vh, 10px);
             overflow: hidden; 
         }
 
@@ -195,31 +180,22 @@
             box-sizing: border-box;
         }
 
-        iframe { width: 100%; height: 100%; border: none; border-radius: 8px; max-height: 152px; }
+        iframe { width: 100%; height: 152px; border: none; border-radius: 12px; }
 
         #si-school { 
-            font-size: clamp(1rem, 2.5vw, 2.2em); 
+            font-size: clamp(1.2rem, 3vw, 2.2em); 
             font-weight: 800; 
             color: #fff; 
             line-height: 1.1; 
             text-shadow: 0 0 10px var(--highlight), 0 0 20px var(--highlight);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-            display: block;
         }
         #si-conf { font-size: clamp(0.5em, 1vw, 0.9em); color: #666; font-style: italic; font-weight: 400; margin-left: 10px;}
         #si-title { 
-            font-size: clamp(0.8rem, 1.8vw, 1.3em); 
+            font-size: clamp(0.9rem, 2vw, 1.3em); 
             color: var(--accent); 
             margin: 0; 
             font-style: italic; 
-            line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis; 
-            max-width: 100%;
+            line-height: 1.2; 
         }
         
         .badges { 
@@ -229,7 +205,7 @@
             flex-wrap: wrap; 
             justify-content: flex-start; 
         }
-        .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #ccc; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #ccc; display: flex; align-items: center; gap: 5px; }
         .badge i { color: var(--highlight); }
 
         /* --- Viz 4 Specific Styles --- */
@@ -251,9 +227,6 @@
             justify-content: flex-start; 
             margin: 0; 
             white-space: nowrap; 
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         .stats-row b { color: #fff; }
 
@@ -350,9 +323,6 @@
             padding: 30px;
             border-radius: 10px;
             max-width: 900px;
-            width: 90%; /* Mobile fix */
-            max-height: 90vh; /* Mobile fix */
-            overflow-y: auto; /* Mobile fix */
             border: 2px solid var(--highlight);
             color: #fff;
             position: relative;
@@ -390,13 +360,11 @@
 
     <div id="middle-strip">
         <div id="strip-left">
-            <div class="text-buffer-wrapper">
-                <div class="sub-top">Bucky's Data Viz Challenge 2026</div>
-                <div class="main-title">The Geometry of College Fight Songs</div>
-                <div class="sub-bot">
-                    Barnabás Valkó
-                    <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">ABOUT THIS PAGE</span>
-                </div>
+            <div class="sub-top">Bucky's Data Viz Challenge 2026</div>
+            <div class="main-title">The Geometry of College Fight Songs</div>
+            <div class="sub-bot">
+                Barnabás Valkó
+                <span class="about-link" onclick="document.getElementById('about-modal').style.display='flex'; event.stopPropagation();">ABOUT THIS PAGE</span>
             </div>
         </div>
 
@@ -414,7 +382,7 @@
                     
                     <div class="stats-row">
                         <span>Year: <b id="si-year"></b></span>
-                        <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">Writer(s): <b id="si-writers"></b></span>
+                        <span>Writer(s): <b id="si-writers"></b></span>
                     </div>
                 </div>
                 
@@ -566,7 +534,7 @@
                 d3.select("#no-fights-check").style("display", "none"); // Hide check
                 
                 // --- VIZ 4 RESET: Show Grid with Tiny Text ---
-                if(drawViz4) drawViz4(null);
+                drawViz4(null);
 
                 return;
             }
@@ -615,22 +583,16 @@
             d3.select("#si-year").text(d.year);
 
             const wSpan = d3.select("#si-writers");
-            wSpan.text(d.writers).style("font-size", "1em"); // Reset font size
+            wSpan.text(d.writers).style("font-size", "1em");
             
-            // Force redraw/calculation of text fitting
-            requestAnimationFrame(() => {
-                const rowNode = wSpan.node().closest(".stats-row");
-                const panelNode = document.getElementById("song-info-panel");
-                if(rowNode && panelNode) {
-                   let fs = 1.0;
-                   // strict buffer check (padding is 20px on each side = 40px)
-                   const maxW = panelNode.clientWidth - 40; 
-                   while (rowNode.scrollWidth > maxW && fs > 0.6) {
-                       fs -= 0.05;
-                       wSpan.style("font-size", `${fs}em`);
-                   }
-                }
-            });
+            const rowNode = wSpan.node().closest(".stats-row");
+            const panelNode = document.getElementById("song-info-panel");
+            
+            let fs = 1.0;
+            while (rowNode.scrollWidth > (panelNode.clientWidth - 40) && fs > 0.5) {
+                fs -= 0.05;
+                wSpan.style("font-size", `${fs}em`);
+            }
             
             let badgesHTML = "";
             if(d.official_song === "Yes") badgesHTML += `<div class="badge"><i class="fas fa-check-circle"></i> Official</div>`;
@@ -670,7 +632,7 @@
             }
 
             // --- VIZ 4 UPDATE: Radial Layout ---
-            if(drawViz4) drawViz4(d);
+            drawViz4(d);
 
             // --- VIZ 4 LEGEND INDICATOR (MUST BE CALLED AFTER DRAWVIZ4) ---
              const tInd = d3.select("#trope-indicator");
@@ -967,7 +929,7 @@
                 });
 
             } else {
-                // *** DEFAULT GRID MODE ***
+                // *** DEFAULT MODE (Grid) ***
                 renderNodes = sortedNodes;
                 const cols = 13;
                 const rows = Math.ceil(renderNodes.length / cols);
@@ -1339,10 +1301,134 @@
             
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
         };
+        drawViz3();
+
+
+        // --- VIZ 2: Origin Story ---
+        const drawViz2 = () => {
+            d3.select("#upset-origin").html("");
+            const container = document.getElementById('upset-origin');
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            const svg = d3.select("#upset-origin").append("svg").attr("width", w).attr("height", h);
+
+            const meta = ['official_song', 'student_writer', 'contest'];
+            const combos = {};
+            const totals = { 'official_song': 0, 'student_writer': 0, 'contest': 0 };
+
+            data.forEach(d => {
+                const sig = meta.map(t => {
+                    if (d[t] === 'Yes') { totals[t]++; return '1'; }
+                    return '0';
+                }).join("");
+                if (!combos[sig]) combos[sig] = { count: 0, sig: sig, schools: [] };
+                combos[sig].count++;
+                combos[sig].schools.push(d.school);
+            });
+            const sorted = Object.values(combos).sort((a,b) => b.count - a.count);
+
+            const margin = {top: 65, right: 10, bottom: 5, left: 10};
+            const rowH = (h - margin.top - margin.bottom) / sorted.length;
+            const matrixWidth = w * 0.4; 
+            const barAreaWidth = w * 0.6;
+            const maxVal = d3.max(sorted, d=>d.count);
+            const barScale = d3.scaleLinear().domain([0, maxVal]).range([0, barAreaWidth - 40]);
+
+            const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
+            
+            g.append("text").attr("x", barAreaWidth - 10).attr("y", -10).attr("text-anchor", "end")
+             .style("fill", "#888").style("font-size", "10px").text("Number of Songs (65)");
+
+            const headerG = svg.append("g").attr("transform", `translate(${margin.left + barAreaWidth}, ${margin.top - 10})`);
+            const colW = matrixWidth / meta.length;
+            
+            meta.forEach((m, i) => {
+                const centerX = i * colW + colW/2;
+                headerG.append("text").attr("x", centerX).attr("y", -38).attr("text-anchor", "middle")
+                    .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
+                
+                headerG.append("text").attr("x", centerX).attr("y", -1).attr("text-anchor", "middle")
+                    .style("font-size", "9px").style("fill", "#bbb").style("font-weight", "bold").text(`(${totals[m]})`);
+
+                const labelWords = iconLabels[m].split(" ");
+                labelWords.forEach((word, idx) => {
+                    headerG.append("text").attr("x", centerX).attr("y", -22 + (idx*9)).attr("text-anchor", "middle")
+                        .style("font-size", "9px").style("fill", "#fff").text(word);
+                });
+            });
+
+            sorted.forEach((d, i) => {
+                const y = i * rowH;
+                const centerY = y + rowH/2;
+                const rowG = g.append("g").attr("class", "upset-row");
+
+                rowG.append("rect")
+                    .attr("x", barAreaWidth - barScale(d.count) - 10)
+                    .attr("y", centerY - 8).attr("width", barScale(d.count)).attr("height", 16)
+                    .attr("fill", "#444") 
+                    .attr("data-schools", JSON.stringify(d.schools))
+                    // --- MOUSEOVER ---
+                    .on("mouseover", function(e) { 
+                         // Bar highlight
+                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
+                         
+                         const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
+                         tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
+                                .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                        
+                         // LOGO HIGHLIGHT/DIM LOGIC
+                         // Only run if global selection is empty (default mode)
+                         if (currentIndex === -1) {
+                             d3.selectAll(".school-logo")
+                                .style("transition", "opacity 0.2s, filter 0.2s")
+                                .each(function() {
+                                    const school = d3.select(this).attr("data-school");
+                                    const isMatch = d.schools.includes(school);
+
+                                    if (isMatch) {
+                                        // Highlight Match
+                                        d3.select(this)
+                                            .style("opacity", 1)
+                                            .style("filter", "drop-shadow(0 0 6px #00f2ff) grayscale(0%)");
+                                    } else {
+                                        // Dim Non-Match
+                                        d3.select(this)
+                                            .style("opacity", 0.2)
+                                            .style("filter", "grayscale(100%)");
+                                    }
+                                });
+                         }
+                    })
+                    // --- MOUSEOUT ---
+                    .on("mouseout", function() { 
+                        if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
+                        tooltip.style("opacity", 0);
+
+                        // REVERT ALL LOGOS
+                        d3.selectAll(".school-logo")
+                            .style("opacity", null)
+                            .style("filter", null);
+                    })
+                    .on("click", (e) => {
+                        e.stopPropagation();
+                        if (d.schools.length === 1) updateSelection(d.schools[0]);
+                    });
+                
+                rowG.append("text").attr("x", barAreaWidth - barScale(d.count) - 15).attr("y", centerY + 4).attr("text-anchor", "end").text(d.count);
+                rowG.append("line").attr("x1", barAreaWidth).attr("x2", w).attr("y1", centerY).attr("y2", centerY).attr("stroke", "#333");
+                
+                meta.forEach((m, k) => {
+                    const active = d.sig[k] === '1';
+                    rowG.append("circle").attr("cx", barAreaWidth + (k * colW) + colW/2).attr("cy", centerY).attr("r", active ? 5 : 2)
+                     .attr("class", active ? "upset-dot active" : "upset-dot")
+                     .style("fill", active ? "#888" : "#333");
+                });
+            });
+            svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
+        };
         drawViz2();
 
-        // --- RESIZE HANDLING ---
-        function triggerResize() {
+        window.addEventListener("resize", () => {
             initViz1(); 
             drawViz2(); 
             drawViz3(); 
@@ -1352,23 +1438,7 @@
             } else {
                  drawViz4(null);
             }
-        }
-        
-        // Debounce Resize (Waits 200ms after resize stops to redraw)
-        let resizeTimer;
-        window.addEventListener("resize", () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(triggerResize, 200);
         });
-        
-        // Fullscreen specific handlers to force immediate checks
-        document.addEventListener("fullscreenchange", () => setTimeout(triggerResize, 100));
-        document.addEventListener("webkitfullscreenchange", () => setTimeout(triggerResize, 100));
-        document.addEventListener("mozfullscreenchange", () => setTimeout(triggerResize, 100));
-        document.addEventListener("msfullscreenchange", () => setTimeout(triggerResize, 100));
-
-        // Initial Trigger after load
-        setTimeout(triggerResize, 50);
 
         document.addEventListener('keydown', (e) => {
             const modal = document.getElementById('about-modal');
@@ -1408,3 +1478,4 @@
 </script>
 </body>
 </html>
+
