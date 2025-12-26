@@ -371,7 +371,7 @@
         #logo-grid-container::-webkit-scrollbar-thumb:hover { background: var(--highlight); }
 
         /* --- NEW: Compact Mode for Thin Screens --- */
-        @media (max-height: 700px) {
+        @media (max-height: 550px) {
             /* 1. Left Side: Clean up title */
             .sub-top, .sub-bot { display: none !important; }
             .main-title { font-size: 1.2em; line-height: 1.1; }
@@ -397,7 +397,12 @@
             }
             
             /* Add separators visually */
-            #si-school::after { content: "•"; margin: 0 5px; color: #444; }
+            #si-conf::after {
+              content: "•\A"; /* The "\A" inserts a line feed character */
+              white-space: pre; /* This forces the browser to honor the line feed */
+              margin: 0 5px; /* The margin will be applied, but on the new line it may not be visible as intended */
+              color: #444;
+            }
             #si-title::after { content: "•"; margin: 0 5px; color: #444; }
             
             /* Hide Badges to save space */
@@ -1545,6 +1550,7 @@
 </script>
 </body>
 </html>
+
 
 
 
