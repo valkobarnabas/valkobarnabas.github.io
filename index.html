@@ -363,6 +363,46 @@
         #lyrical-panel { overflow: visible !important; }
         #logo-grid, #logo-grid > div { overflow: visible !important; z-index: 10; }
         #jaccard-web { overflow: visible !important; }
+
+        /* --- NEW: Scrollbar Styling for Logos --- */
+        #logo-grid-container::-webkit-scrollbar { width: 6px; }
+        #logo-grid-container::-webkit-scrollbar-track { background: #0b1626; }
+        #logo-grid-container::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        #logo-grid-container::-webkit-scrollbar-thumb:hover { background: var(--highlight); }
+
+        /* --- NEW: Compact Mode for Thin Screens --- */
+        @media (max-height: 700px) {
+            /* 1. Left Side: Clean up title */
+            .sub-top, .sub-bot { display: none !important; }
+            .main-title { font-size: 1.2em; line-height: 1.1; }
+
+            /* 2. Right Side: Compact Song Info */
+            #spotify-panel { display: none !important; }
+            
+            #song-info-panel {
+                flex-direction: row !important;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                width: 100%;
+                gap: 15px;
+                padding: 0 10px;
+            }
+
+            /* Force small text and horizontal layout */
+            #si-school, #si-title, .stats-row, #si-conf {
+                font-size: 0.9em !important;
+                white-space: nowrap;
+                margin: 0;
+            }
+            
+            /* Add separators visually */
+            #si-school::after { content: "•"; margin: 0 5px; color: #444; }
+            #si-title::after { content: "•"; margin: 0 5px; color: #444; }
+            
+            /* Hide Badges to save space */
+            .badges { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -792,46 +832,49 @@
 
     
         // --- VIZ 1: Grid (11x6) ---
-            function initViz1() {
-                const gridDiv = d3.select("#logo-grid");
-                gridDiv.html("");
+        function initViz1() {
+            const gridDiv = d3.select("#logo-grid");
+            gridDiv.html("");
+            
+            // Updated Container: Scrollable with minimum row heights
+            const container = gridDiv.append("div")
+                .attr("id", "logo-grid-container") 
+                .style("display", "grid")
+                .style("grid-template-columns", "repeat(11, 1fr)")
+                .style("grid-auto-rows", "minmax(35px, 1fr)") // Prevents squishing
+                .style("width", "100%")
+                .style("height", "100%")
+                .style("gap", "2px")
+                .style("overflow-y", "auto") // Adds scrollbar if needed
+                .style("padding-right", "5px"); // Space for scrollbar
+
+            const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
+        
+            container.selectAll("div")
+                .data(sortedData)
+                .enter().append("div")
+                .style("display", "flex").style("align-items", "center").style("justify-content", "center")
+                .style("min-height", "0") // Crucial for flex/grid nesting
+                .append("img")
+                .attr("src", d => `logos/${getSlug(d.school)}.png`)
+                .style("max-width", "90%").style("max-height", "90%").style("object-fit", "contain")
+                .attr("class", "school-logo")
+                .attr("data-school", d => d.school)
+                .on("mouseover", function(e, d) {
+                    d3.select("#tooltip")
+                        .style("opacity", 1)
+                        .html(`<b>${d.school}</b>`)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 10) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select("#tooltip").style("opacity", 0);
+                })
+                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
+                .on("error", function() { this.style.display='none'; });
                 
-                const container = gridDiv.append("div")
-                    .style("display", "grid")
-                    .style("grid-template-columns", "repeat(11, 1fr)")
-                    .style("grid-template-rows", "repeat(6, 1fr)")
-                    .style("width", "100%")
-                    .style("height", "100%")
-                    .style("gap", "2px");
-            
-                const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
-            
-                container.selectAll("div")
-                    .data(sortedData)
-                    .enter().append("div")
-                    .style("display", "flex").style("align-items", "center").style("justify-content", "center")
-                    .append("img")
-                    .attr("src", d => `logos/${getSlug(d.school)}.png`)
-                    .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
-                    .attr("class", "school-logo")
-                    .attr("data-school", d => d.school)
-                    // REMOVED: .attr("title", d => d.school) 
-                    // ADDED: Custom Tooltip Events
-                    .on("mouseover", function(e, d) {
-                        d3.select("#tooltip")
-                            .style("opacity", 1)
-                            .html(`<b>${d.school}</b>`)
-                            .style("left", (e.pageX + 10) + "px")
-                            .style("top", (e.pageY - 10) + "px");
-                    })
-                    .on("mouseout", function() {
-                        d3.select("#tooltip").style("opacity", 0);
-                    })
-                    .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
-                    .on("error", function() { this.style.display='none'; });
-                    
-                drawTropeDashboard(null);
-            }
+            drawTropeDashboard(null);
+        }
         
         initViz1();
 
@@ -1502,6 +1545,7 @@
 </script>
 </body>
 </html>
+
 
 
 
