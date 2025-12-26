@@ -39,6 +39,12 @@
             gap: 15px;
             overflow: hidden; 
         }
+        /* Find the existing 'text' rule or add this new one */
+        text { 
+            fill: #aaa; 
+            font-size: 11px; 
+            font-family: 'Segoe UI', sans-serif; /* Forces the font */
+        }
 
         /* --- Grid Areas --- */
         #viz1 { grid-column: 1 / 2; grid-row: 1 / 2; } 
@@ -1303,9 +1309,9 @@
             grad.append("stop").attr("offset", "100%").style("stop-color", "#FFFF00");
             
             leg.append("rect").attr("class", "legend-rect").attr("y", 25).attr("width", 70).attr("height", 8).style("fill", "url(#gradFight)");
-            leg.append("text").text("1").attr("y", 45).attr("x", 0); 
-            leg.append("text").text("5").attr("y", 45).attr("x", 32);
-            leg.append("text").text("10+").attr("y", 45).attr("x", 65);
+            leg.append("text").text("1").attr("y", 45).attr("x", 0).style("fill", "#ccc").style("font-size", "10px"); 
+            leg.append("text").text("5").attr("y", 45).attr("x", 32).style("fill", "#ccc").style("font-size", "10px");
+            leg.append("text").text("10+").attr("y", 45).attr("x", 65).style("fill", "#ccc").style("font-size", "10px");
 
             const fightInd = leg.append("g")
                 .attr("id", "fight-indicator")
@@ -1502,6 +1508,7 @@
 </script>
 </body>
 </html>
+
 
 
 
