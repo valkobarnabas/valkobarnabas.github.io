@@ -1431,7 +1431,7 @@
             const leg = svg.append("g")
                 .attr("transform", `translate(${legX}, 20) scale(${legScale})`);
             
-            leg.append("text").text(`# OF "FIGHT"S`).attr("y", 0).style("font-size","9px").style("fill","#00f2ff");
+            leg.append("text").text(`# OF "FIGHT"S`).attr("y", 0).style("font-size","9px").style("fill","#aaa");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
             const fRange = fightColorScale.range();
@@ -1668,6 +1668,7 @@
 </script>
 </body>
 </html>
+
 
 
 
