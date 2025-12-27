@@ -469,7 +469,31 @@
     <div class="modal-content">
         <span class="close-btn" onclick="document.getElementById('about-modal').style.display='none'">×</span>
         <h2 style="color:var(--highlight); margin-top:0;">ABOUT THIS DASHBOARD</h2>
-        <p>This interactive visualization explores the lyrical and musical patterns of 65 major college fight songs. Click any node or logo to analyze that school's fight song, or hover over a trope to see which songs utilize it. Press <b>esc</b> or click anywhere to reset to the default view. This site is best viewed in fullscreen <span style="color:var(--accent)">(press <b>F</b>)</span>!</p>
+        
+        <div style="margin: 0 0 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--dim); border-radius: 8px;">
+            <div style="margin-bottom: 10px; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; color: var(--highlight); font-weight: bold;">
+                <i class="fas fa-keyboard"></i> &nbsp;Keyboard Controls
+            </div>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="background: #222; color: #fff; padding: 4px 10px; border-radius: 6px; border: 1px solid #555; font-family: 'Segoe UI', sans-serif; font-weight: 700; box-shadow: 0 2px 0 #000;">A</span>
+                    <span style="font-size: 0.9em; color: #ddd;">Accessible Mode</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="background: #222; color: #fff; padding: 4px 10px; border-radius: 6px; border: 1px solid #555; font-family: 'Segoe UI', sans-serif; font-weight: 700; box-shadow: 0 2px 0 #000;">F</span>
+                    <span style="font-size: 0.9em; color: #ddd;">Fullscreen</span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="background: #222; color: #fff; padding: 4px 10px; border-radius: 6px; border: 1px solid #555; font-family: 'Segoe UI', sans-serif; font-weight: 700; box-shadow: 0 2px 0 #000;">Esc</span>
+                    <span style="font-size: 0.9em; color: #ddd;">Reset View / Close</span>
+                </div>
+            </div>
+        </div>
+
+        <p>This interactive visualization explores the lyrical and musical patterns of 65 major college fight songs. Click any node or logo to analyze that school's fight song, or hover over a trope to see which songs utilize it.</p>
+        
         <ul>
             <li><strong style="color:var(--highlight)">TROPE-O-METER:</strong> Do the words "fight," "victory," "win" or "won," or "rah" show up in any given song?
             Do the lyrics have nonsense syllables? Do they mention any colors, groups of men, or opponents? Do they spell any words? Click any logo to highlight that school's song.</li>
@@ -493,7 +517,6 @@
         </p>
     </div>
 </div>
-
 <script>
     let isAccessible = false; // State flag
     // --- Utils ---
@@ -1407,7 +1430,7 @@
             const leg = svg.append("g")
                 .attr("transform", `translate(${legX}, 20) scale(${legScale})`);
             
-            leg.append("text").text(`# OF "FIGHT"S`).attr("y", 0).style("font-size","9px").style("fill","#FF4500");
+            leg.append("text").text(`# OF "FIGHT"S`).attr("y", 0).style("font-size","9px").style("fill","#00f2ff");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
             const fRange = fightColorScale.range();
@@ -1637,6 +1660,7 @@
 </script>
 </body>
 </html>
+
 
 
 
