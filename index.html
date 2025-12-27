@@ -48,10 +48,14 @@
         
         /* Specific fix for Viz 1 Logos to use filter instead of stroke/fill */
         img.hover-matched {
-            filter: grayscale(100%) drop-shadow(0 0 8px #ffffff) !important;
+            /* Ensure NO grayscale, add white glow */
+            filter: grayscale(0%) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) !important; 
             opacity: 1 !important;
-            transform: scale(1.1);
-            z-index: 1000;
+            transform: scale(1.2) !important; /* Pop out */
+            z-index: 1000 !important;
+            border: none !important;
+            stroke: none !important;
+            fill: none !important;
         }
         
         body {
@@ -1602,6 +1606,7 @@
 </script>
 </body>
 </html>
+
 
 
 
