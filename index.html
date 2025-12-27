@@ -488,7 +488,7 @@
             <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="background: #222; color: #fff; padding: 4px 10px; border-radius: 6px; border: 1px solid #555; font-family: 'Segoe UI', sans-serif; font-weight: 700; box-shadow: 0 2px 0 #000;">A</span>
-                    <span style="font-size: 0.9em; color: #ddd;">Accessible Mode</span>
+                    <span style="font-size: 0.9em; color: #ddd;">Accessible Color Mode</span>
                 </div>
                 
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -1605,36 +1605,43 @@
 
         document.addEventListener('keydown', (e) => {
             const modal = document.getElementById('about-modal');
-            if (modal && modal.style.display === 'flex') {
-                if(e.key === "Escape") modal.style.display = 'none';
-                return;
+            
+            // FIX: Use getComputedStyle to detect visibility set by CSS on page load
+            const isModalOpen = modal && window.getComputedStyle(modal).display === 'flex';
+
+            if (isModalOpen) {
+                if (e.key === "Escape") modal.style.display = 'none';
+                return; // Stop here if modal was open
             }
+
+            // Standard Escape (Reset Selection)
             if (e.key === "Escape") {
                 updateSelection(null);
                 return;
             }
-            if (e.key === 'f' || e.key === 'F') {
-                toggleFullScreen();
-            }
+
+            // Accessible Mode Toggle ('A')
             if (e.key === 'a' || e.key === 'A') {
+                // Double check logic: Don't toggle if modal is open (redundant but safe)
+                if (isModalOpen) return;
+
                 isAccessible = !isAccessible;
-                
-                // 1. Toggle CSS Class
                 document.body.classList.toggle("accessible-mode", isAccessible);
-                
-                // 2. Update Scales
                 updateScales();
                 
-                // 3. Re-draw everything to apply new colors
                 initViz1();
-                drawViz2(); // UpSet
-                drawViz3(); // Topology
-                // Redraw Viz 4 preserving current focus
+                drawViz2(); 
+                drawViz3(); 
                 if (currentIndex > -1) {
                      drawViz4(sortedData[currentIndex]);
                 } else {
                      drawViz4(null);
                 }
+            }
+            
+            // Fullscreen ('F')
+            if (e.key === 'f' || e.key === 'F') {
+                toggleFullScreen();
             }
         });
 
@@ -1661,6 +1668,7 @@
 </script>
 </body>
 </html>
+
 
 
 
