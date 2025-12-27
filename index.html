@@ -548,7 +548,7 @@
 
     let tropeColorScale = d3.scaleLinear()
         .domain([0, 8])
-        .range(["#000055", "#00ff00"]); // Default DarkBlue->Green
+        .range(["#000044", "#006400"]);
 
     // Function to update Scales AND Gradients
     function updateScales() {
@@ -564,7 +564,7 @@
         } else {
             // Default
             fightRange = ["#8B0000", "#FF4500", "#FFFF00"];
-            tropeRange = ["#000055", "#00ff00"];
+            tropeRange = ["#000044", "#006400"];
         }
 
         // 1. Update D3 Scales
@@ -1605,27 +1605,21 @@
 
         document.addEventListener('keydown', (e) => {
             const modal = document.getElementById('about-modal');
-            
-            // FIX: Use getComputedStyle to detect visibility set by CSS on page load
             const isModalOpen = modal && window.getComputedStyle(modal).display === 'flex';
 
-            if (isModalOpen) {
-                if (e.key === "Escape") modal.style.display = 'none';
-            }
-
-            // Standard Escape (Reset Selection)
-            if (e.key === "Escape") {
-                updateSelection(null);
+            // 1. FULLSCREEN (Works everywhere)
+            if (e.key === 'f' || e.key === 'F') {
+                toggleFullScreen();
                 return;
             }
 
-            // Accessible Mode Toggle ('A')
+            // 2. ACCESSIBLE MODE (Works everywhere)
             if (e.key === 'a' || e.key === 'A') {
-
                 isAccessible = !isAccessible;
                 document.body.classList.toggle("accessible-mode", isAccessible);
                 updateScales();
                 
+                // Redraw logic
                 initViz1();
                 drawViz2(); 
                 drawViz3(); 
@@ -1634,14 +1628,21 @@
                 } else {
                      drawViz4(null);
                 }
+                return;
             }
-            
-            // Fullscreen ('F')
-            if (e.key === 'f' || e.key === 'F') {
-                toggleFullScreen();
+
+            // 3. ESCAPE (Context Sensitive)
+            if (e.key === "Escape") {
+                if (isModalOpen) {
+                    // Priority 1: If modal is open, ONLY close modal
+                    modal.style.display = 'none';
+                } else {
+                    // Priority 2: If modal is closed, reset the selection
+                    updateSelection(null);
+                }
+                return;
             }
         });
-
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
                 if (document.documentElement.requestFullscreen) {
@@ -1665,6 +1666,7 @@
 </script>
 </body>
 </html>
+
 
 
 
