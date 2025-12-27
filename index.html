@@ -1611,7 +1611,6 @@
 
             if (isModalOpen) {
                 if (e.key === "Escape") modal.style.display = 'none';
-                return; // Stop here if modal was open
             }
 
             // Standard Escape (Reset Selection)
@@ -1622,8 +1621,6 @@
 
             // Accessible Mode Toggle ('A')
             if (e.key === 'a' || e.key === 'A') {
-                // Double check logic: Don't toggle if modal is open (redundant but safe)
-                if (isModalOpen) return;
 
                 isAccessible = !isAccessible;
                 document.body.classList.toggle("accessible-mode", isAccessible);
@@ -1668,6 +1665,7 @@
 </script>
 </body>
 </html>
+
 
 
 
