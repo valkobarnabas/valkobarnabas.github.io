@@ -25,15 +25,15 @@
             box-sizing: border-box;
         }
 
-        /* NEW: Accessible Mode Overrides (High Contrast) */
+        /* Accessible Mode (Blue/Orange) */
         body.accessible-mode {
             --bg-color: #000000;
             --card-bg: #111111;
             --text-color: #ffffff;
-            --highlight: #FFD700; /* Gold/Yellow */
-            --accent: #ff9900; /* Orange */
-            --dim: #666666;
-            --border: 2px solid #FFD700; /* Thicker border */
+            --highlight: #448aff; /* Bright Blue (Primary) */
+            --accent: #ff9900;    /* Vivid Orange (Secondary) */
+            --dim: #999999;
+            --border: 2px solid #448aff;
         }
 
         /* NEW: Cross-Viz Hover Highlight (Grey) */
@@ -149,7 +149,7 @@
         
         .about-link {
             font-size: 0.7em;
-            background: #d100d1; 
+            background: var(--accent); /* Was hardcoded #d100d1 */
             padding: 2px 8px;
             border-radius: 10px;
             cursor: pointer;
@@ -519,26 +519,53 @@
 
     let fightColorScale = d3.scaleLinear()
         .domain([0, 5, 10])
-        .range(["#8B0000", "#FF4500", "#FFFF00"])
+        .range(["#8B0000", "#FF4500", "#FFFF00"]) // Default Red->Yellow
         .clamp(true);
 
     let tropeColorScale = d3.scaleLinear()
         .domain([0, 8])
-        .range(["#000055", "#00ff00"]);
+        .range(["#000055", "#00ff00"]); // Default DarkBlue->Green
 
-    // Update Scales Helper
+    // Function to update Scales AND Gradients
     function updateScales() {
+        // Define colors based on mode
+        let fightRange, tropeRange;
+        
         if (isAccessible) {
-            // High Contrast / Colorblind Safe (Viridis-ish)
-            fightColorScale.range(["#440154", "#21918c", "#fde725"]); 
-            tropeColorScale.range(["#000000", "#ffffff"]); // Simple B&W intensity or High Contrast
+            // Accessible: Blue -> Orange
+            // Fight: White -> Orange (Heatmap style)
+            fightRange = ["#ffffff", "#ffcc80", "#ff9900"]; 
+            // Trope: Black -> Blue (Intensity)
+            tropeRange = ["#000000", "#448aff"];
         } else {
             // Default
-            fightColorScale.range(["#8B0000", "#FF4500", "#FFFF00"]);
-            tropeColorScale.range(["#000055", "#00ff00"]);
+            fightRange = ["#8B0000", "#FF4500", "#FFFF00"];
+            tropeRange = ["#000055", "#00ff00"];
+        }
+
+        // 1. Update D3 Scales
+        fightColorScale.range(fightRange);
+        tropeColorScale.range(tropeRange);
+
+        // 2. Update SVG Gradients (Direct DOM manipulation)
+        
+        // Update Viz 4 Gradient (Trope Count)
+        const tGrad = d3.select("#trope-gradient");
+        if (!tGrad.empty()) {
+            tGrad.selectAll("stop").remove(); // Clear old stops
+            tGrad.append("stop").attr("offset", "0%").attr("stop-color", tropeRange[0]);
+            tGrad.append("stop").attr("offset", "100%").attr("stop-color", tropeRange[1]);
+        }
+
+        // Update Viz 3 Gradient (Fight Count)
+        const fGrad = d3.select("#gradFight");
+        if (!fGrad.empty()) {
+            fGrad.selectAll("stop").remove();
+            fGrad.append("stop").attr("offset", "0%").style("stop-color", fightRange[0]);
+            fGrad.append("stop").attr("offset", "50%").style("stop-color", fightRange[1]);
+            fGrad.append("stop").attr("offset", "100%").style("stop-color", fightRange[2]);
         }
     }
-
     // --- GLOBAL CROSS-HIGHLIGHT HANDLERS ---
     const globalHighlight = (schoolName) => {
         if (!schoolName) return;
@@ -661,7 +688,7 @@
                 const schools = JSON.parse(d3.select(this).attr("data-schools") || "[]");
                 if (schools.includes(schoolName)) {
                     d3.select(this).classed("dimmed", false).classed("highlighted", true); 
-                    d3.select(this.parentNode).selectAll(".upset-dot.active").classed("dimmed", false).style("fill", "#ff00ff");
+                    d3.select(this.parentNode).selectAll(".upset-dot.active").classed("dimmed", false).style("fill", "var(--accent)");
                 }
             });
             d3.selectAll("rect.dimmed").each(function() {
@@ -1453,7 +1480,9 @@
             meta.forEach((m, i) => {
                 const centerX = i * colW + colW/2;
                 headerG.append("text").attr("x", centerX).attr("y", -38).attr("text-anchor", "middle")
-                    .style("font-family", "FontAwesome").style("font-size", "14px").style("fill", "#ff00ff").text(icons[m]);
+                .style("font-family", "FontAwesome").style("font-size", "14px")
+                .style("fill", "var(--accent)") // Use variable
+                .text(icons[m]);
                 
                 headerG.append("text").attr("x", centerX).attr("y", -1).attr("text-anchor", "middle")
                     .style("font-size", "9px").style("fill", "#bbb").style("font-weight", "bold").text(`(${totals[m]})`);
@@ -1529,7 +1558,7 @@
                     const active = d.sig[k] === '1';
                     rowG.append("circle").attr("cx", barAreaWidth + (k * colW) + colW/2).attr("cy", centerY).attr("r", active ? 5 : 2)
                      .attr("class", active ? "upset-dot active" : "upset-dot")
-                     .style("fill", active ? "#888" : "#333");
+                        .style("fill", active ? "var(--accent)" : "#333");
                 });
             });
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
@@ -1606,6 +1635,7 @@
 </script>
 </body>
 </html>
+
 
 
 
