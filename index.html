@@ -1336,7 +1336,7 @@
                 .style("color", "#ccc")
                 .style("line-height", "1.2")
                 .style("width", "100%") 
-                .html("Click on or hover over a node to reveal connections to songs with similar tropes.");
+                .html("Click a node to reveal connections to songs with similar tropes.");
 
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
             legSvg.on("click", (e) => { if(e.target === legSvg.node()) updateSelection(null); });
@@ -1666,6 +1666,7 @@
 </script>
 </body>
 </html>
+
 
 
 
