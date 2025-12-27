@@ -1272,8 +1272,9 @@
             const smallFS = Math.max(8, Math.min(11, legW / 12));
             const defs = legSvg.append("defs");
             const linearGradient = defs.append("linearGradient").attr("id", "trope-gradient");
-            linearGradient.append("stop").attr("offset", "0%").attr("stop-color", "#000055");
-            linearGradient.append("stop").attr("offset", "100%").attr("stop-color", "#00ff00");
+            const tRange = tropeColorScale.range(); 
+            linearGradient.append("stop").attr("offset", "0%").attr("stop-color", tRange[0]);
+            linearGradient.append("stop").attr("offset", "100%").attr("stop-color", tRange[1]);
             const legG = legSvg.append("g").attr("transform", "translate(15, 20)");
 
             legG.append("text").text("TROPE COUNT").attr("fill", "#00f2ff").attr("font-size", baseFS + "px").attr("font-weight", "bold");
@@ -1406,12 +1407,13 @@
             const leg = svg.append("g")
                 .attr("transform", `translate(${legX}, 20) scale(${legScale})`);
             
-            leg.append("text").text(`# of "Fight"s`).attr("y", 0).style("font-size","9px").style("fill","#FF4500");
+            leg.append("text").text(`# OF "FIGHT"S`).attr("y", 0).style("font-size","9px").style("fill","#FF4500");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
-            grad.append("stop").attr("offset", "0%").style("stop-color", "#8B0000");
-            grad.append("stop").attr("offset", "50%").style("stop-color", "#FF4500");
-            grad.append("stop").attr("offset", "100%").style("stop-color", "#FFFF00");
+            const fRange = fightColorScale.range();
+            grad.append("stop").attr("offset", "0%").style("stop-color", fRange[0]);
+            grad.append("stop").attr("offset", "50%").style("stop-color", fRange[1]);
+            grad.append("stop").attr("offset", "100%").style("stop-color", fRange[2]);
             
             leg.append("rect").attr("class", "legend-rect").attr("y", 25).attr("width", 70).attr("height", 8).style("fill", "url(#gradFight)");
             leg.append("text").text("1").attr("y", 45).attr("x", 0).style("fill", "#ccc").style("font-size", "10px"); 
@@ -1635,6 +1637,7 @@
 </script>
 </body>
 </html>
+
 
 
 
