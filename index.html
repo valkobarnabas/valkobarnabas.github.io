@@ -7,36 +7,35 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/d3-contour.v4.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="/logos/favicon/bucky.png"> <!-- Yes, this is Bucky Badger driving the 28 bus (happy holidays!) to Sherman. -->
+    <link rel="icon" type="image/png" href="/logos/favicon/bucky.png">
     
     <style>
         :root {
-            --bg-color: #050b14; /* Black */
-            --card-bg: #0b1626; /* Dark Navy Blue */
-            --text-color: #ffffff; /* White */
-            --highlight: #00f2ff; /* Bright Cyan */
-            --accent: #ff00ff; /* Bright Pink */
-            --dim: #4a5d75; /* Blue-Gray */
+            --bg-color: #050b14; 
+            --card-bg: #0b1626;
+            --text-color: #ffffff;
+            --highlight: #00f2ff; /* Cyan */
+            --accent: #ff00ff; /* Pink */
+            --dim: #4a5d75;
             --border: 1px solid rgba(0, 242, 255, 0.2);
-            --grey-dim: #3a3a3a; /* Gray-Gray */
+            --grey-dim: #3a3a3a;
         }
 
         * {
-            box-sizing: border-box; /* Force borders on 4 visualizations */
+            box-sizing: border-box;
         }
 
         /* Accessible Mode (Blue/Orange) */
         body.accessible-mode {
-            --bg-color: #000000; /* Jet Black */
-            --card-bg: #111111; /* "Slightly less" Black */
-            --text-color: #ffffff; /* White */
-            --highlight: #448aff; /* Bright Blue */
-            --accent: #ff9900;    /* Vivid Orange (contrasts with blue in all forms of common colorblindness) */
-            --dim: #999999; /* Light Gray */
-            --border: 2px solid #448aff; /* Double times Blue border */
+            --bg-color: #000000;
+            --card-bg: #111111;
+            --text-color: #ffffff;
+            --highlight: #448aff; /* Bright Blue (Primary) */
+            --accent: #ff9900;    /* Vivid Orange (Secondary) */
+            --dim: #999999;
+            --border: 2px solid #448aff;
         }
 
-        /* Forces grayscale logos in accessible mode*/
         body.accessible-mode .school-logo {
             filter: grayscale(100%);
             transition: filter 0.2s, transform 0.2s;
@@ -57,11 +56,11 @@
             z-index: 10;
         }
 
-        /* Cross-Viz Hover Highlight (Grey) */
+        /* NEW: Cross-Viz Hover Highlight (Grey) */
         .hover-matched {
             stroke: #aaa !important;
             stroke-width: 3px !important;
-            fill: #888 !important;
+            fill: #888 !important; /* Grey fill */
             opacity: 1 !important;
             filter: drop-shadow(0 0 5px white) !important;
             z-index: 9999;
@@ -71,7 +70,7 @@
         img.hover-matched {
             filter: grayscale(0%) drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)) !important; 
             opacity: 1 !important;
-            transform: scale(1.2) !important;
+            transform: scale(1.2) !important; /* Pop out */
             z-index: 1000 !important;
             border: none !important;
             stroke: none !important;
@@ -95,18 +94,17 @@
         text { 
             fill: #aaa; 
             font-size: 11px; 
-            font-family: 'Segoe UI', sans-serif; /* Forces Segoe UI Font! Did you know that Segoe UI was named for the Segoe Road, the Madison, WI street that its designer lived on? 
-            And that Segoe Road was named for Ladislas "Laci" Segoe, the Hungarian-American city-planner responsible for the west- and eastward expansion of Madison?*/
+            font-family: 'Segoe UI', sans-serif; /* Forces the font */
         }
 
-        /*  Grid Areas */
+        /* --- Grid Areas --- */
         #viz1 { grid-column: 1 / 2; grid-row: 1 / 2; } 
         #viz4 { grid-column: 2 / 3; grid-row: 1 / 2; } 
         #middle-strip { grid-column: 1 / 3; grid-row: 2 / 3; }
         #viz3 { grid-column: 1 / 2; grid-row: 3 / 4; } 
         #viz2 { grid-column: 2 / 3; grid-row: 3 / 4; } 
 
-        /*  Containers  */
+        /* --- Containers --- */
         .viz-container {
             background: var(--card-bg);
             border-radius: 6px;
@@ -118,7 +116,7 @@
             min-height: 0;
             overflow: hidden;
         }
-        /* Headers */
+
         h3 { 
             margin: 0 0 5px 0; 
             color: var(--highlight); 
@@ -134,7 +132,7 @@
         
         .chart-area { flex-grow: 1; position: relative; overflow: hidden; width: 100%; height: 100%; }
 
-        /*  Middle Strip  */
+        /* --- Middle Strip --- */
         #middle-strip {
             display: grid;
             grid-template-columns: 1fr 2fr;
@@ -144,7 +142,7 @@
             overflow: hidden;
             min-height: 0; 
         }
-        /* Title of Visualization: Middle Strip Left */
+
         #strip-left {
             padding: 0 30px;
             border-right: 1px solid var(--dim);
@@ -167,11 +165,10 @@
         }
         
         .sub-bot { font-size: 1em; color: #fff; margin-top: 5px; font-weight: 300; display: flex; align-items: center; gap: 10px; }
-
-        /* "About this page" button */
+        
         .about-link {
             font-size: 0.7em;
-            background: var(--accent);
+            background: var(--accent); /* Was hardcoded #d100d1 */
             padding: 2px 8px;
             border-radius: 10px;
             cursor: pointer;
@@ -185,12 +182,11 @@
             color: #000; 
         }
 
-        /*  Legend Indicators  */
+        /* --- Legend Indicators --- */
         .legend-indicator { pointer-events: none; transition: transform 0.2s ease-out; }
         .legend-indicator path { fill: #fff; stroke: #000; stroke-width: 1px; }
         .legend-indicator text { fill: #fff; font-size: 10px; font-weight: bold; text-anchor: middle; text-shadow: 0 0 3px #000; }
 
-        /* Middle strip right: Spotify player*/
         #strip-right {
             display: flex;
             height: 100%;
@@ -198,7 +194,6 @@
             overflow: hidden;
         }
 
-        /* Placeholder text that tells user to select a logo/node*/
         #placeholder-msg {
             width: 100%;
             display: flex;
@@ -208,13 +203,14 @@
             color: var(--dim);
             font-style: italic;
         }
-        /* Currently selected song - middle/middle */
+
         #active-content {
             display: none; 
             width: 100%;
             height: 100%;
             display: flex; 
         }
+
         #song-info-panel {
             flex: 1; 
             padding: clamp(10px, 2vh, 25px) 30px; 
@@ -227,6 +223,7 @@
             gap: clamp(2px, 1.5vh, 10px);
             overflow: hidden; 
         }
+
         #spotify-panel {
             flex: 1 1 0px; 
             max-width: 450px;
@@ -268,7 +265,7 @@
         .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #ccc; display: flex; align-items: center; gap: 5px; }
         .badge i { color: var(--highlight); }
 
-        /*  Viz 4 Specific Styles  */
+        /* --- Viz 4 Specific Styles --- */
         .network-logo {
             filter: grayscale(100%) drop-shadow(0 0 1px rgba(255,255,255,0.5));
             transition: all 0.2s;
@@ -290,7 +287,7 @@
         }
         .stats-row b { color: #fff; }
 
-        /*  Viz Elements  */
+        /* --- Viz Elements --- */
         .node circle { stroke: #fff; stroke-width: 1px; cursor: pointer; transition: all 0.2s; }
         
         /* Highlight States */
@@ -324,7 +321,7 @@
             filter: drop-shadow(0 0 8px var(--accent)) !important;
         }
         
-        /*  FIX: Black outline for highlighted nodes in Viz 4  */
+        /* --- FIX: Black outline for highlighted nodes in Viz 4 --- */
         .node-group circle.highlighted {
             stroke: #000 !important;
         }
@@ -1746,9 +1743,6 @@
 </script>
 </body>
 </html>
-
-
-
 
 
 
