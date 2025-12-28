@@ -1450,7 +1450,7 @@
 
             // Persistent Tooltip Definition
             const pTip = g.append("g").attr("class", "topo-tooltip").style("display", "none");
-            pTip.append("rect").attr("width", 110).attr("height", 45).attr("x", 10).attr("y", -30).attr("fill", "rgba(0,0,0,0.9)").attr("stroke", "#00f2ff");
+            pTip.append("rect").attr("width", 110).attr("height", 60).attr("x", 10).attr("y", -30).attr("fill", "rgba(0,0,0,0.9)").attr("stroke", "#00f2ff");
             const tText = pTip.append("text").attr("x", 15).attr("y", -15).style("fill", "#fff").style("font-size", "10px");
             
             tText.append("tspan").attr("id", "pt-school").attr("x", 15).attr("dy", 0).style("font-weight", "bold").style("fill", "#00f2ff");
@@ -1468,7 +1468,7 @@
                     pTip.select("#pt-school").text(d.school);
                     pTip.select("#pt-bpm").text(`BPM: ${d.bpm}`);
                     pTip.select("#pt-dur").text(`Duration: ${d.sec_duration}s`);
-                    pTip.select("#pt-numfights").text(`# of "Fight"s: ${d.number_fights}`);
+                    pTip.select("#pt-numfights").text(`Num. of "Fight"s: ${d.number_fights}`);
                 }
             };
 
@@ -1480,7 +1480,7 @@
             const leg = svg.append("g")
                 .attr("transform", `translate(${legX}, 20) scale(${legScale})`);
             
-            leg.append("text").text(`# OF "FIGHT"S`).attr("y", 0).style("font-size","9px").style("fill","#aaa");
+            leg.append("text").text(`NUM. OF "FIGHT"S`).attr("y", 0).style("font-size","9px").style("fill","#aaa");
             
             const grad = svg.append("defs").append("linearGradient").attr("id", "gradFight");
             const fRange = fightColorScale.range();
@@ -1735,6 +1735,7 @@
 </script>
 </body>
 </html>
+
 
 
 
