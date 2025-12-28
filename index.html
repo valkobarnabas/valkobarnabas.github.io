@@ -946,62 +946,70 @@
 
     
         function initViz1() {
-                const gridDiv = d3.select("#logo-grid");
-                gridDiv.html("");
+            const gridDiv = d3.select("#logo-grid");
+            gridDiv.html("");
+            
+            // Check window height
+            const isShort = window.innerHeight < 700;
+
+            // --- PARENT CONTAINER FIX ---
+            // Override CSS: Force hidden overflow when scrolling to prevent issues,
+            // but allow visible overflow on tall screens for pop-outs.
+            d3.select("#viz1").style("overflow", isShort ? "hidden" : "visible", "important");
+            d3.select("#lyrical-panel").style("overflow", isShort ? "hidden" : "visible", "important");
+
+            const container = gridDiv.append("div")
+                .style("display", "grid")
+                .style("grid-template-columns", "repeat(11, 1fr)")
+                .style("grid-template-rows", isShort ? "auto" : "repeat(6, 1fr)")
+                .style("width", "100%")
+                .style("height", "100%")
+                .style("gap", "2px")
+                .style("box-sizing", "border-box") // Ensures padding doesn't break width
                 
-                // Check window height
-                const isShort = window.innerHeight < 700;
+                // PADDING:
+                // 1. General buffer (12px) to prevent clipped pop-outs on edges
+                // 2. Right padding (15px) ensures rightmost logos don't trigger X-scroll
+                // 3. Bottom padding (20px) ensures last row isn't cut off when scrolling
+                .style("padding", "12px")
+                .style("padding-right", "15px")
+                .style("padding-bottom", isShort ? "20px" : "12px")
 
-                const container = gridDiv.append("div")
-                    .style("display", "grid")
-                    .style("grid-template-columns", "repeat(11, 1fr)")
-                    .style("grid-template-rows", isShort ? "auto" : "repeat(6, 1fr)")
-                    .style("width", "100%")
-                    .style("height", "100%")
-                    .style("gap", "2px")
-                    
-                    // FIX: Box-sizing ensures padding doesn't break 100% width
-                    .style("box-sizing", "border-box")
-
-                    // FIX: Add padding buffer on ALL sides. 
-                    // This creates safe space for logos to scale up without hitting edges.
-                    .style("padding", "12px") 
-                    
-                    // FIX: Overflow Logic
-                    // 1. Short (Scrolling): Auto Y for scroll, Hidden X to prevent horiz scrollbar bug.
-                    // 2. Tall (Fixed): Visible allows logos to fully pop out of the box boundaries.
-                    .style("overflow-y", isShort ? "auto" : "visible", "important")
-                    .style("overflow-x", isShort ? "hidden" : "visible", "important");
-            
-                const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
-            
-                container.selectAll("div")
-                    .data(sortedData)
-                    .enter().append("div")
-                    .style("display", "flex").style("align-items", "center").style("justify-content", "center")
-                    .style("min-height", isShort ? "45px" : "0")
-                    .append("img")
-                    .attr("src", d => `logos/${getSlug(d.school)}.png`)
-                    .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
-                    .attr("class", "school-logo")
-                    .attr("data-school", d => d.school)
-                    .on("mouseover", function(e, d) {
-                        globalHighlight(d.school);
-                        d3.select("#tooltip")
-                            .style("opacity", 1)
-                            .html(`<b>${d.school}</b>`)
-                            .style("left", (e.pageX + 10) + "px")
-                            .style("top", (e.pageY - 10) + "px");
-                    })
-                    .on("mouseout", function() {
-                        globalUnhighlight();
-                        d3.select("#tooltip").style("opacity", 0);
-                    })
-                    .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
-                    .on("error", function() { this.style.display='none'; });
-                    
-                drawTropeDashboard(null);
-            }
+                // OVERFLOW LOGIC:
+                // Short: Auto Y (scroll), Hidden X (no horiz scrollbar)
+                // Tall: Visible (allow pop-outs everywhere)
+                .style("overflow-y", isShort ? "auto" : "visible", "important")
+                .style("overflow-x", isShort ? "hidden" : "visible", "important");
+        
+            const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
+        
+            container.selectAll("div")
+                .data(sortedData)
+                .enter().append("div")
+                .style("display", "flex").style("align-items", "center").style("justify-content", "center")
+                .style("min-height", isShort ? "45px" : "0")
+                .append("img")
+                .attr("src", d => `logos/${getSlug(d.school)}.png`)
+                .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
+                .attr("class", "school-logo")
+                .attr("data-school", d => d.school)
+                .on("mouseover", function(e, d) {
+                    globalHighlight(d.school);
+                    d3.select("#tooltip")
+                        .style("opacity", 1)
+                        .html(`<b>${d.school}</b>`)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 10) + "px");
+                })
+                .on("mouseout", function() {
+                    globalUnhighlight();
+                    d3.select("#tooltip").style("opacity", 0);
+                })
+                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
+                .on("error", function() { this.style.display='none'; });
+                
+            drawTropeDashboard(null);
+        }
         
         initViz1();
 
@@ -1725,6 +1733,7 @@
 </script>
 </body>
 </html>
+
 
 
 
