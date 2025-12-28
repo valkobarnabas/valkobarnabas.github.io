@@ -940,53 +940,56 @@
 
     
         function initViz1() {
-            const gridDiv = d3.select("#logo-grid");
-            gridDiv.html("");
-            
-            // Check window height
-            const isShort = window.innerHeight < 700;
-
-            const container = gridDiv.append("div")
-                .style("display", "grid")
-                .style("grid-template-columns", "repeat(11, 1fr)")
-                .style("grid-template-rows", isShort ? "auto" : "repeat(6, 1fr)")
-                .style("width", "100%")
-                .style("height", "100%")
-                .style("gap", "2px")
-                .style("overflow-y", isShort ? "auto" : "hidden", "important")
-                .style("padding-right", isShort ? "5px" : "0")
-                // FIX: Add bottom padding so the last row isn't cut off when scrolling
-                .style("padding-bottom", isShort ? "20px" : "0"); 
-        
-            const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
-        
-            container.selectAll("div")
-                .data(sortedData)
-                .enter().append("div")
-                .style("display", "flex").style("align-items", "center").style("justify-content", "center")
-                .style("min-height", isShort ? "45px" : "0")
-                .append("img")
-                .attr("src", d => `logos/${getSlug(d.school)}.png`)
-                .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
-                .attr("class", "school-logo")
-                .attr("data-school", d => d.school)
-                .on("mouseover", function(e, d) {
-                    globalHighlight(d.school);
-                    d3.select("#tooltip")
-                        .style("opacity", 1)
-                        .html(`<b>${d.school}</b>`)
-                        .style("left", (e.pageX + 10) + "px")
-                        .style("top", (e.pageY - 10) + "px");
-                })
-                .on("mouseout", function() {
-                    globalUnhighlight();
-                    d3.select("#tooltip").style("opacity", 0);
-                })
-                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
-                .on("error", function() { this.style.display='none'; });
+                const gridDiv = d3.select("#logo-grid");
+                gridDiv.html("");
                 
-            drawTropeDashboard(null);
-        }
+                // Check window height
+                const isShort = window.innerHeight < 700;
+
+                const container = gridDiv.append("div")
+                    .style("display", "grid")
+                    .style("grid-template-columns", "repeat(11, 1fr)")
+                    .style("grid-template-rows", isShort ? "auto" : "repeat(6, 1fr)")
+                    .style("width", "100%")
+                    .style("height", "100%")
+                    .style("gap", "2px")
+                    // FIX: Enforce hidden X overflow to stop scrollbar, use important to override CSS
+                    .style("overflow-x", "hidden", "important")
+                    .style("overflow-y", isShort ? "auto" : "hidden", "important")
+                    // FIX: Add permanent padding-right so rightmost logos don't get clipped when scaling
+                    .style("padding-right", "5px")
+                    .style("padding-left", "5px") 
+                    .style("padding-bottom", isShort ? "20px" : "0"); 
+            
+                const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
+            
+                container.selectAll("div")
+                    .data(sortedData)
+                    .enter().append("div")
+                    .style("display", "flex").style("align-items", "center").style("justify-content", "center")
+                    .style("min-height", isShort ? "45px" : "0")
+                    .append("img")
+                    .attr("src", d => `logos/${getSlug(d.school)}.png`)
+                    .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
+                    .attr("class", "school-logo")
+                    .attr("data-school", d => d.school)
+                    .on("mouseover", function(e, d) {
+                        globalHighlight(d.school);
+                        d3.select("#tooltip")
+                            .style("opacity", 1)
+                            .html(`<b>${d.school}</b>`)
+                            .style("left", (e.pageX + 10) + "px")
+                            .style("top", (e.pageY - 10) + "px");
+                    })
+                    .on("mouseout", function() {
+                        globalUnhighlight();
+                        d3.select("#tooltip").style("opacity", 0);
+                    })
+                    .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); })
+                    .on("error", function() { this.style.display='none'; });
+                    
+                drawTropeDashboard(null);
+            }
         
         initViz1();
 
@@ -1710,4 +1713,5 @@
 </script>
 </body>
 </html>
+
 
