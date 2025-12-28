@@ -926,18 +926,25 @@
 }
 
     
-        // --- VIZ 1: Grid (11x6) ---
+        // --- VIZ 1: Grid (11x6 or Scrollable) ---
             function initViz1() {
                 const gridDiv = d3.select("#logo-grid");
                 gridDiv.html("");
                 
+                const isMobile = window.innerWidth < 700;
+
                 const container = gridDiv.append("div")
                     .style("display", "grid")
-                    .style("grid-template-columns", "repeat(11, 1fr)")
-                    .style("grid-template-rows", "repeat(6, 1fr)")
+                    // Mobile: Responsive columns (min 45px) | Desktop: Fixed 11 cols
+                    .style("grid-template-columns", isMobile ? "repeat(auto-fill, minmax(45px, 1fr))" : "repeat(11, 1fr)")
+                    // Mobile: Auto rows (grows down) | Desktop: Fixed 6 rows
+                    .style("grid-template-rows", isMobile ? "auto" : "repeat(6, 1fr)")
                     .style("width", "100%")
                     .style("height", "100%")
-                    .style("gap", "2px");
+                    .style("gap", "2px")
+                    // Mobile: Add vertical scrollbar | Desktop: No scroll
+                    .style("overflow-y", isMobile ? "auto" : "hidden")
+                    .style("padding-right", isMobile ? "5px" : "0"); 
             
                 const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
             
@@ -945,13 +952,13 @@
                     .data(sortedData)
                     .enter().append("div")
                     .style("display", "flex").style("align-items", "center").style("justify-content", "center")
+                    // Mobile: Add min-height to cells so they don't squish
+                    .style("min-height", isMobile ? "45px" : "0")
                     .append("img")
                     .attr("src", d => `logos/${getSlug(d.school)}.png`)
                     .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
                     .attr("class", "school-logo")
                     .attr("data-school", d => d.school)
-                    // REMOVED: .attr("title", d => d.school) 
-                    // ADDED: Custom Tooltip Events
                     .on("mouseover", function(e, d) {
                         globalHighlight(d.school);
                         d3.select("#tooltip")
@@ -1531,31 +1538,37 @@
                 const centerY = y + rowH/2;
                 const rowG = g.append("g").attr("class", "upset-row");
 
+                // Responsive Bar Height
+                const isMobile = window.innerWidth < 700;
+                const barHeight = isMobile ? 6 : 16;
+                const barOffset = centerY - (barHeight / 2);
+
                 rowG.append("rect")
                     .attr("x", barAreaWidth - barScale(d.count) - 10)
-                    .attr("y", centerY - 8).attr("width", barScale(d.count)).attr("height", 16)
+                    .attr("y", barOffset) // Use calculated offset
+                    .attr("width", barScale(d.count))
+                    .attr("height", barHeight) // Use calculated height
                     .attr("fill", "#444") 
                     .attr("data-schools", JSON.stringify(d.schools))
+                    
                     // --- MOUSEOVER ---
                     .on("mouseover", function(e) { 
-                        isSticky = false; // Break lock
+                        isSticky = false; 
                         highlightUpSetGroup(this, d, e);
                     })
                     // --- CLICK ---
                     .on("click", function(e) {
                         e.stopPropagation();
                         if (d.schools.length === 1) {
-                            // If only 1 school, fully select it (standard behavior)
                             updateSelection(d.schools[0]);
                         } else {
-                            // If multiple, use Sticky Highlight
                             isSticky = true;
                             highlightUpSetGroup(this, d, e);
                         }
                     })
                     // --- MOUSEOUT ---
                     .on("mouseout", function() { 
-                        if (isSticky) return; // Don't clear if locked
+                        if (isSticky) return; 
 
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
                         tooltip.style("opacity", 0);
@@ -1676,6 +1689,7 @@
 </script>
 </body>
 </html>
+
 
 
 
