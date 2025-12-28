@@ -36,6 +36,26 @@
             --border: 2px solid #448aff;
         }
 
+        body.accessible-mode .school-logo {
+            filter: grayscale(100%);
+            transition: filter 0.2s, transform 0.2s;
+        }
+
+        /* Restore Color on Hover in Accessible Mode */
+        body.accessible-mode .school-logo:hover {
+            filter: drop-shadow(0 0 5px white); /* Removes grayscale, adds glow */
+            transform: scale(1.2);
+            z-index: 100;
+        }
+
+        /* Restore Color when Selected in Accessible Mode */
+        body.accessible-mode .school-logo.logo-highlighted {
+            filter: drop-shadow(0 0 8px var(--highlight));
+            opacity: 1;
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
         /* NEW: Cross-Viz Hover Highlight (Grey) */
         .hover-matched {
             stroke: #aaa !important;
@@ -1690,3 +1710,4 @@
 </script>
 </body>
 </html>
+
