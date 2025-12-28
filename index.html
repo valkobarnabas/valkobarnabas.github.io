@@ -1537,6 +1537,9 @@
             const h = container.clientHeight;
             const svg = d3.select("#upset-origin").append("svg").attr("width", w).attr("height", h);
 
+            // FIX: Define highlightColor locally so it's available for the tooltip
+            const highlightColor = isAccessible ? "#448aff" : "#00f2ff"; 
+
             const meta = ['official_song', 'student_writer', 'contest'];
             const combos = {};
             const totals = { 'official_song': 0, 'student_writer': 0, 'contest': 0 };
@@ -1571,7 +1574,7 @@
                 const centerX = i * colW + colW/2;
                 headerG.append("text").attr("x", centerX).attr("y", -38).attr("text-anchor", "middle")
                 .style("font-family", "FontAwesome").style("font-size", "14px")
-                .style("fill", "var(--accent)") // Use variable
+                .style("fill", "var(--accent)") 
                 .text(icons[m]);
                 
                 headerG.append("text").attr("x", centerX).attr("y", -1).attr("text-anchor", "middle")
@@ -1589,7 +1592,7 @@
                 const centerY = y + rowH/2;
                 const rowG = g.append("g").attr("class", "upset-row");
 
-                // Responsive Bar Height: Check Height < 700
+                // Responsive Bar Height
                 const isShort = window.innerHeight < 700;
                 const barHeight = isShort ? 6 : 16;
                 const barOffset = centerY - (barHeight / 2);
@@ -1602,18 +1605,19 @@
                     .attr("fill", "#444") 
                     .attr("data-schools", JSON.stringify(d.schools))
                     
-                    // --- MOUSEOVER (Standard) ---
+                    // --- MOUSEOVER ---
                     .on("mouseover", function(e) { 
                          if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
                          
                          // Calculate Percentage
                          const pct = ((d.count / data.length) * 100).toFixed(1);
                          
-                         // FIX: Grammar check for School vs Schools
+                         // Grammar check
                          const label = d.count === 1 ? "School" : "Schools";
 
                          const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
                          
+                         // Tooltip with Colors
                          tooltip.style("opacity", 1)
                                 .html(`<b><span style="color:${highlightColor}">${d.count}</span> ${label} <span style="color:${highlightColor}">(${pct}%)</span></b><br>${names}`)
                                 .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
@@ -1632,42 +1636,18 @@
                                 });
                          }
                     })
-                    // --- MOUSEOUT (Standard) ---
+                    // --- MOUSEOUT ---
                     .on("mouseout", function() { 
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
                         tooltip.style("opacity", 0);
                         d3.selectAll(".school-logo").style("opacity", null).style("filter", null);
                     })
-                    // --- CLICK (Only for single school selection) ---
+                    // --- CLICK ---
                     .on("click", (e) => {
                         e.stopPropagation();
                         if (d.schools.length === 1) updateSelection(d.schools[0]);
                     });
 
-                // Helper for UpSet Logic
-                function highlightUpSetGroup(elem, dataObj, event) {
-                     // Bar visual
-                     if(!d3.select(elem).classed("highlighted")) d3.select(elem).attr("fill", "#888");
-                     
-                     // Tooltip
-                     const names = dataObj.schools.slice(0, 10).join(", ") + (dataObj.schools.length > 10 ? "..." : "");
-                     tooltip.style("opacity", 1).html(`<b>${dataObj.count} Schools</b><br>${names}`)
-                            .style("left", (event.pageX+10)+"px").style("top", (event.pageY-10)+"px");
-                    
-                     // Logo Highlight (Only if global selection empty)
-                     if (currentIndex === -1) {
-                         d3.selectAll(".school-logo")
-                            .style("transition", "opacity 0.2s, filter 0.2s")
-                            .each(function() {
-                                const school = d3.select(this).attr("data-school");
-                                if (dataObj.schools.includes(school)) {
-                                    d3.select(this).style("opacity", 1).style("filter", "drop-shadow(0 0 6px var(--highlight)) grayscale(0%)");
-                                } else {
-                                    d3.select(this).style("opacity", 0.2).style("filter", "grayscale(100%)");
-                                }
-                            });
-                     }
-                }
                 
                 rowG.append("text").attr("x", barAreaWidth - barScale(d.count) - 15).attr("y", centerY + 4).attr("text-anchor", "end").text(d.count);
                 rowG.append("line").attr("x1", barAreaWidth).attr("x2", w).attr("y1", centerY).attr("y2", centerY).attr("stroke", "#333");
@@ -1758,6 +1738,7 @@
 </script>
 </body>
 </html>
+
 
 
 
