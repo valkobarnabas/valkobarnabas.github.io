@@ -524,6 +524,7 @@
 </div>
 <script>
     let isAccessible = false; // State flag
+    let isSticky = false;
     // --- Utils ---
     const getSlug = (name) => name.toLowerCase().replace(/ /g, "_").replace(/[^a-z0-9_]/g, "");
 
@@ -654,6 +655,7 @@
         });
 
        function updateSelection(schoolName) {
+           isSticky = false;
             // FORCE TOOLTIP HIDE ON UPDATE
             d3.select("#tooltip").style("opacity", 0);
 
@@ -851,50 +853,50 @@
             const cell = rowDiv.append("div")
                 .style("display", "flex").style("flex-direction", "column").style("align-items", "center")
                 .style("opacity", opacity)
-                .style("cursor", "pointer") 
-                // --- MOUSEOVER ---
+                .style("cursor", "pointer")
+                
+                // --- INTERACTION LOGIC ---
                 .on("mouseover", (e) => {
-                    // 1. Tooltip
-                    d3.select("#tooltip")
-                        .style("opacity", 1)
-                        .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:#00f2ff">${totalCount}</span> schools have this trope <span style="color:#00f2ff">(${percent}%)</span>.`)
-                        .style("left", (e.pageX + 10) + "px")
-                        .style("top", (e.pageY - 10) + "px");
-
-                    // 2. LOGO HIGHLIGHT/DIM LOGIC
-                    // Only run if NO school is selected (!d)
-                    if (!d) {
-                        const matchingSchools = data.filter(r => r[key] === 'Yes').map(r => r.school);
-
-                        d3.selectAll(".school-logo")
-                            .style("transition", "opacity 0.2s, filter 0.2s") // Smooth transition
-                            .each(function() {
-                                const school = d3.select(this).attr("data-school");
-                                const isMatch = matchingSchools.includes(school);
-
-                                if (isMatch) {
-                                    // Highlight Match
-                                    d3.select(this)
-                                        .style("opacity", 1)
-                                        .style("filter", "drop-shadow(0 0 6px #00f2ff) grayscale(0%)");
-                                } else {
-                                    // Dim Non-Match
-                                    d3.select(this)
-                                        .style("opacity", 0.2)
-                                        .style("filter", "grayscale(100%)");
-                                }
-                            });
-                    }
+                    isSticky = false; // Break any existing lock on mouseover
+                    highlightTropeGroup(key, totalCount, percent, e);
                 })
-                // --- MOUSEOUT ---
+                .on("click", (e) => {
+                    isSticky = true; // Set lock
+                    e.stopPropagation();
+                    highlightTropeGroup(key, totalCount, percent, e);
+                })
                 .on("mouseout", () => {
+                    if (isSticky) return; // Don't clear if locked
+                    
                     d3.select("#tooltip").style("opacity", 0);
-
-                    // Revert all styles to null so CSS classes take over
-                    d3.selectAll(".school-logo")
-                        .style("opacity", null)
-                        .style("filter", null);
+                    // Revert styles
+                    d3.selectAll(".school-logo").style("opacity", null).style("filter", null);
                 });
+
+            // Helper to share logic between Hover and Click
+            function highlightTropeGroup(key, count, pct, event) {
+                // 1. Tooltip
+                d3.select("#tooltip")
+                    .style("opacity", 1)
+                    .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:var(--highlight)">${count}</span> schools have this trope <span style="color:var(--highlight)">(${pct}%)</span>.`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 10) + "px");
+
+                // 2. Highlight Logic (Only if no specific song selected)
+                if (!d) {
+                    const matchingSchools = data.filter(r => r[key] === 'Yes').map(r => r.school);
+                    d3.selectAll(".school-logo")
+                        .style("transition", "opacity 0.2s, filter 0.2s")
+                        .each(function() {
+                            const school = d3.select(this).attr("data-school");
+                            if (matchingSchools.includes(school)) {
+                                d3.select(this).style("opacity", 1).style("filter", "drop-shadow(0 0 6px var(--highlight)) grayscale(0%)");
+                            } else {
+                                d3.select(this).style("opacity", 0.2).style("filter", "grayscale(100%)");
+                            }
+                        });
+                }
+            }
 
             cell.append("div")
                 .style("font-family", "FontAwesome")
@@ -1670,6 +1672,7 @@
 </script>
 </body>
 </html>
+
 
 
 
