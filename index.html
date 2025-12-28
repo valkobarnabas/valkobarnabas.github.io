@@ -425,6 +425,12 @@
             .badges { display: none !important; }
             .sub-top { display: none !important; }
         }
+        
+        /* FIX: Allow Viz 1 (Logos) to overflow its container so pop-outs aren't clipped */
+        #viz1.viz-container, #viz1 .chart-area {
+            overflow: visible !important;
+            z-index: 10; /* Ensure it stacks on top of neighboring content */
+        }
     </style>
 </head>
 <body>
@@ -953,13 +959,19 @@
                     .style("width", "100%")
                     .style("height", "100%")
                     .style("gap", "2px")
-                    // FIX: Enforce hidden X overflow to stop scrollbar, use important to override CSS
-                    .style("overflow-x", "hidden", "important")
-                    .style("overflow-y", isShort ? "auto" : "hidden", "important")
-                    // FIX: Add permanent padding-right so rightmost logos don't get clipped when scaling
-                    .style("padding-right", "5px")
-                    .style("padding-left", "5px") 
-                    .style("padding-bottom", isShort ? "20px" : "0"); 
+                    
+                    // FIX: Box-sizing ensures padding doesn't break 100% width
+                    .style("box-sizing", "border-box")
+
+                    // FIX: Add padding buffer on ALL sides. 
+                    // This creates safe space for logos to scale up without hitting edges.
+                    .style("padding", "12px") 
+                    
+                    // FIX: Overflow Logic
+                    // 1. Short (Scrolling): Auto Y for scroll, Hidden X to prevent horiz scrollbar bug.
+                    // 2. Tall (Fixed): Visible allows logos to fully pop out of the box boundaries.
+                    .style("overflow-y", isShort ? "auto" : "visible", "important")
+                    .style("overflow-x", isShort ? "hidden" : "visible", "important");
             
                 const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
             
@@ -1713,5 +1725,6 @@
 </script>
 </body>
 </html>
+
 
 
