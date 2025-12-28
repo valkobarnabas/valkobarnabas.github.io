@@ -851,108 +851,114 @@
              });
              
     function drawTropeDashboard(d) {
-    const container = d3.select("#trope-dashboard");
-    container.html(""); 
+        const container = d3.select("#trope-dashboard");
+        container.html(""); 
 
-    const rect = container.node().getBoundingClientRect();
-    const size = Math.max(10, Math.min(22, rect.width / 16)); 
+        // NEW: Dynamic Colors based on Accessible Mode
+        const highlightColor = isAccessible ? "#448aff" : "#00f2ff"; 
+        const highlightBg = isAccessible ? "rgba(68, 138, 255, 0.2)" : "rgba(0, 242, 255, 0.2)";
 
-    const tropeDescriptions = {
-        'fight': 'Lyrics contain the word "Fight"',
-        'victory': 'Lyrics contain the word "Victory"',
-        'win_won': 'Lyrics contain "Win" or "Won"',
-        'rah': 'Lyrics contain the cheer "Rah"',
-        'nonsense': 'Lyrics contain nonsense syllables (e.g., "Hooperay," "Ski-U-Mah," etc...)',
-        'colors': 'Lyrics mention the school colors',
-        'men': 'Lyrics refer to a group of men (e.g. "men," "boys," etc...)',
-        'opponents': 'Lyrics mention an opponent or rival',
-        'spelling': 'Lyrics spell out a word'
-    };
+        const rect = container.node().getBoundingClientRect();
+        const size = Math.max(10, Math.min(22, rect.width / 16)); 
 
-    const wrapper = container.append("div")
-        .style("display", "flex").style("flex-direction", "column").style("gap", "20px").style("width", "100%");
+        const tropeDescriptions = {
+            'fight': 'Lyrics contain the word "Fight"',
+            'victory': 'Lyrics contain the word "Victory"',
+            'win_won': 'Lyrics contain "Win" or "Won"',
+            'rah': 'Lyrics contain the cheer "Rah"',
+            'nonsense': 'Lyrics contain nonsense syllables (e.g., "Hooperay," "Ski-U-Mah," etc...)',
+            'colors': 'Lyrics mention the school colors',
+            'men': 'Lyrics refer to a group of men (e.g. "men," "boys," etc...)',
+            'opponents': 'Lyrics mention an opponent or rival',
+            'spelling': 'Lyrics spell out a word'
+        };
 
-    const createRow = (keys) => {
-        const rowDiv = wrapper.append("div")
-            .style("display", "flex").style("justify-content", "space-around").style("width", "100%");
-        
-        keys.forEach(key => {
-            const totalCount = data.filter(r => r[key] === 'Yes').length;
-            const percent = ((totalCount / data.length) * 100).toFixed(1);
+        const wrapper = container.append("div")
+            .style("display", "flex").style("flex-direction", "column").style("gap", "20px").style("width", "100%");
 
-            const hasTrope = d ? (d[key] === 'Yes') : false;
-            const opacity = d ? (hasTrope ? 1 : 0.2) : 0.5;
+        const createRow = (keys) => {
+            const rowDiv = wrapper.append("div")
+                .style("display", "flex").style("justify-content", "space-around").style("width", "100%");
             
-            const cell = rowDiv.append("div")
-                .style("display", "flex").style("flex-direction", "column").style("align-items", "center")
-                .style("opacity", opacity)
-                .style("cursor", "pointer") 
-                // --- MOUSEOVER ---
-                .on("mouseover", (e) => {
-                    // 1. Tooltip
-                    d3.select("#tooltip")
-                        .style("opacity", 1)
-                        .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:var(--highlight)">${totalCount}</span> schools have this trope <span style="color:var(--highlight)">(${percent}%)</span>.`)
-                        .style("left", (e.pageX + 10) + "px")
-                        .style("top", (e.pageY - 10) + "px");
+            keys.forEach(key => {
+                const totalCount = data.filter(r => r[key] === 'Yes').length;
+                const percent = ((totalCount / data.length) * 100).toFixed(1);
 
-                    // 2. LOGO HIGHLIGHT/DIM LOGIC
-                    if (!d) {
-                        const matchingSchools = data.filter(r => r[key] === 'Yes').map(r => r.school);
+                const hasTrope = d ? (d[key] === 'Yes') : false;
+                const opacity = d ? (hasTrope ? 1 : 0.2) : 0.5;
+                
+                const cell = rowDiv.append("div")
+                    .style("display", "flex").style("flex-direction", "column").style("align-items", "center")
+                    .style("opacity", opacity)
+                    .style("cursor", "pointer") 
+                    // --- MOUSEOVER ---
+                    .on("mouseover", (e) => {
+                        // 1. Tooltip (Updated color to variable)
+                        d3.select("#tooltip")
+                            .style("opacity", 1)
+                            .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:${highlightColor}">${totalCount}</span> schools have this trope <span style="color:${highlightColor}">(${percent}%)</span>.`)
+                            .style("left", (e.pageX + 10) + "px")
+                            .style("top", (e.pageY - 10) + "px");
 
+                        // 2. LOGO HIGHLIGHT/DIM LOGIC
+                        if (!d) {
+                            const matchingSchools = data.filter(r => r[key] === 'Yes').map(r => r.school);
+
+                            d3.selectAll(".school-logo")
+                                .style("transition", "opacity 0.2s, filter 0.2s")
+                                .each(function() {
+                                    const school = d3.select(this).attr("data-school");
+                                    const isMatch = matchingSchools.includes(school);
+
+                                    if (isMatch) {
+                                        d3.select(this)
+                                            .style("opacity", 1)
+                                            .style("filter", "drop-shadow(0 0 6px var(--highlight)) grayscale(0%)");
+                                    } else {
+                                        d3.select(this)
+                                            .style("opacity", 0.2)
+                                            .style("filter", "grayscale(100%)");
+                                    }
+                                });
+                        }
+                    })
+                    // --- MOUSEOUT ---
+                    .on("mouseout", () => {
+                        d3.select("#tooltip").style("opacity", 0);
                         d3.selectAll(".school-logo")
-                            .style("transition", "opacity 0.2s, filter 0.2s")
-                            .each(function() {
-                                const school = d3.select(this).attr("data-school");
-                                const isMatch = matchingSchools.includes(school);
+                            .style("opacity", null)
+                            .style("filter", null);
+                    });
 
-                                if (isMatch) {
-                                    d3.select(this)
-                                        .style("opacity", 1)
-                                        .style("filter", "drop-shadow(0 0 6px var(--highlight)) grayscale(0%)");
-                                } else {
-                                    d3.select(this)
-                                        .style("opacity", 0.2)
-                                        .style("filter", "grayscale(100%)");
-                                }
-                            });
-                    }
-                })
-                // --- MOUSEOUT ---
-                .on("mouseout", () => {
-                    d3.select("#tooltip").style("opacity", 0);
-                    d3.selectAll(".school-logo")
-                        .style("opacity", null)
-                        .style("filter", null);
-                });
+                // ICON: Use highlightColor
+                cell.append("div")
+                    .style("font-family", "FontAwesome")
+                    .style("font-size", size + "px") 
+                    .style("color", highlightColor)
+                    .style("margin-bottom", "5px")
+                    .text(icons[key]);
+                
+                cell.append("div")
+                    .style("font-size", (size * 0.45) + "px") 
+                    .style("color", "#aaa").style("margin-bottom", "5px")
+                    .text(iconLabels[key]);
 
-            cell.append("div")
-                .style("font-family", "FontAwesome")
-                .style("font-size", size + "px") 
-                .style("color", "#00f2ff").style("margin-bottom", "5px")
-                .text(icons[key]);
-            
-            cell.append("div")
-                .style("font-size", (size * 0.45) + "px") 
-                .style("color", "#aaa").style("margin-bottom", "5px")
-                .text(iconLabels[key]);
+                // CIRCLE: Use highlightColor and highlightBg
+                const circle = cell.append("div")
+                    .style("width", size + "px").style("height", size + "px") 
+                    .style("border-radius", "50%")
+                    .style("border", "2px solid " + ((!d || hasTrope) ? highlightColor : "#444"))
+                    .style("background", (d && hasTrope) ? highlightBg : "transparent")
+                    .style("display", "flex").style("align-items", "center").style("justify-content", "center")
+                    .style("font-size", (size * 0.5) + "px").style("color", "#fff").style("font-weight", "bold");
 
-            const circle = cell.append("div")
-                .style("width", size + "px").style("height", size + "px") 
-                .style("border-radius", "50%")
-                .style("border", "2px solid " + ((!d || hasTrope) ? "#00f2ff" : "#444"))
-                .style("background", (d && hasTrope) ? "rgba(0, 242, 255, 0.2)" : "transparent")
-                .style("display", "flex").style("align-items", "center").style("justify-content", "center")
-                .style("font-size", (size * 0.5) + "px").style("color", "#fff").style("font-weight", "bold");
-
-            if (!d) {
-                circle.text(totalCount);
-            }
-        });
-    };
-    createRow(row1); createRow(row2); 
-}
-
+                if (!d) {
+                    circle.text(totalCount);
+                }
+            });
+        };
+        createRow(row1); createRow(row2); 
+    }
     
         function initViz1() {
             const gridDiv = d3.select("#logo-grid");
@@ -1600,8 +1606,14 @@
                     .on("mouseover", function(e) { 
                          if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
                          
+                         // Calculate Percentage
+                         const pct = ((d.count / data.length) * 100).toFixed(1);
+                         
                          const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
-                         tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
+                         
+                         // Add Percentage to Tooltip HTML
+                         tooltip.style("opacity", 1)
+                                .html(`<b>${d.count} Schools (${pct}%)</b><br>${names}`)
                                 .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                         
                          if (currentIndex === -1) {
@@ -1744,6 +1756,7 @@
 </script>
 </body>
 </html>
+
 
 
 
