@@ -1456,6 +1456,7 @@
             tText.append("tspan").attr("id", "pt-school").attr("x", 15).attr("dy", 0).style("font-weight", "bold").style("fill", "#00f2ff");
             tText.append("tspan").attr("id", "pt-bpm").attr("x", 15).attr("dy", 12);
             tText.append("tspan").attr("id", "pt-dur").attr("x", 15).attr("dy", 12);
+            tText.append("tspan").attr("id", "pt-numfights").attr("x", 15).attr("dy", 12);
 
             showTopologyTooltip = function(d) {
                 if(!d) {
@@ -1467,6 +1468,7 @@
                     pTip.select("#pt-school").text(d.school);
                     pTip.select("#pt-bpm").text(`BPM: ${d.bpm}`);
                     pTip.select("#pt-dur").text(`Duration: ${d.sec_duration}s`);
+                    pTip.select("#pt-numfights").text(`# of "Fight"s: ${d.number_fights}`);
                 }
             };
 
@@ -1733,6 +1735,7 @@
 </script>
 </body>
 </html>
+
 
 
 
