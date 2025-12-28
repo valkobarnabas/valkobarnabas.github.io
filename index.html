@@ -524,7 +524,6 @@
 </div>
 <script>
     let isAccessible = false; // State flag
-    let isSticky = false;
     // --- Utils ---
     const getSlug = (name) => name.toLowerCase().replace(/ /g, "_").replace(/[^a-z0-9_]/g, "");
 
@@ -655,7 +654,6 @@
         });
 
        function updateSelection(schoolName) {
-           isSticky = false;
             // FORCE TOOLTIP HIDE ON UPDATE
             d3.select("#tooltip").style("opacity", 0);
 
@@ -853,50 +851,45 @@
             const cell = rowDiv.append("div")
                 .style("display", "flex").style("flex-direction", "column").style("align-items", "center")
                 .style("opacity", opacity)
-                .style("cursor", "pointer")
-                
-                // --- INTERACTION LOGIC ---
+                .style("cursor", "pointer") 
+                // --- MOUSEOVER ---
                 .on("mouseover", (e) => {
-                    isSticky = false; // Break any existing lock on mouseover
-                    highlightTropeGroup(key, totalCount, percent, e);
+                    // 1. Tooltip
+                    d3.select("#tooltip")
+                        .style("opacity", 1)
+                        .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:var(--highlight)">${totalCount}</span> schools have this trope <span style="color:var(--highlight)">(${percent}%)</span>.`)
+                        .style("left", (e.pageX + 10) + "px")
+                        .style("top", (e.pageY - 10) + "px");
+
+                    // 2. LOGO HIGHLIGHT/DIM LOGIC
+                    if (!d) {
+                        const matchingSchools = data.filter(r => r[key] === 'Yes').map(r => r.school);
+
+                        d3.selectAll(".school-logo")
+                            .style("transition", "opacity 0.2s, filter 0.2s")
+                            .each(function() {
+                                const school = d3.select(this).attr("data-school");
+                                const isMatch = matchingSchools.includes(school);
+
+                                if (isMatch) {
+                                    d3.select(this)
+                                        .style("opacity", 1)
+                                        .style("filter", "drop-shadow(0 0 6px var(--highlight)) grayscale(0%)");
+                                } else {
+                                    d3.select(this)
+                                        .style("opacity", 0.2)
+                                        .style("filter", "grayscale(100%)");
+                                }
+                            });
+                    }
                 })
-                .on("click", (e) => {
-                    isSticky = true; // Set lock
-                    e.stopPropagation();
-                    highlightTropeGroup(key, totalCount, percent, e);
-                })
+                // --- MOUSEOUT ---
                 .on("mouseout", () => {
-                    if (isSticky) return; // Don't clear if locked
-                    
                     d3.select("#tooltip").style("opacity", 0);
-                    // Revert styles
-                    d3.selectAll(".school-logo").style("opacity", null).style("filter", null);
-                });
-
-            // Helper to share logic between Hover and Click
-            function highlightTropeGroup(key, count, pct, event) {
-                // 1. Tooltip
-                d3.select("#tooltip")
-                    .style("opacity", 1)
-                    .html(`<b>${iconLabels[key]}</b><br><span style="font-size:0.9em; color:#ccc;">${tropeDescriptions[key]}</span><br><br><span style="color:var(--highlight)">${count}</span> schools have this trope <span style="color:var(--highlight)">(${pct}%)</span>.`)
-                    .style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 10) + "px");
-
-                // 2. Highlight Logic (Only if no specific song selected)
-                if (!d) {
-                    const matchingSchools = data.filter(r => r[key] === 'Yes').map(r => r.school);
                     d3.selectAll(".school-logo")
-                        .style("transition", "opacity 0.2s, filter 0.2s")
-                        .each(function() {
-                            const school = d3.select(this).attr("data-school");
-                            if (matchingSchools.includes(school)) {
-                                d3.select(this).style("opacity", 1).style("filter", "drop-shadow(0 0 6px var(--highlight)) grayscale(0%)");
-                            } else {
-                                d3.select(this).style("opacity", 0.2).style("filter", "grayscale(100%)");
-                            }
-                        });
-                }
-            }
+                        .style("opacity", null)
+                        .style("filter", null);
+                });
 
             cell.append("div")
                 .style("font-family", "FontAwesome")
@@ -926,25 +919,25 @@
 }
 
     
-        // --- VIZ 1: Grid (11x6 or Scrollable) ---
-            function initViz1() {
+        function initViz1() {
                 const gridDiv = d3.select("#logo-grid");
                 gridDiv.html("");
                 
-                const isMobile = window.innerWidth < 700;
+                // CHANGE: Use innerHeight to detect short screens
+                const isShort = window.innerHeight < 700;
 
                 const container = gridDiv.append("div")
                     .style("display", "grid")
-                    // Mobile: Responsive columns (min 45px) | Desktop: Fixed 11 cols
-                    .style("grid-template-columns", isMobile ? "repeat(auto-fill, minmax(45px, 1fr))" : "repeat(11, 1fr)")
-                    // Mobile: Auto rows (grows down) | Desktop: Fixed 6 rows
-                    .style("grid-template-rows", isMobile ? "auto" : "repeat(6, 1fr)")
+                    // Desktop: 11 cols | Mobile: 11 cols (just scrolling rows)
+                    .style("grid-template-columns", "repeat(11, 1fr)")
+                    // Short: Auto rows (scroll) | Tall: Fixed 6 rows
+                    .style("grid-template-rows", isShort ? "auto" : "repeat(6, 1fr)")
                     .style("width", "100%")
                     .style("height", "100%")
                     .style("gap", "2px")
-                    // Mobile: Add vertical scrollbar | Desktop: No scroll
-                    .style("overflow-y", isMobile ? "auto" : "hidden")
-                    .style("padding-right", isMobile ? "5px" : "0"); 
+                    // CHANGE: Use "important" to force scrollbar over existing CSS
+                    .style("overflow-y", isShort ? "auto" : "hidden", "important")
+                    .style("padding-right", isShort ? "5px" : "0"); 
             
                 const sortedData = [...data].sort((a,b) => d3.ascending(a.school, b.school));
             
@@ -952,8 +945,8 @@
                     .data(sortedData)
                     .enter().append("div")
                     .style("display", "flex").style("align-items", "center").style("justify-content", "center")
-                    // Mobile: Add min-height to cells so they don't squish
-                    .style("min-height", isMobile ? "45px" : "0")
+                    // Short: Min-height prevents squishing
+                    .style("min-height", isShort ? "45px" : "0")
                     .append("img")
                     .attr("src", d => `logos/${getSlug(d.school)}.png`)
                     .style("max-width", "100%").style("max-height", "100%").style("object-fit", "contain")
@@ -1538,41 +1531,51 @@
                 const centerY = y + rowH/2;
                 const rowG = g.append("g").attr("class", "upset-row");
 
-                // Responsive Bar Height
-                const isMobile = window.innerWidth < 700;
-                const barHeight = isMobile ? 6 : 16;
+                // Responsive Bar Height: Check Height < 700
+                const isShort = window.innerHeight < 700;
+                const barHeight = isShort ? 6 : 16;
                 const barOffset = centerY - (barHeight / 2);
 
                 rowG.append("rect")
                     .attr("x", barAreaWidth - barScale(d.count) - 10)
-                    .attr("y", barOffset) // Use calculated offset
+                    .attr("y", barOffset) 
                     .attr("width", barScale(d.count))
-                    .attr("height", barHeight) // Use calculated height
+                    .attr("height", barHeight) 
                     .attr("fill", "#444") 
                     .attr("data-schools", JSON.stringify(d.schools))
                     
-                    // --- MOUSEOVER ---
+                    // --- MOUSEOVER (Standard) ---
                     .on("mouseover", function(e) { 
-                        isSticky = false; 
-                        highlightUpSetGroup(this, d, e);
+                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
+                         
+                         const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
+                         tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
+                                .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
+                        
+                         if (currentIndex === -1) {
+                             d3.selectAll(".school-logo")
+                                .style("transition", "opacity 0.2s, filter 0.2s")
+                                .each(function() {
+                                    const school = d3.select(this).attr("data-school");
+                                    const isMatch = d.schools.includes(school);
+                                    if (isMatch) {
+                                        d3.select(this).style("opacity", 1).style("filter", "drop-shadow(0 0 6px var(--highlight)) grayscale(0%)");
+                                    } else {
+                                        d3.select(this).style("opacity", 0.2).style("filter", "grayscale(100%)");
+                                    }
+                                });
+                         }
                     })
-                    // --- CLICK ---
-                    .on("click", function(e) {
-                        e.stopPropagation();
-                        if (d.schools.length === 1) {
-                            updateSelection(d.schools[0]);
-                        } else {
-                            isSticky = true;
-                            highlightUpSetGroup(this, d, e);
-                        }
-                    })
-                    // --- MOUSEOUT ---
+                    // --- MOUSEOUT (Standard) ---
                     .on("mouseout", function() { 
-                        if (isSticky) return; 
-
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
                         tooltip.style("opacity", 0);
                         d3.selectAll(".school-logo").style("opacity", null).style("filter", null);
+                    })
+                    // --- CLICK (Only for single school selection) ---
+                    .on("click", (e) => {
+                        e.stopPropagation();
+                        if (d.schools.length === 1) updateSelection(d.schools[0]);
                     });
 
                 // Helper for UpSet Logic
@@ -1689,6 +1692,7 @@
 </script>
 </body>
 </html>
+
 
 
 
