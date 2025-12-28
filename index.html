@@ -1699,10 +1699,11 @@
                 initViz1();
                 drawViz2(); 
                 drawViz3(); 
-                if (currentIndex > -1) {
-                     drawViz4(sortedData[currentIndex]);
-                    updateSelection(activeSchool);
+                if (currentIndex > -1 && sortedData[currentIndex]) {
+                     const activeSchool = sortedData[currentIndex].school;
+                     updateSelection(activeSchool);
                 } else {
+                     // If nothing selected, just reset Viz 4 to grid
                      drawViz4(null);
                 }
                 return;
@@ -1743,6 +1744,7 @@
 </script>
 </body>
 </html>
+
 
 
 
