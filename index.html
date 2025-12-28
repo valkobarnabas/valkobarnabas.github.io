@@ -1538,50 +1538,54 @@
                     .attr("data-schools", JSON.stringify(d.schools))
                     // --- MOUSEOVER ---
                     .on("mouseover", function(e) { 
-                         // Bar highlight
-                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#888");
-                         
-                         const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
-                         tooltip.style("opacity", 1).html(`<b>${d.count} Schools</b><br>${names}`)
-                                .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
-                        
-                         // LOGO HIGHLIGHT/DIM LOGIC
-                         // Only run if global selection is empty (default mode)
-                         if (currentIndex === -1) {
-                             d3.selectAll(".school-logo")
-                                .style("transition", "opacity 0.2s, filter 0.2s")
-                                .each(function() {
-                                    const school = d3.select(this).attr("data-school");
-                                    const isMatch = d.schools.includes(school);
-
-                                    if (isMatch) {
-                                        // Highlight Match
-                                        d3.select(this)
-                                            .style("opacity", 1)
-                                            .style("filter", "drop-shadow(0 0 6px #00f2ff) grayscale(0%)");
-                                    } else {
-                                        // Dim Non-Match
-                                        d3.select(this)
-                                            .style("opacity", 0.2)
-                                            .style("filter", "grayscale(100%)");
-                                    }
-                                });
-                         }
+                        isSticky = false; // Break lock
+                        highlightUpSetGroup(this, d, e);
+                    })
+                    // --- CLICK ---
+                    .on("click", function(e) {
+                        e.stopPropagation();
+                        if (d.schools.length === 1) {
+                            // If only 1 school, fully select it (standard behavior)
+                            updateSelection(d.schools[0]);
+                        } else {
+                            // If multiple, use Sticky Highlight
+                            isSticky = true;
+                            highlightUpSetGroup(this, d, e);
+                        }
                     })
                     // --- MOUSEOUT ---
                     .on("mouseout", function() { 
+                        if (isSticky) return; // Don't clear if locked
+
                         if(!d3.select(this).classed("highlighted")) d3.select(this).attr("fill", "#444"); 
                         tooltip.style("opacity", 0);
-
-                        // REVERT ALL LOGOS
-                        d3.selectAll(".school-logo")
-                            .style("opacity", null)
-                            .style("filter", null);
-                    })
-                    .on("click", (e) => {
-                        e.stopPropagation();
-                        if (d.schools.length === 1) updateSelection(d.schools[0]);
+                        d3.selectAll(".school-logo").style("opacity", null).style("filter", null);
                     });
+
+                // Helper for UpSet Logic
+                function highlightUpSetGroup(elem, dataObj, event) {
+                     // Bar visual
+                     if(!d3.select(elem).classed("highlighted")) d3.select(elem).attr("fill", "#888");
+                     
+                     // Tooltip
+                     const names = dataObj.schools.slice(0, 10).join(", ") + (dataObj.schools.length > 10 ? "..." : "");
+                     tooltip.style("opacity", 1).html(`<b>${dataObj.count} Schools</b><br>${names}`)
+                            .style("left", (event.pageX+10)+"px").style("top", (event.pageY-10)+"px");
+                    
+                     // Logo Highlight (Only if global selection empty)
+                     if (currentIndex === -1) {
+                         d3.selectAll(".school-logo")
+                            .style("transition", "opacity 0.2s, filter 0.2s")
+                            .each(function() {
+                                const school = d3.select(this).attr("data-school");
+                                if (dataObj.schools.includes(school)) {
+                                    d3.select(this).style("opacity", 1).style("filter", "drop-shadow(0 0 6px var(--highlight)) grayscale(0%)");
+                                } else {
+                                    d3.select(this).style("opacity", 0.2).style("filter", "grayscale(100%)");
+                                }
+                            });
+                     }
+                }
                 
                 rowG.append("text").attr("x", barAreaWidth - barScale(d.count) - 15).attr("y", centerY + 4).attr("text-anchor", "end").text(d.count);
                 rowG.append("line").attr("x1", barAreaWidth).attr("x2", w).attr("y1", centerY).attr("y2", centerY).attr("stroke", "#333");
@@ -1672,6 +1676,7 @@
 </script>
 </body>
 </html>
+
 
 
 
