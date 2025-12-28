@@ -1609,11 +1609,13 @@
                          // Calculate Percentage
                          const pct = ((d.count / data.length) * 100).toFixed(1);
                          
+                         // FIX: Grammar check for School vs Schools
+                         const label = d.count === 1 ? "School" : "Schools";
+
                          const names = d.schools.slice(0, 10).join(", ") + (d.schools.length > 10 ? "..." : "");
                          
-                         // Add Percentage to Tooltip HTML
                          tooltip.style("opacity", 1)
-                                .html(`<b>${d.count} Schools (${pct}%)</b><br>${names}`)
+                                .html(`<b><span style="color:${highlightColor}">${d.count}</span> ${label} <span style="color:${highlightColor}">(${pct}%)</span></b><br>${names}`)
                                 .style("left", (e.pageX+10)+"px").style("top", (e.pageY-10)+"px");
                         
                          if (currentIndex === -1) {
@@ -1756,6 +1758,7 @@
 </script>
 </body>
 </html>
+
 
 
 
