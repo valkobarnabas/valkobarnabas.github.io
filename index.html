@@ -432,8 +432,11 @@
             z-index: 10; /* Ensure it stacks on top of neighboring content */
         }
 
-        .node-group circle.neighbor ~ text,
-        .node-group circle.hover-matched ~ text {
+        /* FIX: Ensure text turns black on grey highlighted nodes for readability */
+        /* Targets text labels next to "Neighbor" or "Hovered" circles in Viz 4 */
+        /* CHANGE: Only apply in Grid Mode (when container is NOT .radial-mode) */
+        #jaccard-web:not(.radial-mode) .node-group circle.neighbor ~ text,
+        #jaccard-web:not(.radial-mode) .node-group circle.hover-matched ~ text {
             fill: #000 !important;
             text-shadow: 0 0 3px rgba(255, 255, 255, 0.8) !important; /* White halo for contrast */
             font-weight: 800;
@@ -1035,6 +1038,7 @@
             data.forEach(n => n.isCenter = false);
 
             const container = d3.select("#jaccard-web");
+            container.classed("radial-mode", !!focusNode);
             container.html(""); 
 
             container.style("display", "flex").style("height", "100%").style("width", "100%");
@@ -1738,6 +1742,7 @@
 </script>
 </body>
 </html>
+
 
 
 
