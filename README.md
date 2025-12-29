@@ -1,8 +1,18 @@
 # The Geometry of College Fight Songs
 
-This interactive dashboard, created for Bucky’s Data Viz Challenge 2026 uses D3.js to analyze 65 major college fight songs. 
+This interactive dashboard uses D3.js to visualize the lyrical and musical make-up of fight songs. Clicking any node or logo analyzes that school's fight song, activating a central info strip which displays the title, author and origin of the song, and an embedded Spotify player of the specified song.
 
-blah blah blah...
+The dashboard contains four distinct data visualizations:
+
+1) The TROPE-O-METER (top left) quantifies lyrical clichés. Hovering over a trope icon defines the trope and highlights schools that use it. Clicking a logo illuminates that specific song's tropes; otherwise, aggregate usage is shown.
+
+2) The JACCARD NETWORK (top right) is a network graph that connects songs by similar tropes. Treating the tropes of songs as sets, we use the Jaccard index as a measure of similarity. Hovering over or clicking a node reveals links to its "neighbors" (songs with ≥75% trope similarity).
+
+3) SONG TOPOLOGY (bottom left) plots tempo vs. duration with added density contours. Node color indicates how many times the word "fight" is sung. 
+
+4) ORIGIN STORY (bottom right) is an UpSet plot showing how songs were created based off the power set of {Student Author, Contest Winner, Official Song}. Hovering over bars highlights songs with corresponding origins.
+
+The dashboard is designed to be responsive, and has keyboard shortcuts for fullscreen ('F') and accessible high-contrast mode ('A'). Detailed tooltips provide further context on mouseovers, and icons are used to promote comprehensibility.
 
 [Link to dashboard!](valkobarnabas.github.io)
 
@@ -22,6 +32,7 @@ tempo and duration. Also included is the origin of the song, including author, y
 * The [Segoe UI](https://fonts.adobe.com/fonts/segoe-ui) font family.
 * The website [d3indepth.com](d3indepth.com), for its very helpful tutorials on D3.js.
 * [This post](https://www.audioeye.com/post/8-ways-to-design-a-color-blind-friendly-website/) from audioeye.com, for its guideline on making accessible websites.
+* The artificial intelligence tool Google Gemini 3 was used sparingly and under careful cross-checking to troubleshoot bugs in code.
 
 ## Author Information
 Barnabás Valkó (bvalko@wisc.edu) is a Junior at the University of Wisconsin-Madison studying Mathematics (B.S.), Statistics (B.S), Physics (Cert.), and Educational Policy Studies (Cert.).
