@@ -1,6 +1,6 @@
 # The Geometry of College Fight Songs
 
-This interactive dashboard uses D3.js to visualize the lyrical and musical make-up of fight songs. Clicking any node or logo analyzes that school's fight song, activating a central info strip which displays the title, author and origin of the song, and an embedded Spotify player of the specified song.
+This interactive dashboard (live at valkobarnabas.github.io) uses D3.js to visualize the lyrical and musical make-up of fight songs. Clicking any node or logo analyzes that school's fight song, activating a central info panel which displays the title, author and origin of the song, and an embedded Spotify player of the specified song.
 
 The dashboard contains four distinct data visualizations:
 
@@ -8,13 +8,13 @@ The dashboard contains four distinct data visualizations:
 
 2) The JACCARD NETWORK (top right) is a network graph that connects songs by similar tropes. Treating the tropes of songs as sets, we use the Jaccard index as a measure of similarity. Hovering over or clicking a node reveals links to its "neighbors" (songs with ≥75% trope similarity).
 
-3) SONG TOPOLOGY (bottom left) plots tempo vs. duration with added density contours. Node color indicates how many times the word "fight" is sung. 
+3) SONG TOPOLOGY (bottom left) plots tempo (BPM) vs. duration with added density contours. Node color indicates how many times the word "fight" is sung. 
 
 4) ORIGIN STORY (bottom right) is an UpSet plot showing how songs were created based off the power set of {Student Author, Contest Winner, Official Song}. Hovering over bars highlights songs with corresponding origins.
 
-The dashboard is designed to be responsive, and has keyboard shortcuts for fullscreen ('F') and accessible high-contrast mode ('A'). Detailed tooltips provide further context on mouseovers, and icons are used to promote comprehensibility.
+The dashboard is designed to be intuitive and responsive, and has keyboard shortcuts for fullscreen ('F') and accessible high-contrast mode ('A'). Tooltips provide further context on mouseovers, and icons are used to promote ease of comprehensibility.
 
-[Link to dashboard!](valkobarnabas.github.io)
+[Link to dashboard!](valkobarnabas.github.io) (does not currently support mobile)
 
 ## Background
 
