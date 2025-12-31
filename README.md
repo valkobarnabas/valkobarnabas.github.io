@@ -14,7 +14,7 @@ The dashboard contains four distinct data visualizations:
 
 The dashboard is designed to be intuitive and responsive, and has keyboard shortcuts for fullscreen ('F') and accessible high-contrast mode ('A'). Tooltips provide further context on mouseovers, and icons are used to promote ease of comprehensibility.
 
-[Link to dashboard!](valkobarnabas.github.io) *(does not currently support mobile)*
+[Link to dashboard!](https://valkobarnabas.github.io) *(does not currently support mobile)*
 
 ## Background
 
