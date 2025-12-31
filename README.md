@@ -23,7 +23,7 @@ One winner goes on to represent the Badgers at the annual [Big Ten Academic Alli
 
 The 2026 edition of the championship revolves around college fight songs. 
 The dataset of 65 songs, adapted from FiveThirtyEight's [Fight Song Dataset](https://github.com/fivethirtyeight/data/blob/master/fight-songs/fight-songs.csv), includes data points regarding various tropes present in the fight songs (saying the words "fight" or "rah," for instance), as well as musical attributes such as
-tempo and duration. Also included is the origin of the song, including author, year written, and whether a contest took place to establish the fight song. Also included in the dataset is the Spotify ID of the song.
+tempo and duration. Also included is the origin of the song, including author, year written, and whether a contest took place to establish the fight song, and a corresponding Spotify ID of the song.
 
 ## Resources used
 
