@@ -30,7 +30,7 @@ tempo and duration. Also included is the origin of the song, including author, y
 * [D3.js](https://d3js.org/) for data visualization framework.
 * [FontAwesome](https://fontawesome.com/) for icons.
 * The [Segoe UI](https://fonts.adobe.com/fonts/segoe-ui) font family.
-* The website [d3indepth.com](d3indepth.com), for its very helpful tutorials on D3.js.
+* The website [d3indepth.com](https://d3indepth.com), for its very helpful tutorials on D3.js.
 * [This post](https://www.audioeye.com/post/8-ways-to-design-a-color-blind-friendly-website/) from audioeye.com, for its guideline on designing accessible websites.
 * All text was written by the author. The artificial intelligence tool Google Gemini 3 was used sparingly and under careful cross-checking to troubleshoot bugs in code.
 
