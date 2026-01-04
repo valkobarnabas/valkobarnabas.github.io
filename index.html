@@ -1428,8 +1428,7 @@
             const h = container.clientHeight;
             const svg = d3.select("#topology-map").append("svg").attr("width", w).attr("height", h);
             
-            // Increased bottom margin slightly to fit the new '0' label
-            const margin = {top: 10, right: 110, bottom: 40, left: 40};
+            const margin = {top: 10, right: 110, bottom: 30, left: 45}; // Increased left slightly for wider label
             const iw = w - margin.left - margin.right;
             const ih = h - margin.top - margin.bottom;
 
@@ -1447,38 +1446,14 @@
             // Axes
             g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5));
             
-            // Draw Y Axis and store reference
-            const yAxis = g.append("g").call(d3.axisLeft(y).ticks(5));
+            // --- Y-AXIS FIX ---
+            // We use tickFormat to intercept the "60" and replace it with "0 ↑ 60"
+            const yAxis = d3.axisLeft(y)
+                .ticks(5)
+                .tickFormat(d => d === 60 ? "0 \u2191 60" : d);
 
-            // --- START Y-AXIS BREAK FIX ---
-            // This creates a visual "break" (zigzag) at the bottom of the axis 
-            // and adds a manual "0" label to satisfy the "start at 0" requirement.
-            
-            const breakGroup = yAxis.append("g").attr("transform", `translate(0, ${ih})`);
-            
-            // 1. The Zigzag path (\/\/\/\/)
-            breakGroup.append("path")
-                .attr("d", "M0,0 L-3,3 L3,6 L-3,9 L3,12 L-3,15 L0,18") 
-                .attr("stroke", "#444") 
-                .attr("stroke-width", 1)
-                .attr("fill", "none");
-
-            // 2. The "0" Tick Label
-            breakGroup.append("text")
-                .attr("x", -9)      // Align with standard axis labels
-                .attr("y", 30)      // Position below the zigzag
-                .attr("dy", "0.32em")
-                .attr("text-anchor", "end")
-                .style("fill", "#aaa") // Match your CSS text color
-                .style("font-size", "10px")
-                .text("0");
-            
-            // 3. Optional: A tiny tick mark for the 0
-            breakGroup.append("line")
-                .attr("x1", 0).attr("y1", 30)
-                .attr("x2", -6).attr("y2", 30)
-                .attr("stroke", "#444");
-            // --- END Y-AXIS BREAK FIX ---
+            g.append("g").call(yAxis);
+            // ------------------
 
             g.selectAll(".domain, .tick line").attr("stroke", "#444");
             g.append("text").attr("class", "axis-label").attr("x", iw).attr("y", ih - 5).attr("text-anchor", "end").text("Duration (sec)");
@@ -1787,4 +1762,5 @@
 </script>
 </body>
 </html>
+
 
