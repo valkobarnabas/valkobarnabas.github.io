@@ -1428,7 +1428,7 @@
             const h = container.clientHeight;
             const svg = d3.select("#topology-map").append("svg").attr("width", w).attr("height", h);
             
-            const margin = {top: 10, right: 110, bottom: 30, left: 45}; // Increased left slightly for wider label
+            const margin = {top: 10, right: 110, bottom: 30, left: 40};
             const iw = w - margin.left - margin.right;
             const ih = h - margin.top - margin.bottom;
 
@@ -1445,16 +1445,7 @@
 
             // Axes
             g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5));
-            
-            // --- Y-AXIS FIX ---
-            // We use tickFormat to intercept the "60" and replace it with "0 ↑ 60"
-            const yAxis = d3.axisLeft(y)
-                .ticks(5)
-                .tickFormat(d => d === 60 ? "0 \u2191 60" : d);
-
-            g.append("g").call(yAxis);
-            // ------------------
-
+            g.append("g").call(d3.axisLeft(y).ticks(5));
             g.selectAll(".domain, .tick line").attr("stroke", "#444");
             g.append("text").attr("class", "axis-label").attr("x", iw).attr("y", ih - 5).attr("text-anchor", "end").text("Duration (sec)");
             g.append("text").attr("class", "axis-label").attr("x", 10).attr("y", 15).text("BPM");
@@ -1762,5 +1753,3 @@
 </script>
 </body>
 </html>
-
-
