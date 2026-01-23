@@ -1461,54 +1461,74 @@
                 .attr("stroke-width", 1)
                 .style("cursor", "pointer")
                 .attr("data-school", d => d.school)
+                // --- 1. MOUSEOVER: Highlight without moving DOM (No .raise()) ---
                 .on("mouseover", (e, d) => {
-                    // 1. Cross-Viz Highlight (Grey lines/Logos)
+                    // Global cross-viz highlight
                     globalHighlight(d.school);
-
-                    // 2. Show Tooltip immediately
+                    
+                    // Show the specific topology tooltip
                     if(showTopologyTooltip) showTopologyTooltip(d);
                     
-                    // 3. Local Node Highlight (Stroke)
-                    // Note: We do NOT use .raise() here, as it breaks the mouseout event.
+                    // Highlight this specific node
                     d3.select(e.currentTarget)
                         .classed("highlighted", true)
                         .attr("stroke", "#fff")
-                        .attr("stroke-width", 3);
+                        .attr("stroke-width", 2);
                 })
+                // --- 2. MOUSEOUT: The "Big Reset" ---
                 .on("mouseout", (e, d) => {
-                    // 1. Clear Cross-Viz Highlights
                     globalUnhighlight();
                     
-                    // 2. Reset the stroke of the node we just left
-                    d3.select(e.currentTarget)
-                        .attr("stroke", "#000")
-                        .attr("stroke-width", 1);
-
-                    // 3. THE "BIG RESET" LOGIC
                     if (currentIndex === -1) {
-                        // SCENARIO: No song is currently selected (clicked).
-                        // ACTION: "Nuclear" reset. Hide everything, like pressing ESC.
+                        // SCENARIO: No song is locked (clicked).
+                        // ACTION: "Nuclear" reset (Manual Esc). Strip ALL classes from ALL elements.
                         
-                        d3.select(e.currentTarget).classed("highlighted", false);
-                        if(showTopologyTooltip) showTopologyTooltip(null); // Force Hide Tooltip
+                        // 1. Reset Topology Nodes
+                        d3.selectAll(".scatter-node")
+                            .classed("highlighted", false)
+                            .classed("dimmed-soft", false)
+                            .classed("hover-matched", false)
+                            .attr("stroke", "#000")
+                            .attr("stroke-width", 1);
+
+                        // 2. Reset Logos (Viz 1)
+                        d3.selectAll(".school-logo")
+                            .classed("logo-dimmed", false)
+                            .classed("logo-highlighted", false)
+                            .style("opacity", null)
+                            .style("filter", null);
+
+                        // 3. Reset UpSet Plot (Viz 2)
+                        d3.selectAll("rect")
+                            .classed("dimmed", false)
+                            .classed("highlighted", false);
+                        d3.selectAll(".upset-dot")
+                            .classed("dimmed", false);
+
+                        // 4. Force Hide ALL Tooltips
+                        d3.select("#tooltip").style("opacity", 0);
+                        if(showTopologyTooltip) showTopologyTooltip(null);
                         
                     } else {
                         // SCENARIO: A song IS selected.
-                        // ACTION: Revert to the selected song's state.
+                        // ACTION: Revert this specific node to its correct state based on selection.
                         
-                        // Only keep 'highlighted' class if this node is the one actually selected
-                        const selectedSchool = sortedData[currentIndex].school;
-                        const isSelected = (d.school === selectedSchool);
+                        const isSelected = (d.school === sortedData[currentIndex].school);
                         
-                        d3.select(e.currentTarget).classed("highlighted", isSelected);
-                        
-                        // Revert the tooltip to show the SELECTED song, not the one we just left
+                        // If this wasn't the selected node, un-highlight it.
+                        // If it WAS the selected node, keep it highlighted.
+                        d3.select(e.currentTarget)
+                            .classed("highlighted", isSelected)
+                            .attr("stroke", isSelected ? "#fff" : "#000")
+                            .attr("stroke-width", isSelected ? 2 : 1);
+
+                        // Revert tooltip to the LOCKED song
                         if(showTopologyTooltip) showTopologyTooltip(sortedData[currentIndex]);
                     }
                 })
+                // --- 3. CLICK: Locks the selection ---
                 .on("click", (e, d) => { 
                     e.stopPropagation(); 
-                    // This updates the middle strip and sets the "currentIndex" lock
                     updateSelection(d.school); 
                 });
 
@@ -1789,6 +1809,7 @@
 </script>
 </body>
 </html>
+
 
 
 
