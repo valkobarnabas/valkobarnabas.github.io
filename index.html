@@ -1437,11 +1437,16 @@
 
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Density
+            // Density contours
+            // FIX: Added 'pointer-events: none' so contours don't block clicks on the nodes
             const contours = d3.contourDensity().x(d=>x(d.sec_duration)).y(d=>y(d.bpm))
                 .size([iw, ih]).bandwidth(15)(data);
+                
             g.append("g").selectAll("path").data(contours).enter().append("path")
-                .attr("d", d3.geoPath()).attr("fill", "#00f2ff").attr("opacity", 0.08);
+                .attr("d", d3.geoPath())
+                .attr("fill", "#00f2ff")
+                .attr("opacity", 0.08)
+                .style("pointer-events", "none"); 
 
             // Axes
             g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5));
@@ -1459,25 +1464,33 @@
                 .attr("fill", d => d.number_fights === 0 ? "#666" : fightColorScale(d.number_fights))
                 .attr("stroke", "#000")
                 .attr("data-school", d => d.school)
-                .on("mouseover", (e, d) => {
+                .style("cursor", "pointer")
+                .on("mouseover", function(e, d) {
                     globalHighlight(d.school);
-                     d3.select(e.currentTarget).raise();
-                     if(showTopologyTooltip) showTopologyTooltip(d);
+                    d3.select(this).raise(); // Bring to front
+                    if(showTopologyTooltip) showTopologyTooltip(d);
                 })
-                .on("mouseout", () => {
+                .on("mouseout", function() {
                     globalUnhighlight();
-                     // If a school is selected (currentIndex is valid), revert tooltip to that school
-                     if (currentIndex > -1 && sortedData[currentIndex]) {
-                         showTopologyTooltip(sortedData[currentIndex]);
-                     } else {
-                         // Otherwise, hide the tooltip completely
-                         if(showTopologyTooltip) showTopologyTooltip(null);
-                     }
+                    // If a song is selected, revert tooltip to that song. Otherwise hide.
+                    if (currentIndex > -1 && sortedData[currentIndex]) {
+                        showTopologyTooltip(sortedData[currentIndex]);
+                    } else {
+                        if(showTopologyTooltip) showTopologyTooltip(null);
+                    }
                 })
-                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
+                .on("click", (e, d) => { 
+                    e.stopPropagation(); 
+                    updateSelection(d.school); 
+                });
 
             // Persistent Tooltip Definition
-            const pTip = g.append("g").attr("class", "topo-tooltip").style("display", "none");
+            // FIX: Moved tooltip definition BEFORE usage in logic, and ensured pointer-events none
+            const pTip = g.append("g")
+                .attr("class", "topo-tooltip")
+                .style("display", "none")
+                .style("pointer-events", "none");
+                
             pTip.append("rect").attr("width", 110).attr("height", 60).attr("x", 10).attr("y", -30).attr("fill", "rgba(0,0,0,0.9)").attr("stroke", "#00f2ff");
             const tText = pTip.append("text").attr("x", 15).attr("y", -15).style("fill", "#fff").style("font-size", "10px");
             
@@ -1500,7 +1513,7 @@
                 }
             };
 
-            // Key
+            // Key / Legend
             const isSmall = w < 400;
             const legScale = isSmall ? 0.7 : 1; 
             const legX = w - (isSmall ? 70 : 100);
@@ -1529,15 +1542,15 @@
             fightInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 25)");
             fightInd.append("text").attr("y", 15).text("0");
 
-            const noFightsG = leg.append("g")
-                .attr("id", "no-fights-group") 
-                .style("opacity", 0.5); 
-            
+            const noFightsG = leg.append("g").attr("id", "no-fights-group").style("opacity", 0.5); 
             noFightsG.append("rect").attr("class", "legend-rect").attr("x", 1).attr("y", 56).attr("width", 12).attr("height", 12).attr("fill", "#666").attr("stroke", "#000");
             noFightsG.append("path").attr("id", "no-fights-check").attr("d", "M 2 6 L 5 9 L 10 2").attr("transform", "translate(1, 56)").attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 2).style("display", "none");
             noFightsG.append("text").text(`No "Fight"s`).attr("x", 18).attr("y", 65).style("font-size", "9px").style("fill", "#ccc");
             
-            svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
+            // Background click reset
+            svg.on("click", (e) => { 
+                if(e.target === svg.node()) updateSelection(null); 
+            });
         };
         drawViz3();
 
@@ -1753,6 +1766,7 @@
 </script>
 </body>
 </html>
+
 
 
 
