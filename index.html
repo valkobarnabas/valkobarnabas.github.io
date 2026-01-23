@@ -1437,25 +1437,26 @@
 
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Density contours
-            // FIX: Added 'pointer-events: none' so contours don't block clicks on the nodes
+            // 1. Density Contours
+            // CRITICAL FIX: Added 'pointer-events: none' so these don't block mouse interactions with nodes
             const contours = d3.contourDensity().x(d=>x(d.sec_duration)).y(d=>y(d.bpm))
                 .size([iw, ih]).bandwidth(15)(data);
                 
-            g.append("g").selectAll("path").data(contours).enter().append("path")
+            g.append("g")
+                .style("pointer-events", "none") // <--- Allows clicks to pass through
+                .selectAll("path").data(contours).enter().append("path")
                 .attr("d", d3.geoPath())
                 .attr("fill", "#00f2ff")
-                .attr("opacity", 0.08)
-                .style("pointer-events", "none"); 
+                .attr("opacity", 0.08);
 
-            // Axes
+            // 2. Axes
             g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5));
             g.append("g").call(d3.axisLeft(y).ticks(5));
             g.selectAll(".domain, .tick line").attr("stroke", "#444");
             g.append("text").attr("class", "axis-label").attr("x", iw).attr("y", ih - 5).attr("text-anchor", "end").text("Duration (sec)");
             g.append("text").attr("class", "axis-label").attr("x", 10).attr("y", 15).text("BPM");
 
-            // Dots (Added class scatter-node)
+            // 3. Scatter Nodes (Circles)
             g.selectAll("circle").data(data).enter().append("circle")
                 .attr("class", "scatter-node")
                 .attr("cx", d => x(d.sec_duration))
@@ -1465,31 +1466,36 @@
                 .attr("stroke", "#000")
                 .attr("data-school", d => d.school)
                 .style("cursor", "pointer")
+                .style("pointer-events", "all") // <--- Forces circles to capture mouse events
                 .on("mouseover", function(e, d) {
                     globalHighlight(d.school);
-                    d3.select(this).raise(); // Bring to front
+                    d3.select(this).raise(); // Brings node to front visually
                     if(showTopologyTooltip) showTopologyTooltip(d);
                 })
                 .on("mouseout", function() {
+                    // Global Reset
                     globalUnhighlight();
-                    // If a song is selected, revert tooltip to that song. Otherwise hide.
+                    d3.select("#tooltip").style("opacity", 0); // Hide generic tooltip just in case
+                    
+                    // Logic: If a song is actively selected (clicked), revert tooltip to that song.
+                    // If NOTHING is selected, hide the tooltip completely.
                     if (currentIndex > -1 && sortedData[currentIndex]) {
                         showTopologyTooltip(sortedData[currentIndex]);
                     } else {
                         if(showTopologyTooltip) showTopologyTooltip(null);
                     }
                 })
-                .on("click", (e, d) => { 
-                    e.stopPropagation(); 
-                    updateSelection(d.school); 
+                .on("click", function(e, d) { 
+                    e.stopPropagation(); // Stop click from hitting the background
+                    updateSelection(d.school); // Triggers the Center Strip update
                 });
 
-            // Persistent Tooltip Definition
-            // FIX: Moved tooltip definition BEFORE usage in logic, and ensured pointer-events none
+            // 4. Persistent Tooltip
+            // CRITICAL FIX: Added 'pointer-events: none' so the tooltip itself doesn't cause a mouseout when it appears
             const pTip = g.append("g")
                 .attr("class", "topo-tooltip")
                 .style("display", "none")
-                .style("pointer-events", "none");
+                .style("pointer-events", "none"); 
                 
             pTip.append("rect").attr("width", 110).attr("height", 60).attr("x", 10).attr("y", -30).attr("fill", "rgba(0,0,0,0.9)").attr("stroke", "#00f2ff");
             const tText = pTip.append("text").attr("x", 15).attr("y", -15).style("fill", "#fff").style("font-size", "10px");
@@ -1505,7 +1511,10 @@
                 } else {
                     const cx = x(d.sec_duration);
                     const cy = y(d.bpm);
-                    pTip.style("display", "block").attr("transform", `translate(${cx}, ${cy})`).raise();
+                    // Prevent tooltip from overflowing right edge
+                    const tx = (cx + 120 > iw) ? cx - 130 : cx;
+                    
+                    pTip.style("display", "block").attr("transform", `translate(${tx}, ${cy})`).raise();
                     pTip.select("#pt-school").text(d.school);
                     pTip.select("#pt-bpm").text(`BPM: ${d.bpm}`);
                     pTip.select("#pt-dur").text(`Duration: ${d.sec_duration}s`);
@@ -1513,7 +1522,7 @@
                 }
             };
 
-            // Key / Legend
+            // 5. Legend
             const isSmall = w < 400;
             const legScale = isSmall ? 0.7 : 1; 
             const legX = w - (isSmall ? 70 : 100);
@@ -1534,11 +1543,7 @@
             leg.append("text").text("5").attr("y", 45).attr("x", 32).style("fill", "#ccc").style("font-size", "10px");
             leg.append("text").text("10+").attr("y", 45).attr("x", 65).style("fill", "#ccc").style("font-size", "10px");
 
-            const fightInd = leg.append("g")
-                .attr("id", "fight-indicator")
-                .attr("class", "legend-indicator")
-                .style("display", "none");
-            
+            const fightInd = leg.append("g").attr("id", "fight-indicator").attr("class", "legend-indicator").style("display", "none");
             fightInd.append("path").attr("d", "M -4 -6 L 4 -6 L 0 0 Z").attr("transform", "translate(0, 25)");
             fightInd.append("text").attr("y", 15).text("0");
 
@@ -1547,7 +1552,7 @@
             noFightsG.append("path").attr("id", "no-fights-check").attr("d", "M 2 6 L 5 9 L 10 2").attr("transform", "translate(1, 56)").attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 2).style("display", "none");
             noFightsG.append("text").text(`No "Fight"s`).attr("x", 18).attr("y", 65).style("font-size", "9px").style("fill", "#ccc");
             
-            // Background click reset
+            // Background click reset (Clicking empty space resets selection)
             svg.on("click", (e) => { 
                 if(e.target === svg.node()) updateSelection(null); 
             });
@@ -1766,6 +1771,7 @@
 </script>
 </body>
 </html>
+
 
 
 
