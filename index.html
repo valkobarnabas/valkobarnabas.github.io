@@ -1457,79 +1457,60 @@
                 .attr("cy", d => y(d.bpm))
                 .attr("r", 6)
                 .attr("fill", d => d.number_fights === 0 ? "#666" : fightColorScale(d.number_fights))
-                .attr("stroke", "#000")
+                .attr("stroke", "#000") // Default stroke
                 .attr("stroke-width", 1)
                 .style("cursor", "pointer")
                 .attr("data-school", d => d.school)
-                // --- 1. MOUSEOVER: Highlight without moving DOM (No .raise()) ---
-                .on("mouseover", (e, d) => {
-                    // Global cross-viz highlight
+                .on("mouseover", function(e, d) {
+                    // 1. External Highlights (Logos, Grid, etc)
                     globalHighlight(d.school);
                     
-                    // Show the specific topology tooltip
+                    // 2. Tooltip
                     if(showTopologyTooltip) showTopologyTooltip(d);
-                    
-                    // Highlight this specific node
-                    d3.select(e.currentTarget)
+
+                    // 3. Highlight THIS node (Inline styles win over CSS)
+                    d3.select(this)
                         .classed("highlighted", true)
-                        .attr("stroke", "#fff")
-                        .attr("stroke-width", 2);
+                        .attr("stroke", "#fff")      // Set border to White
+                        .attr("stroke-width", 3);    // Make it thick
                 })
-                // --- 2. MOUSEOUT: The "Big Reset" ---
-                .on("mouseout", (e, d) => {
+                .on("mouseout", function(e, d) {
+                    // 1. Clear External Highlights
                     globalUnhighlight();
-                    
-                    if (currentIndex === -1) {
-                        // SCENARIO: No song is locked (clicked).
-                        // ACTION: "Nuclear" reset (Manual Esc). Strip ALL classes from ALL elements.
-                        
-                        // 1. Reset Topology Nodes
-                        d3.selectAll(".scatter-node")
+
+                    // 2. Determine if this node should stay highlighted
+                    // It stays highlighted ONLY if a song is clicked (currentIndex > -1) AND this is that song.
+                    const isSelected = (currentIndex > -1 && sortedData[currentIndex].school === d.school);
+
+                    if (isSelected) {
+                        // Keep it highlighted
+                        d3.select(this)
+                            .classed("highlighted", true)
+                            .attr("stroke", "#fff")
+                            .attr("stroke-width", 3);
+                            
+                        // Revert tooltip to the selected song
+                        if(showTopologyTooltip) showTopologyTooltip(sortedData[currentIndex]);
+                    } else {
+                        // RESET: Explicitly set attributes back to default
+                        d3.select(this)
                             .classed("highlighted", false)
-                            .classed("dimmed-soft", false)
-                            .classed("hover-matched", false)
-                            .attr("stroke", "#000")
+                            .attr("stroke", "#000")  // <--- CRITICAL FIX: Force border back to black
                             .attr("stroke-width", 1);
 
-                        // 2. Reset Logos (Viz 1)
-                        d3.selectAll(".school-logo")
-                            .classed("logo-dimmed", false)
-                            .classed("logo-highlighted", false)
-                            .style("opacity", null)
-                            .style("filter", null);
-
-                        // 3. Reset UpSet Plot (Viz 2)
-                        d3.selectAll("rect")
-                            .classed("dimmed", false)
-                            .classed("highlighted", false);
-                        d3.selectAll(".upset-dot")
-                            .classed("dimmed", false);
-
-                        // 4. Force Hide ALL Tooltips
-                        d3.select("#tooltip").style("opacity", 0);
-                        if(showTopologyTooltip) showTopologyTooltip(null);
-                        
-                    } else {
-                        // SCENARIO: A song IS selected.
-                        // ACTION: Revert this specific node to its correct state based on selection.
-                        
-                        const isSelected = (d.school === sortedData[currentIndex].school);
-                        
-                        // If this wasn't the selected node, un-highlight it.
-                        // If it WAS the selected node, keep it highlighted.
-                        d3.select(e.currentTarget)
-                            .classed("highlighted", isSelected)
-                            .attr("stroke", isSelected ? "#fff" : "#000")
-                            .attr("stroke-width", isSelected ? 2 : 1);
-
-                        // Revert tooltip to the LOCKED song
-                        if(showTopologyTooltip) showTopologyTooltip(sortedData[currentIndex]);
+                        // Tooltip Handling
+                        if (currentIndex > -1) {
+                            // If another song is selected, show THAT song's tooltip
+                            if(showTopologyTooltip) showTopologyTooltip(sortedData[currentIndex]);
+                        } else {
+                            // If nothing is selected, HIDE the tooltip completely
+                            if(showTopologyTooltip) showTopologyTooltip(null);
+                        }
                     }
                 })
-                // --- 3. CLICK: Locks the selection ---
                 .on("click", (e, d) => { 
                     e.stopPropagation(); 
-                    updateSelection(d.school); 
+                    updateSelection(d.school); // Updates the middle strip and sets the selection lock
                 });
 
             // Persistent Tooltip Definition
@@ -1809,6 +1790,7 @@
 </script>
 </body>
 </html>
+
 
 
 
