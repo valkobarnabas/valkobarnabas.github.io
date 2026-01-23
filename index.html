@@ -561,7 +561,7 @@
 
         <p style="font-size:0.9em; color:#888; margin-top:20px;">
             Built with D3.js by Barnabás Valkó (UW-Madison Math/Stats 2027).
-            GitHub: <a href="https://github.com/valkobarnabas/valkobarnabas.github.io" target="_blank">valkobarnabas</a>.
+            GitHub: <a href="https://github.com/valkobarnabas/valkobarnabas.github.io" target="_blank">valkobarnabas</a>
         </p>
         <p style="font-size:0.66em; color:#555; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
             All logos and songs are the full copyright of their respective universities. This website uses the <a href="https://x.com/JSEllenberg/status/1496214856722227200" target="_blank">Segoe UI</a> font family and icons from FontAwesome. On, Wisconsin!
@@ -1437,11 +1437,14 @@
 
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Density
+            // Density (FIX: Added pointer-events: none so it doesn't block clicks)
             const contours = d3.contourDensity().x(d=>x(d.sec_duration)).y(d=>y(d.bpm))
                 .size([iw, ih]).bandwidth(15)(data);
             g.append("g").selectAll("path").data(contours).enter().append("path")
-                .attr("d", d3.geoPath()).attr("fill", "#00f2ff").attr("opacity", 0.08);
+                .attr("d", d3.geoPath())
+                .attr("fill", "#00f2ff")
+                .attr("opacity", 0.08)
+                .style("pointer-events", "none"); 
 
             // Axes
             g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5));
@@ -1457,64 +1460,35 @@
                 .attr("cy", d => y(d.bpm))
                 .attr("r", 6)
                 .attr("fill", d => d.number_fights === 0 ? "#666" : fightColorScale(d.number_fights))
-                .attr("stroke", "#000") // Default stroke
-                .attr("stroke-width", 1)
-                .style("cursor", "pointer")
+                .attr("stroke", "#000")
                 .attr("data-school", d => d.school)
-                .on("mouseover", function(e, d) {
-                    // 1. External Highlights (Logos, Grid, etc)
+                .style("cursor", "pointer") // Ensure cursor indicates clickability
+                .on("mouseover", (e, d) => {
                     globalHighlight(d.school);
-                    
-                    // 2. Tooltip
-                    if(showTopologyTooltip) showTopologyTooltip(d);
-
-                    // 3. Highlight THIS node (Inline styles win over CSS)
-                    d3.select(this)
-                        .classed("highlighted", true)
-                        .attr("stroke", "#fff")      // Set border to White
-                        .attr("stroke-width", 3);    // Make it thick
+                     d3.select(e.currentTarget).raise();
+                     if(showTopologyTooltip) showTopologyTooltip(d);
                 })
-                .on("mouseout", function(e, d) {
-                    // 1. Clear External Highlights
+                .on("mouseout", () => {
                     globalUnhighlight();
-
-                    // 2. Determine if this node should stay highlighted
-                    // It stays highlighted ONLY if a song is clicked (currentIndex > -1) AND this is that song.
-                    const isSelected = (currentIndex > -1 && sortedData[currentIndex].school === d.school);
-
-                    if (isSelected) {
-                        // Keep it highlighted
-                        d3.select(this)
-                            .classed("highlighted", true)
-                            .attr("stroke", "#fff")
-                            .attr("stroke-width", 3);
-                            
-                        // Revert tooltip to the selected song
-                        if(showTopologyTooltip) showTopologyTooltip(sortedData[currentIndex]);
-                    } else {
-                        // RESET: Explicitly set attributes back to default
-                        d3.select(this)
-                            .classed("highlighted", false)
-                            .attr("stroke", "#000")  // <--- CRITICAL FIX: Force border back to black
-                            .attr("stroke-width", 1);
-
-                        // Tooltip Handling
-                        if (currentIndex > -1) {
-                            // If another song is selected, show THAT song's tooltip
-                            if(showTopologyTooltip) showTopologyTooltip(sortedData[currentIndex]);
-                        } else {
-                            // If nothing is selected, HIDE the tooltip completely
-                            if(showTopologyTooltip) showTopologyTooltip(null);
-                        }
-                    }
+                     // If a school is selected (currentIndex is valid), revert tooltip to that school
+                     if (currentIndex > -1 && sortedData[currentIndex]) {
+                         showTopologyTooltip(sortedData[currentIndex]);
+                     } else {
+                         // Otherwise, hide the tooltip completely
+                         if(showTopologyTooltip) showTopologyTooltip(null);
+                     }
                 })
                 .on("click", (e, d) => { 
                     e.stopPropagation(); 
-                    updateSelection(d.school); // Updates the middle strip and sets the selection lock
+                    updateSelection(d.school); 
                 });
 
-            // Persistent Tooltip Definition
-            const pTip = g.append("g").attr("class", "topo-tooltip").style("display", "none");
+            // Persistent Tooltip Definition (FIX: Explicitly set pointer-events: none)
+            const pTip = g.append("g")
+                .attr("class", "topo-tooltip")
+                .style("display", "none")
+                .style("pointer-events", "none"); 
+
             pTip.append("rect").attr("width", 110).attr("height", 60).attr("x", 10).attr("y", -30).attr("fill", "rgba(0,0,0,0.9)").attr("stroke", "#00f2ff");
             const tText = pTip.append("text").attr("x", 15).attr("y", -15).style("fill", "#fff").style("font-size", "10px");
             
@@ -1529,6 +1503,7 @@
                 } else {
                     const cx = x(d.sec_duration);
                     const cy = y(d.bpm);
+                    // Ensure tooltip is raised but doesn't block events
                     pTip.style("display", "block").attr("transform", `translate(${cx}, ${cy})`).raise();
                     pTip.select("#pt-school").text(d.school);
                     pTip.select("#pt-bpm").text(`BPM: ${d.bpm}`);
@@ -1574,6 +1549,7 @@
             noFightsG.append("path").attr("id", "no-fights-check").attr("d", "M 2 6 L 5 9 L 10 2").attr("transform", "translate(1, 56)").attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 2).style("display", "none");
             noFightsG.append("text").text(`No "Fight"s`).attr("x", 18).attr("y", 65).style("font-size", "9px").style("fill", "#ccc");
             
+            // Global click reset for background clicks
             svg.on("click", (e) => { if(e.target === svg.node()) updateSelection(null); });
         };
         drawViz3();
@@ -1790,11 +1766,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
