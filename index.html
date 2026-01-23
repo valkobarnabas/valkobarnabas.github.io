@@ -1437,7 +1437,7 @@
 
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Density (Pointer events none to pass clicks through)
+            // Density
             const contours = d3.contourDensity().x(d=>x(d.sec_duration)).y(d=>y(d.bpm))
                 .size([iw, ih]).bandwidth(15)(data);
             g.append("g").selectAll("path").data(contours).enter().append("path")
@@ -1453,39 +1453,48 @@
             g.append("text").attr("class", "axis-label").attr("x", iw).attr("y", ih - 5).attr("text-anchor", "end").text("Duration (sec)");
             g.append("text").attr("class", "axis-label").attr("x", 10).attr("y", 15).text("BPM");
 
-            // --- 1. DEFINE SELECTION LABEL (Hidden by default) ---
-            // This is the persistent label that appears ONLY when a school is clicked.
-            const selectionLabel = g.append("g")
-                .attr("class", "topo-tooltip")
-                .style("display", "none")
-                .style("pointer-events", "none"); // Ensure clicks pass through it
+            // --- TOOLTIP TEMPLATE BUILDER ---
+            // Helper to create identical styled tooltips for both Hover and Click states
+            const createTooltipGroup = () => {
+                const grp = g.append("g")
+                    .style("display", "none")
+                    .style("pointer-events", "none");
+                
+                grp.append("rect")
+                    .attr("width", 110).attr("height", 60).attr("x", 10).attr("y", -30)
+                    .attr("fill", "rgba(0,0,0,0.9)").attr("stroke", "#00f2ff");
+                
+                const txt = grp.append("text").attr("x", 15).attr("y", -15).style("fill", "#fff").style("font-size", "10px");
+                txt.append("tspan").attr("class", "pt-school").attr("x", 15).attr("dy", 0).style("font-weight", "bold").style("fill", "#00f2ff");
+                txt.append("tspan").attr("class", "pt-bpm").attr("x", 15).attr("dy", 12);
+                txt.append("tspan").attr("class", "pt-dur").attr("x", 15).attr("dy", 12);
+                txt.append("tspan").attr("class", "pt-num").attr("x", 15).attr("dy", 12);
+                
+                return grp;
+            };
 
-            selectionLabel.append("rect").attr("width", 110).attr("height", 60).attr("x", 10).attr("y", -30).attr("fill", "rgba(0,0,0,0.9)").attr("stroke", "#00f2ff");
-            const tText = selectionLabel.append("text").attr("x", 15).attr("y", -15).style("fill", "#fff").style("font-size", "10px");
-            
-            tText.append("tspan").attr("id", "pt-school").attr("x", 15).attr("dy", 0).style("font-weight", "bold").style("fill", "#00f2ff");
-            tText.append("tspan").attr("id", "pt-bpm").attr("x", 15).attr("dy", 12);
-            tText.append("tspan").attr("id", "pt-dur").attr("x", 15).attr("dy", 12);
-            tText.append("tspan").attr("id", "pt-numfights").attr("x", 15).attr("dy", 12);
+            const populateTooltip = (grp, d) => {
+                grp.select(".pt-school").text(d.school);
+                grp.select(".pt-bpm").text(`BPM: ${d.bpm}`);
+                grp.select(".pt-dur").text(`Duration: ${d.sec_duration}s`);
+                grp.select(".pt-num").text(`Num. of "Fight"s: ${d.number_fights}`);
+            };
 
-            // --- 2. CONNECT TO GLOBAL SELECTION LOGIC ---
-            // This function is called by updateSelection() when you click ANYWHERE in the dashboard.
+            // 1. HOVER LABEL (Transient)
+            const hoverLabel = createTooltipGroup();
+
+            // 2. SELECTION LABEL (Persistent)
+            const selectionLabel = createTooltipGroup();
+
+            // --- CONNECT GLOBAL SELECTION LOGIC ---
             showTopologyTooltip = function(d) {
                 if(!d) {
                     selectionLabel.style("display", "none");
                 } else {
                     const cx = x(d.sec_duration);
                     const cy = y(d.bpm);
-                    
-                    selectionLabel
-                        .style("display", "block")
-                        .attr("transform", `translate(${cx}, ${cy})`)
-                        .raise(); // Put on top of dots
-                    
-                    selectionLabel.select("#pt-school").text(d.school);
-                    selectionLabel.select("#pt-bpm").text(`BPM: ${d.bpm}`);
-                    selectionLabel.select("#pt-dur").text(`Duration: ${d.sec_duration}s`);
-                    selectionLabel.select("#pt-numfights").text(`Num. of "Fight"s: ${d.number_fights}`);
+                    selectionLabel.style("display", "block").attr("transform", `translate(${cx}, ${cy})`).raise();
+                    populateTooltip(selectionLabel, d);
                 }
             };
 
@@ -1503,19 +1512,16 @@
                     globalHighlight(d.school);
                     d3.select(e.currentTarget).raise();
                     
-                    // --- 3. HOVER BEHAVIOR (Standard Tooltip) ---
-                    // This is independent of the selection label.
-                    d3.select("#tooltip")
-                        .style("opacity", 1)
-                        .html(`<b>${d.school}</b><br>BPM: ${d.bpm}<br>Duration: ${d.sec_duration}s<br>Fights: ${d.number_fights}`)
-                        .style("left", (e.pageX + 10) + "px")
-                        .style("top", (e.pageY - 10) + "px");
+                    // SHOW HOVER LABEL (Stylistically identical to selection label)
+                    hoverLabel.style("display", "block")
+                        .attr("transform", `translate(${x(d.sec_duration)}, ${y(d.bpm)})`)
+                        .raise(); // Ensure it's on top
+                    populateTooltip(hoverLabel, d);
                 })
                 .on("mouseout", () => {
                     globalUnhighlight();
-                    // Hide standard tooltip immediately
-                    d3.select("#tooltip").style("opacity", 0);
-                    // Note: We do NOT touch selectionLabel here. It stays if something is selected.
+                    // HIDE HOVER LABEL IMMEDIATELY
+                    hoverLabel.style("display", "none");
                 })
                 .on("click", (e, d) => { 
                     e.stopPropagation(); 
