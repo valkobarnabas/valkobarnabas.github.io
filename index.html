@@ -1458,37 +1458,59 @@
                 .attr("r", 6)
                 .attr("fill", d => d.number_fights === 0 ? "#666" : fightColorScale(d.number_fights))
                 .attr("stroke", "#000")
+                .attr("stroke-width", 1)
+                .style("cursor", "pointer")
                 .attr("data-school", d => d.school)
                 .on("mouseover", (e, d) => {
+                    // 1. Cross-Viz Highlight (Grey lines/Logos)
                     globalHighlight(d.school);
-                    // Note: Removed .raise() to prevent z-index changes from disrupting mouseout events
+
+                    // 2. Show Tooltip immediately
                     if(showTopologyTooltip) showTopologyTooltip(d);
+                    
+                    // 3. Local Node Highlight (Stroke)
+                    // Note: We do NOT use .raise() here, as it breaks the mouseout event.
+                    d3.select(e.currentTarget)
+                        .classed("highlighted", true)
+                        .attr("stroke", "#fff")
+                        .attr("stroke-width", 3);
                 })
-                .on("mouseout", (e) => {
-                    // 1. Standard Unhighlight
+                .on("mouseout", (e, d) => {
+                    // 1. Clear Cross-Viz Highlights
                     globalUnhighlight();
                     
-                    // 2. The "Big Reset" (Aggressive cleanup)
+                    // 2. Reset the stroke of the node we just left
+                    d3.select(e.currentTarget)
+                        .attr("stroke", "#000")
+                        .attr("stroke-width", 1);
+
+                    // 3. THE "BIG RESET" LOGIC
                     if (currentIndex === -1) {
-                        // If no song is selected, forcefully strip ALL effects to mimic 'Esc'
-                        d3.selectAll(".scatter-node").classed("hover-matched", false);
-                        d3.selectAll(".dimmed").classed("dimmed", false);
-                        d3.selectAll(".dimmed-soft").classed("dimmed-soft", false);
-                        d3.selectAll(".highlighted").classed("highlighted", false);
+                        // SCENARIO: No song is currently selected (clicked).
+                        // ACTION: "Nuclear" reset. Hide everything, like pressing ESC.
                         
-                        // Hide Tooltips
-                        d3.select("#tooltip").style("opacity", 0);
-                        if(showTopologyTooltip) showTopologyTooltip(null);
+                        d3.select(e.currentTarget).classed("highlighted", false);
+                        if(showTopologyTooltip) showTopologyTooltip(null); // Force Hide Tooltip
+                        
                     } else {
-                        // If a song IS selected, just ensure the hover effect is gone
-                        // and revert the tooltip to the selected song
-                        d3.select(e.currentTarget).classed("hover-matched", false);
-                        if(sortedData[currentIndex]) {
-                             showTopologyTooltip(sortedData[currentIndex]);
-                        }
+                        // SCENARIO: A song IS selected.
+                        // ACTION: Revert to the selected song's state.
+                        
+                        // Only keep 'highlighted' class if this node is the one actually selected
+                        const selectedSchool = sortedData[currentIndex].school;
+                        const isSelected = (d.school === selectedSchool);
+                        
+                        d3.select(e.currentTarget).classed("highlighted", isSelected);
+                        
+                        // Revert the tooltip to show the SELECTED song, not the one we just left
+                        if(showTopologyTooltip) showTopologyTooltip(sortedData[currentIndex]);
                     }
                 })
-                .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
+                .on("click", (e, d) => { 
+                    e.stopPropagation(); 
+                    // This updates the middle strip and sets the "currentIndex" lock
+                    updateSelection(d.school); 
+                });
 
             // Persistent Tooltip Definition
             const pTip = g.append("g").attr("class", "topo-tooltip").style("display", "none");
@@ -1767,6 +1789,7 @@
 </script>
 </body>
 </html>
+
 
 
 
