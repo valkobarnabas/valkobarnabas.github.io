@@ -1507,7 +1507,7 @@
                     // This is independent of the selection label.
                     d3.select("#tooltip")
                         .style("opacity", 1)
-                        .html(`<b>${d.school}</b><br>BPM: ${d.bpm}<br>Duration: ${d.sec_duration}s<br>Fights: ${d.number_fights}`)
+                        .html(`<b>${d.school}</b><br>BPM: ${d.bpm}<br>Duration: ${d.sec_duration}s<br>"Fight"s: ${d.number_fights}`)
                         .style("left", (e.pageX + 10) + "px")
                         .style("top", (e.pageY - 10) + "px");
                 })
@@ -1775,6 +1775,7 @@
 </script>
 </body>
 </html>
+
 
 
 
