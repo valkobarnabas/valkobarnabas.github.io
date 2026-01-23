@@ -1461,20 +1461,32 @@
                 .attr("data-school", d => d.school)
                 .on("mouseover", (e, d) => {
                     globalHighlight(d.school);
-                    // FIXED: Removed redundant .raise() here to prevent event thrashing
+                    // Note: Removed .raise() to prevent z-index changes from disrupting mouseout events
                     if(showTopologyTooltip) showTopologyTooltip(d);
                 })
-                .on("mouseout", (e) => { // FIXED: Added 'e' parameter
-                    d3.select(e.currentTarget).classed("hover-matched", false); // FIXED: Explicitly un-highlight this specific node
+                .on("mouseout", (e) => {
+                    // 1. Standard Unhighlight
                     globalUnhighlight();
                     
-                     // If a school is selected (currentIndex is valid), revert tooltip to that school
-                     if (currentIndex > -1 && sortedData[currentIndex]) {
-                         showTopologyTooltip(sortedData[currentIndex]);
-                     } else {
-                         // Otherwise, hide the tooltip completely
-                         if(showTopologyTooltip) showTopologyTooltip(null);
-                     }
+                    // 2. The "Big Reset" (Aggressive cleanup)
+                    if (currentIndex === -1) {
+                        // If no song is selected, forcefully strip ALL effects to mimic 'Esc'
+                        d3.selectAll(".scatter-node").classed("hover-matched", false);
+                        d3.selectAll(".dimmed").classed("dimmed", false);
+                        d3.selectAll(".dimmed-soft").classed("dimmed-soft", false);
+                        d3.selectAll(".highlighted").classed("highlighted", false);
+                        
+                        // Hide Tooltips
+                        d3.select("#tooltip").style("opacity", 0);
+                        if(showTopologyTooltip) showTopologyTooltip(null);
+                    } else {
+                        // If a song IS selected, just ensure the hover effect is gone
+                        // and revert the tooltip to the selected song
+                        d3.select(e.currentTarget).classed("hover-matched", false);
+                        if(sortedData[currentIndex]) {
+                             showTopologyTooltip(sortedData[currentIndex]);
+                        }
+                    }
                 })
                 .on("click", (e, d) => { e.stopPropagation(); updateSelection(d.school); });
 
@@ -1755,6 +1767,7 @@
 </script>
 </body>
 </html>
+
 
 
 
