@@ -166,69 +166,21 @@
     color: var(--dim);
   }
 
-  .matrix-viewport {
-    display: grid;
-    grid-template-columns: 24px auto;
-    grid-template-rows: 24px auto;
-    overflow: auto;
-    max-height: 700px;
-    max-width: 100%;
+  .canvas-container {
+    width: 100%;
+    aspect-ratio: 1; /* Forces a perfect square */
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 4px;
     position: relative;
-  }
-  
-  /* Scrollbars styling for the viewport */
-  .matrix-viewport::-webkit-scrollbar { width: 8px; height: 8px; }
-  .matrix-viewport::-webkit-scrollbar-track { background: var(--surface); }
-  .matrix-viewport::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  .corner {
-    position: sticky;
-    top: 0; left: 0;
-    z-index: 4;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .col-headers {
-    position: sticky; top: 0;
-    z-index: 3;
-    display: flex;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    width: fit-content;
-  }
-
-  .row-headers {
-    position: sticky; left: 0;
-    z-index: 3;
-    display: flex;
-    flex-direction: column;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    height: fit-content;
-  }
-
-  .col-header-cell, .row-header-cell {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 9px;
-    color: var(--dim);
-    flex-shrink: 0;
-  }
-
-  .canvas-container {
-    z-index: 1;
-    position: relative;
     cursor: crosshair;
+    overflow: hidden;
   }
 
   canvas {
     display: block;
+    width: 100%;
+    height: 100%;
   }
 
   /* ── Sidebar ── */
@@ -322,7 +274,7 @@
   .hi-triple { color: #eaeef7; font-size: 12px; margin-bottom: 4px; }
   
   footer {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 32px auto 0;
     font-size: 10px;
     color: var(--dim);
@@ -442,15 +394,10 @@
 <div class="main-layout">
   <div class="matrix-wrap">
     <div class="matrix-header">
-      <div class="matrix-title">Full Algebra Basis (Hardware Accelerated Render)</div>
+      <div class="matrix-title">Full Algebra Basis (Macro Pattern View)</div>
     </div>
-    <div class="matrix-viewport">
-      <div class="corner"></div>
-      <div class="col-headers" id="colHeaders"></div>
-      <div class="row-headers" id="rowHeaders"></div>
-      <div class="canvas-container">
-        <canvas id="matrixCanvas"></canvas>
-      </div>
+    <div class="canvas-container">
+      <canvas id="matrixCanvas"></canvas>
     </div>
   </div>
 
@@ -458,7 +405,7 @@
     <div class="info-box">
       <h3>Cell Inspector</h3>
       <div class="hover-info" id="hoverInfo">
-        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell in the canvas to inspect its exact basis class and values.</div>
+        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell in the grid to inspect its exact coordinates and basis class.</div>
       </div>
     </div>
     <div class="info-box scrollable-box">
@@ -484,7 +431,7 @@
 
 <script>
 const N = 126;
-const CELL_SIZE = 18; // Clean, readable size that creates a highly pannable view
+const INTERNAL_RES = 10; // Internal pixels per cell for sharp rendering
 let tClasses = [];
 let cellLabels = [];
 
@@ -571,7 +518,7 @@ function formatComboHTML(comboStr) {
     .replace(/A/g, "A");
 }
 
-// Generate highly contrasting palettes for standard, dimmed, and highlighted states
+// Generate highly contrasting palettes
 const COLORS_BASE = [];
 const COLORS_DIMMED = [];
 const COLORS_HIGHLIGHT = [];
@@ -588,32 +535,12 @@ function labelToColorIndex(lbl) {
   return 26 * (lbl.charCodeAt(0) - 65 + 1) + (lbl.charCodeAt(1) - 65);
 }
 
-// ─── Initialize Header Grids ──────────────────────────────────────────────────
-const colHeaders = document.getElementById('colHeaders');
-const rowHeaders = document.getElementById('rowHeaders');
-
-for(let i=0; i<N; i++) {
-  const lbl = i === 0 ? 'x' : i;
-  
-  const colCell = document.createElement('div');
-  colCell.className = 'col-header-cell';
-  colCell.style.width = CELL_SIZE + 'px';
-  colCell.textContent = lbl;
-  colHeaders.appendChild(colCell);
-  
-  const rowCell = document.createElement('div');
-  rowCell.className = 'row-header-cell';
-  rowCell.style.height = CELL_SIZE + 'px';
-  rowCell.textContent = lbl;
-  rowHeaders.appendChild(rowCell);
-}
-
 // ─── Setup Canvas Engine ──────────────────────────────────────────────────────
 const canvas = document.getElementById('matrixCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.width = N * CELL_SIZE;
-canvas.height = N * CELL_SIZE;
+canvas.width = N * INTERNAL_RES;
+canvas.height = N * INTERNAL_RES;
 
 // ─── Controls State Handlers ──────────────────────────────────────────────────
 const filterRow = document.getElementById('filterRow');
@@ -657,7 +584,6 @@ function drawCanvas() {
       let isDimmed = isFilteredOut || isOverlayNotAdj;
       let isHighlighted = false;
 
-      // Handle interactive hovering targeting
       if (hoveredClass) {
         if (lbl === hoveredClass && !isFilteredOut && !isOverlayNotAdj) {
           isHighlighted = true;
@@ -667,13 +593,12 @@ function drawCanvas() {
         }
       }
 
-      const x = c * CELL_SIZE;
-      const y = r * CELL_SIZE;
+      const x = c * INTERNAL_RES;
+      const y = r * INTERNAL_RES;
 
-      // Backgrounds
       if (lbl === "") {
         ctx.fillStyle = 'rgba(255,255,255,0.02)';
-        ctx.fillRect(x, y, CELL_SIZE - 1, CELL_SIZE - 1); // -1 keeps a 1px gap
+        ctx.fillRect(x, y, INTERNAL_RES - 1, INTERNAL_RES - 1); 
       } else {
         const cIdx = labelToColorIndex(lbl);
         if (isDimmed) {
@@ -683,14 +608,20 @@ function drawCanvas() {
         } else {
           ctx.fillStyle = COLORS_BASE[cIdx];
         }
-        ctx.fillRect(x, y, CELL_SIZE - 1, CELL_SIZE - 1);
+        ctx.fillRect(x, y, INTERNAL_RES - 1, INTERNAL_RES - 1);
       }
 
-      // Adjacency Stroke Overlays
       if (overlayMatrix && overlayMatrix[r][c] > 0 && !isFilteredOut) {
-        ctx.strokeStyle = '#e8c97a'; // var(--accent)
+        ctx.strokeStyle = '#e8c97a';
         ctx.lineWidth = 1;
-        ctx.strokeRect(x + 0.5, y + 0.5, CELL_SIZE - 2, CELL_SIZE - 2);
+        ctx.strokeRect(x + 0.5, y + 0.5, INTERNAL_RES - 1, INTERNAL_RES - 1);
+      }
+      
+      // Draw hover outline
+      if (r === hoveredR && c === hoveredC) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 1, y + 1, INTERNAL_RES - 2, INTERNAL_RES - 2);
       }
     }
   }
@@ -712,7 +643,6 @@ function buildSidebar(classes) {
       <span style="flex:1;">${formatComboHTML(cls.linear_combination)}</span>
     `;
     
-    // Wire up sidebar hovers to the canvas engine
     btn.addEventListener('mouseenter', () => {
       hoveredClass = cls.label;
       drawCanvas();
@@ -726,7 +656,7 @@ function buildSidebar(classes) {
 }
 
 function updateHoverInfo(r, c, targetLbl) {
-  if (!targetLbl) {
+  if (!targetLbl || targetLbl === "") {
     clearHoverInfo();
     return;
   }
@@ -756,17 +686,20 @@ function updateHoverInfo(r, c, targetLbl) {
 }
 
 function clearHoverInfo() {
-  document.getElementById('hoverInfo').innerHTML = `<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell in the canvas to inspect its exact basis class and values.</div>`;
+  document.getElementById('hoverInfo').innerHTML = `<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell in the grid to inspect its exact coordinates and basis class.</div>`;
 }
 
-// Map DOM Canvas Mouse events to Canvas rendering coordinates
+// Map DOM Canvas Mouse events to internal resolution coordinates
 canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  
-  const c = Math.floor(x / CELL_SIZE);
-  const r = Math.floor(y / CELL_SIZE);
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+
+  const c = Math.floor(x / INTERNAL_RES);
+  const r = Math.floor(y / INTERNAL_RES);
 
   if (r >= 0 && r < N && c >= 0 && c < N) {
     if (r !== hoveredR || c !== hoveredC) {
@@ -774,7 +707,7 @@ canvas.addEventListener('mousemove', (e) => {
       hoveredC = c;
       const lbl = cellLabels[r] && cellLabels[r][c] ? cellLabels[r][c] : null;
       updateHoverInfo(r, c, lbl);
-      hoveredClass = lbl;
+      hoveredClass = lbl; // Optional: auto-highlight class on hover
       drawCanvas();
     }
   }
@@ -786,6 +719,11 @@ canvas.addEventListener('mouseleave', () => {
   hoveredClass = null;
   clearHoverInfo();
   drawCanvas();
+});
+
+// Window resize listener to ensure sharpness (optional but good practice)
+window.addEventListener('resize', () => {
+  drawCanvas(); 
 });
 
 // ─── Initialization ───────────────────────────────────────────────────────────
