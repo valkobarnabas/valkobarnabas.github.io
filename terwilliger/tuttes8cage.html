@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tutte's 8-Cage — Terwilliger Algebra Basis</title>
+<title>Tutte's 8-Cage — Terwilliger Algebra</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
 
@@ -113,7 +113,7 @@
     align-items: center;
     justify-content: center;
     font-size: var(--cell-font);
-    font-weight: 500;
+    font-weight: 600;
     border-radius: 2px;
     flex-shrink: 0;
     border: 1px solid transparent;
@@ -130,17 +130,7 @@
     filter: brightness(1.3);
   }
   
-  .cell.highlighted {
-    filter: brightness(1.5);
-    border-color: rgba(255,255,255,0.5) !important;
-    transform: scale(1.05);
-  }
-  .cell.dimmed { filter: brightness(0.3); }
-
-  /* Exact Mode Colors */
-  .cell.val-positive { background: rgba(122, 184, 232, 0.2); color: #fff; }
-  .cell.val-high { background: rgba(122, 184, 232, 0.5); color: #fff; font-weight: bold; }
-  .cell.val-negative { background: rgba(232, 122, 122, 0.2); color: #fff; }
+  .cell.dimmed { filter: brightness(0.3); color: transparent; }
 
   /* ── Sidebar ── */
   .side-panel {
@@ -197,15 +187,20 @@
   }
   .word-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
   .word-btn.active { 
-    background: rgba(168, 122, 232, 0.15); 
-    border-color: var(--accent3); 
+    background: rgba(255,255,255,0.1); 
+    border-color: var(--accent); 
     color: #fff; 
   }
   
-  .word-idx { font-size: 9px; color: var(--dim); width: 18px; }
+  .word-idx { 
+    font-size: 12px; 
+    font-weight: bold;
+    width: 22px; 
+    font-family: 'Fraunces', serif;
+  }
   
   .current-selection-display {
-    font-size: 18px;
+    font-size: 20px;
     font-family: 'Fraunces', serif;
     color: var(--accent);
     margin-bottom: 10px;
@@ -217,20 +212,6 @@
     gap: 12px;
   }
 
-  .btn-reset {
-    background: transparent;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 4px 10px;
-    font-size: 9px;
-    font-family: 'DM Mono', monospace;
-    text-transform: uppercase;
-    border-radius: 4px;
-    cursor: pointer;
-    display: none;
-  }
-  .btn-reset:hover { background: var(--accent); color: var(--bg); }
-
   .hover-info {
     font-size: 11px;
     line-height: 1.7;
@@ -238,15 +219,14 @@
     min-height: 80px;
   }
   .hi-label {
-    font-size: 22px;
+    font-size: 28px;
     font-family: 'Fraunces', serif;
     font-weight: 600;
-    color: var(--accent);
     line-height: 1;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
   }
-  .hi-triple { color: var(--accent2); font-weight: 500; }
-  .hi-count { color: var(--accent3); }
+  .hi-triple { color: #eaeef7; font-size: 14px; margin-bottom: 4px; }
+  .hi-count { color: var(--accent3); font-size: 13px; }
 
 </style>
 </head>
@@ -254,7 +234,7 @@
 
 <header>
   <div>
-    <h1>Tutte's 8-Cage — Basis Explorer</h1>
+    <h1>Tutte's 8-Cage — <em>T</em>(x)</h1>
     <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em;">
       Dimension: 49 &nbsp;·&nbsp; Vertices: 30
     </div>
@@ -265,12 +245,11 @@
 <div class="main-layout">
   <div class="matrix-wrap">
     <div class="matrix-header">
-      <div class="matrix-title">Structure Matrix</div>
+      <div class="matrix-title">Terwilliger Basis Matrix View</div>
     </div>
     
     <div class="current-selection-display" id="selectionDisplay">
-      <span id="displayWord">42 Orbit Classes View</span>
-      <button class="btn-reset" id="btnResetOrbit">Return to Orbit View</button>
+      <span id="displayWord" style="color: var(--dim); font-size: 14px;">Loading JSON...</span>
     </div>
     
     <div class="matrix-container" id="matrixContainer"></div>
@@ -280,86 +259,46 @@
     <div class="info-box">
       <h3>Cell Inspector</h3>
       <div class="hover-info" id="hoverInfo">
-        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its properties.</div>
+        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any active cell to view its algebraic properties.</div>
       </div>
     </div>
     <div class="info-box" style="flex: 1;">
-      <h3>Generating Words (dim T)</h3>
+      <h3>Basis Dimensions (A–AW)</h3>
       <div class="word-list" id="wordList">
-        <div style="text-align: center; color: var(--dim); font-size: 11px; padding: 20px;">Loading JSON...</div>
+        <div style="text-align: center; color: var(--dim); font-size: 11px; padding: 20px;">Loading 8cage_words.json...</div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ─── 1. Graph & BFS Data (For Orbit Classes) ──────────────────────────────────
 const N = 30;
-const EDGES = [
-  [1,2],[1,3],[1,4],[2,5],[2,6],[3,7],[3,8],[4,9],[4,10],
-  [5,11],[5,12],[6,13],[6,14],[7,15],[7,16],[8,17],[8,18],
-  [9,19],[9,20],[10,21],[10,22],[11,23],[11,24],[12,25],[12,26],
-  [13,27],[13,28],[14,29],[14,30],[15,24],[15,27],[16,26],[16,29],
-  [17,23],[17,28],[18,25],[18,30],[19,24],[19,30],[20,26],[20,28],
-  [21,23],[21,29],[22,25],[22,27]
-];
+let basisData = [];
+let currentExactIdx = 0;
 
-const adj = Array.from({length:N}, ()=>new Array(N).fill(0));
-for (const [a,b] of EDGES) { adj[a-1][b-1]=1; adj[b-1][a-1]=1; }
-
-function bfs(src) {
-  const dist = new Array(N).fill(-1);
-  dist[src]=0; const q=[src];
-  while (q.length) {
-    const v=q.shift();
-    for (let u=0;u<N;u++) if (adj[v][u] && dist[u]===-1) { dist[u]=dist[v]+1; q.push(u); }
-  }
-  return dist;
-}
-
-const distMatrix = Array.from({length:N}, (_,i)=>bfs(i));
-const distX = distMatrix[0]; // base vertex 0
-
-const tripleSet = new Map();
-const tripleOrder = [];
-for (let r=0;r<N;r++) for (let c=0;c<N;c++) {
-  const key = `${distX[r]},${distMatrix[r][c]},${distX[c]}`;
-  if (!tripleSet.has(key)) { tripleSet.set(key, tripleOrder.length); tripleOrder.push(key); }
-}
-tripleOrder.sort((a,b)=>{
-  const [a0,a1,a2]=a.split(',').map(Number), [b0,b1,b2]=b.split(',').map(Number);
-  return a0-b0||a1-b1||a2-b2;
-});
-
-const tripleIndex = new Map(tripleOrder.map((t,i)=>[t,i]));
+// ─── Utility Functions ────────────────────────────────────────────────────────
 function idxToLabel(i) {
-  const L='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  if (i<26) return L[i];
-  i-=26; return L[Math.floor(i/26)]+L[i%26];
+  const L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if (i < 26) return L[i];
+  i -= 26; 
+  return L[Math.floor(i/26)] + L[i%26];
 }
 
-const orbitCount = new Array(tripleOrder.length).fill(0);
-const labelGrid = Array.from({length:N},()=>new Array(N));
-for (let r=0;r<N;r++) for (let c=0;c<N;c++) {
-  const idx=tripleIndex.get(`${distX[r]},${distMatrix[r][c]},${distX[c]}`);
-  labelGrid[r][c]=idx;
-  orbitCount[idx]++;
+function formatWordHTML(wordStr) {
+  if (wordStr === "I") return "I (Identity)";
+  return wordStr.replace(/E_(\d+)\^*/g, "E<sub>$1</sub><sup>*</sup>").replace(/A/g, "A");
 }
 
-function hsl(h,s,l){ return `hsl(${h},${s}%,${l}%)`; }
-const BAND_HUE = [210, 140, 50, 20, 300]; 
-const COLORS = tripleOrder.map((t,i)=>{
-  const [band,j,k] = t.split(',').map(Number);
-  const hue = (BAND_HUE[band] + j*18 + k*5) % 360;
-  const sat = 60 + (j%3)*12;
-  const lit = 32 + j*7 - band*2;
-  return hsl(hue, sat, Math.max(20, Math.min(60, lit)));
+// Generate 49 distinct colors evenly distributed across the hue spectrum
+const COLORS = Array.from({length: 50}, (_, i) => {
+  const hue = (i * 137.5) % 360; 
+  return `hsl(${hue}, 65%, 45%)`;
 });
 
-// ─── 2. Build DOM Grid ─────────────────────────────────────────────────────────
+// ─── Build DOM Grid ───────────────────────────────────────────────────────────
 const mc = document.getElementById('matrixContainer');
 const colLabRow = document.createElement('div'); colLabRow.className='col-labels';
-const spacer=document.createElement('div'); spacer.className='axis-label'; // Fixed column alignment
+const spacer=document.createElement('div'); spacer.className='axis-label'; 
 colLabRow.appendChild(spacer);
 for(let c=0;c<N;c++){
   const el=document.createElement('div'); el.className='axis-label';
@@ -375,14 +314,12 @@ for(let r=0;r<N;r++){
   
   const rowCells = [];
   for(let c=0;c<N;c++){
-    const idx = labelGrid[r][c];
     const cell=document.createElement('div');
-    cell.className='cell';
+    cell.className='cell dimmed';
     cell.dataset.r = r;
     cell.dataset.c = c;
-    cell.dataset.idx = idx;
     
-    cell.addEventListener('mouseenter', () => highlightClass(idx, r, c));
+    cell.addEventListener('mouseenter', () => highlightCell(r, c));
     cell.addEventListener('mouseleave', clearHighlight);
     
     rowCells.push(cell);
@@ -392,129 +329,97 @@ for(let r=0;r<N;r++){
   mc.appendChild(rowEl);
 }
 
-// ─── 3. Global State & Interaction ─────────────────────────────────────────────
-let basisData = [];
-let isExactMode = false;
-let currentExactIdx = null;
-
-function formatWordHTML(wordStr) {
-  if (wordStr === "I") return "I";
-  return wordStr.replace(/E_(\d+)\^*/g, "E<sub>$1</sub><sup>*</sup>").replace(/A/g, "A");
-}
-
-function renderOrbitClasses() {
-  isExactMode = false;
-  currentExactIdx = null;
-  document.getElementById('displayWord').textContent = "42 Orbit Classes View";
-  document.getElementById('btnResetOrbit').style.display = 'none';
-  
-  document.querySelectorAll('.word-btn').forEach(b => b.classList.remove('active'));
-
-  for(let r=0;r<N;r++){
-    for(let c=0;c<N;c++){
-      const idx = labelGrid[r][c];
-      const cell = gridCells[r][c];
-      cell.className = 'cell';
-      cell.textContent = idxToLabel(idx);
-      cell.style.background = COLORS[idx];
-      cell.style.color = '#fff';
-    }
-  }
-}
-
-function renderExactMatrix(idx) {
-  isExactMode = true;
+// ─── Interaction Logic ────────────────────────────────────────────────────────
+function renderDimension(idx) {
   currentExactIdx = idx;
   const data = basisData[idx];
+  const lbl = idxToLabel(idx);
+  const color = COLORS[idx];
   
-  document.getElementById('displayWord').innerHTML = formatWordHTML(data.word);
-  document.getElementById('btnResetOrbit').style.display = 'block';
+  document.getElementById('displayWord').innerHTML = `Basis ${lbl}: &nbsp; <span style="color:#eaeef7">${formatWordHTML(data.word)}</span>`;
   
-  document.querySelectorAll('.word-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.querySelectorAll('.word-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+    if(i === idx) b.style.borderColor = color;
+    else b.style.borderColor = 'transparent';
+  });
   
   for(let r=0;r<N;r++){
     for(let c=0;c<N;c++){
       const val = data.matrix[r][c];
       const cell = gridCells[r][c];
       
-      cell.className = 'cell';
-      cell.style.background = 'transparent';
-      cell.textContent = '';
+      cell.dataset.val = val; // Store exact value for hover info
       
       if (Math.abs(val) < 1e-7) {
-        cell.classList.add('dimmed');
+        cell.textContent = '';
+        cell.className = 'cell dimmed';
+        cell.style.backgroundColor = 'rgba(255,255,255,0.02)';
       } else {
-        cell.textContent = Number.isInteger(val) ? val : parseFloat(val.toFixed(2));
-        if (val > 1) cell.classList.add('val-high');
-        else if (val > 0) cell.classList.add('val-positive');
-        else cell.classList.add('val-negative');
+        cell.textContent = lbl;
+        cell.className = 'cell';
+        cell.style.backgroundColor = color;
+        cell.style.color = '#fff';
       }
     }
   }
 }
 
-function highlightClass(idx, r, c) {
-  const triple = tripleOrder[idx];
-  const [band, j, k] = triple.split(',').map(Number);
-  const lbl = idxToLabel(idx);
+function highlightCell(r, c) {
+  const cell = gridCells[r][c];
+  const val = parseFloat(cell.dataset.val);
   
-  const hoverEl = document.getElementById('hoverInfo');
-  let valStr = '';
+  if (Math.abs(val) < 1e-7) return; // Ignore zero cells
   
-  if (isExactMode && r !== undefined) {
-    const val = basisData[currentExactIdx].matrix[r][c];
-    valStr = `<div class="hi-count" style="margin-top: 8px;">Exact Matrix Value: <strong style="font-size:14px;">${Number.isInteger(val) ? val : parseFloat(val.toFixed(2))}</strong></div>`;
-  } else {
-    // In orbit mode, optionally highlight matching cells
-    gridCells.forEach(row => row.forEach(cell => {
-      if (parseInt(cell.dataset.idx) === idx) cell.classList.add('highlighted');
-    }));
-  }
-
-  hoverEl.innerHTML=`
-    <div class="hi-label" style="color:${COLORS[idx]}">${lbl}</div>
-    <div class="hi-triple" style="color:#eaeef7; font-size: 13px; margin: 4px 0;">
-      E<sub>${band}</sub><sup>*</sup> A<sub>${j}</sub> E<sub>${k}</sub><sup>*</sup>
+  const lbl = idxToLabel(currentExactIdx);
+  const word = formatWordHTML(basisData[currentExactIdx].word);
+  const color = COLORS[currentExactIdx];
+  
+  document.getElementById('hoverInfo').innerHTML = `
+    <div class="hi-label" style="color:${color}">Dimension ${lbl}</div>
+    <div class="hi-triple">Generator: ${word}</div>
+    <div style="font-size: 10px; color: var(--dim); margin-top: 8px;">Matrix Position:</div>
+    <div style="font-size: 13px; color: #eaeef7;">Row ${r+1}, Col ${c+1}</div>
+    <div class="hi-count" style="margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border);">
+      Exact Value:<br>
+      <strong style="font-size:20px;">${Number.isInteger(val) ? val : parseFloat(val.toFixed(2))}</strong>
     </div>
-    <div style="font-size: 10px; color: var(--dim); margin-bottom: 6px;">Pos (${r+1}, ${c+1})</div>
-    <div class="hi-triple">dist(x, row) = ${band}</div>
-    <div class="hi-triple">dist(row, col) = ${j}</div>
-    <div class="hi-triple">dist(x, col) = ${k}</div>
-    <div class="hi-count" style="margin-top: 4px;">${orbitCount[idx]} cells in this class</div>
-    ${valStr}
   `;
 }
 
 function clearHighlight() {
-  if (!isExactMode) {
-    document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('highlighted'));
-  }
-  document.getElementById('hoverInfo').innerHTML = `<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its properties.</div>`;
+  document.getElementById('hoverInfo').innerHTML = `<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any active cell to view its algebraic properties.</div>`;
 }
 
-// ─── 4. JSON Fetching & Initialization ─────────────────────────────────────────
-document.getElementById('btnResetOrbit').addEventListener('click', renderOrbitClasses);
-
+// ─── Data Initialization ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  renderOrbitClasses(); // Show colorful view immediately
-  
   fetch('8cage_words.json')
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) throw new Error("JSON not found");
+      return r.json();
+    })
     .then(data => {
       basisData = data.basis;
       const listEl = document.getElementById('wordList');
       listEl.innerHTML = '';
       
       basisData.forEach((item, idx) => {
+        const lbl = idxToLabel(idx);
+        const color = COLORS[idx];
+        
         const btn = document.createElement('button');
         btn.className = 'word-btn';
-        btn.innerHTML = `<span class="word-idx">${idx + 1}</span><span style="flex:1;">${formatWordHTML(item.word)}</span>`;
-        btn.addEventListener('click', () => renderExactMatrix(idx));
+        btn.innerHTML = `<span class="word-idx" style="color:${color}">${lbl}</span><span style="flex:1;">${formatWordHTML(item.word)}</span>`;
+        btn.addEventListener('click', () => renderDimension(idx));
         listEl.appendChild(btn);
       });
+      
+      // Auto-load the first dimension
+      if (basisData.length > 0) renderDimension(0);
     })
     .catch(err => {
-      document.getElementById('wordList').innerHTML = `<div style="color: #e87a7a; padding: 10px; font-size: 11px;">Failed to load 8cage_words.json</div>`;
+      document.getElementById('selectionDisplay').innerHTML = `<span style="color: #e87a7a; font-size: 14px;">Error: Could not load 8cage_words.json</span>`;
+      document.getElementById('wordList').innerHTML = '';
     });
 });
 </script>
