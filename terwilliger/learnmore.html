@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How It Works — Terwilliger Algebra Basis</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+
+  :root {
+    --bg:       #0d0f14;
+    --surface:  #141720;
+    --surface2: #1a1e28;
+    --border:   #252a36;
+    --border2:  #2f3545;
+    --text:     #c8cdd8;
+    --dim:      #5a6070;
+    --accent:   #e8c97a;
+    --accent2:  #7ab8e8;
+    --accent3:  #a87ae8;
+    --green:    #7ae8a8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 40px 24px 100px;
+  }
+
+  a { color: var(--accent3); text-decoration: none; }
+  a:hover { color: #c4a1ff; }
+
+  .back-link {
+    max-width: 900px;
+    margin: 0 auto 28px;
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+  }
+  .back-link:hover { color: var(--accent3); }
+
+  header {
+    max-width: 900px;
+    margin: 0 auto 40px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+    text-align: center;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    color: #eaeef7;
+    margin-bottom: 8px;
+  }
+
+  header h1 em { font-style: italic; color: var(--accent); }
+
+  .subtitle {
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.6;
+  }
+
+  .main-container {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── Section ── */
+  .section {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .step-num {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--bg);
+    background: var(--accent);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .step-num.blue   { background: var(--accent2); }
+  .step-num.purple { background: var(--accent3); }
+  .step-num.green  { background: var(--green); }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 17px;
+    color: #eaeef7;
+  }
+
+  .section-body {
+    padding: 24px;
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--text);
+  }
+
+  .section-body p + p { margin-top: 14px; }
+
+  /* ── Definition / Theorem boxes ── */
+  .def-box {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 14px 18px;
+    margin: 18px 0;
+    font-size: 12.5px;
+    line-height: 1.8;
+  }
+
+  .def-box.theorem { border-left-color: var(--accent2); }
+  .def-box.lemma   { border-left-color: var(--accent3); }
+  .def-box.result  { border-left-color: var(--green); }
+
+  .def-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .def-box.theorem .def-label { color: var(--accent2); }
+  .def-box.lemma   .def-label { color: var(--accent3); }
+  .def-box.result  .def-label { color: var(--green); }
+
+  /* ── Math display ── */
+  .math-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 20px;
+    margin: 16px 0;
+    text-align: center;
+    font-size: 13px;
+    color: var(--accent2);
+    letter-spacing: 0.03em;
+    overflow-x: auto;
+  }
+
+  /* ── Two-col layout ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  .mini-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .mini-card-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    margin-bottom: 8px;
+  }
+
+  .mini-card-title {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 300;
+    color: #eaeef7;
+    margin-bottom: 6px;
+  }
+
+  .mini-card code {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+
+  /* ── Pipeline diagram ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .pipe-step {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--text);
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .pipe-step span {
+    display: block;
+    font-size: 10px;
+    color: var(--dim);
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .pipe-arrow {
+    color: var(--dim);
+    font-size: 16px;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── Summary grid ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .summary-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .summary-item .s-num {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .summary-item .s-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+  }
+
+  em.math {
+    font-style: italic;
+    color: var(--accent2);
+  }
+
+  em.key {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  footer {
+    max-width: 900px;
+    margin: 40px auto 0;
+    font-size: 10px;
+    color: var(--dim);
+    text-align: center;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="index.html">← Back to all graphs</a>
+
+<header>
+  <h1>Finding a Basis for <em>T</em>(x)</h1>
+  <div class="subtitle">Mathematical justification of the algorithm</div>
+  <div class="subtitle">Barnabás Valkó &nbsp;·&nbsp; University of Wisconsin–Madison</div>
+</header>
+
+<div class="main-container">
+
+  <!-- Intro -->
+  <div class="section">
+    <div class="section-body">
+      <p>The <em class="key">Terwilliger algebra</em> <em class="math">T(x)</em> of a graph is a finite-dimensional associative matrix algebra that encodes the structural symmetry of the graph relative to a fixed base vertex <em class="math">x</em>. It is generated by the adjacency matrix <em class="math">A</em> and a family of diagonal projection matrices called <em class="key">dual idempotents</em>. The algorithm computes a canonical basis for <em class="math">T(x)</em> in three stages.</p>
+
+      <div class="pipeline">
+        <div class="pipe-step">BFS distances<span>Step 1</span></div>
+        <div class="pipe-arrow">›</div>
+        <div class="pipe-step">Gram–Schmidt word search<span>Step 2</span></div>
+        <div class="pipe-arrow">›</div>
+        <div class="pipe-step">RREF canonicalization<span>Step 3</span></div>
+        <div class="pipe-arrow">›</div>
+        <div class="pipe-step">Cell partition<span>Output</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num">1</div>
+      <div class="section-title">Generators: the adjacency matrix and dual idempotents</div>
+    </div>
+    <div class="section-body">
+      <p>Let <em class="math">Γ = (V, E)</em> be a finite connected graph with <em class="math">n</em> vertices. Fix a base vertex <em class="math">x ∈ V</em>. Breadth-first search from <em class="math">x</em> computes the exact shortest-path distance <em class="math">∂(x, v)</em> to every other vertex in <em class="math">O(n + |E|)</em> time. The <em class="key">diameter</em> from <em class="math">x</em> is <em class="math">D = max&#8202;∂(x, v)</em>.</p>
+
+      <div class="def-box">
+        <div class="def-label">Definition — Dual Idempotents</div>
+        For 0 ≤ i ≤ D, the dual idempotent E*<sub>i</sub> is the diagonal n×n matrix whose (j,j)-entry is 1 if ∂(x, v<sub>j</sub>) = i, and 0 otherwise. These satisfy E*<sub>i</sub> E*<sub>j</sub> = δ<sub>ij</sub> E*<sub>i</sub> (mutual orthogonality) and ∑ E*<sub>i</sub> = I<sub>n</sub> (partition of identity).
+      </div>
+
+      <p>The Terwilliger algebra is then defined as the subalgebra of Mat<sub>n</sub>(ℝ) generated by these matrices:</p>
+
+      <div class="math-block">
+        T(x) = span<sub>ℝ</sub>{ w(A, E*<sub>0</sub>, …, E*<sub>D</sub>) : w is any noncommutative word in the generators }
+      </div>
+
+      <div class="two-col">
+        <div class="mini-card">
+          <div class="mini-card-label">Generator A</div>
+          <div class="mini-card-title">Adjacency matrix</div>
+          Standard 0/1 symmetric matrix. Encodes the graph's edge structure globally.
+        </div>
+        <div class="mini-card">
+          <div class="mini-card-label">Generators E*<sub>0</sub>, …, E*<sub>D</sub></div>
+          <div class="mini-card-title">Dual idempotents</div>
+          Diagonal projections onto distance layers. Encode local structure relative to <em class="math">x</em>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num blue">2</div>
+      <div class="section-title">Gram–Schmidt word enumeration</div>
+    </div>
+    <div class="section-body">
+      <p>Since T(x) ⊆ Mat<sub>n</sub>(ℝ) and dim Mat<sub>n</sub>(ℝ) = n², the algebra is at most n²-dimensional. The algorithm constructs a basis by a BFS over all noncommutative words in the generators, testing each for linear independence via Gram–Schmidt orthogonalization.</p>
+
+      <div class="def-box lemma">
+        <div class="def-label">Key Lemma — Gram–Schmidt Test</div>
+        Flatten each n×n matrix M to a vector <strong>v</strong> ∈ ℝ<sup>n²</sup>. Compute the residual <strong>r</strong> = <strong>v</strong> − ∑ ⟨<strong>v</strong>, <strong>b̂</strong><sub>j</sub>⟩ <strong>b̂</strong><sub>j</sub> over the current orthonormal basis. Then M is linearly independent of the current basis if and only if ‖<strong>r</strong>‖ &gt; ε.
+      </div>
+
+      <p>The BFS seeds the basis with <em class="math">E*<sub>0</sub>, …, E*<sub>D</sub></em> and then iterates: each newly added basis matrix is multiplied by every generator, and the result is tested for linear independence. Only matrices that survive the test are added to the frontier for the next round.</p>
+
+      <div class="def-box theorem">
+        <div class="def-label">Theorem — Completeness</div>
+        When the BFS frontier is empty (no new independent matrices found in a generation), the current span is closed under right-multiplication by all generators. Since the algebra is also closed under left-multiplication and contains all generators, this span equals T(x). Termination is guaranteed because the basis size is bounded by n².
+      </div>
+
+      <p>In practice the algebra closes at dimension far smaller than n². For the Foster graph (90 vertices) the dimension is 257; for the Biggs-Smith graph (102 vertices) it is 451.</p>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num purple">3</div>
+      <div class="section-title">RREF canonicalization</div>
+    </div>
+    <div class="section-body">
+      <p>Once a linearly independent spanning set {M<sub>1</sub>, …, M<sub>d</sub>} is found, it is already a basis. The algorithm applies the Reduced Row Echelon Form (RREF) to the augmented matrix formed by stacking the flattened basis matrices as rows alongside a d×d identity block:</p>
+
+      <div class="math-block">
+        [ m<sub>1</sub> | · · · | m<sub>d</sub> ]<sup>T</sup> | I<sub>d</sub>
+      </div>
+
+      <p>Row operations preserve the row space, so the RREF produces a new basis spanning the same algebra. Because the stacked matrix has full row rank d, the RREF yields exactly d nonzero rows, each with a unique pivot position among the n² matrix entries. The augmented identity block tracks the change-of-basis transformation, expressing each canonical basis element as a linear combination of the original word matrices.</p>
+
+      <div class="def-box result">
+        <div class="def-label">Proposition — Uniqueness</div>
+        The RREF of a matrix is unique (for a fixed column ordering). Therefore this procedure produces a canonical basis for T(x) that depends only on the graph and the choice of base vertex, not on the order in which words were enumerated.
+      </div>
+
+      <p>SymPy's exact rational arithmetic is used for the RREF step, avoiding floating-point rounding errors in the pivot selection. The Gram–Schmidt stage uses floating-point arithmetic with tolerance ε = 10<sup>−9</sup>, which is adequate for graphs up to several hundred vertices.</p>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="section">
+    <div class="section-header">
+      <div class="step-num green">4</div>
+      <div class="section-title">Cell partition and association scheme</div>
+    </div>
+    <div class="section-body">
+      <p>Each canonical basis matrix C<sub>i</sub> has a well-defined support: the set of pairs (r,c) where the (r,c)-entry is nonzero. The algorithm assigns a label (A, B, C, …) to each basis matrix and marks every nonzero cell in the n×n grid with that label. Together these cells form a partition of V×V.</p>
+
+      <div class="def-box">
+        <div class="def-label">Definition — Cell Partition</div>
+        The <em>cell partition</em> is the partition of V × V into classes R<sub>A</sub>, R<sub>B</sub>, … where (u, v) ∈ R<sub>L</sub> iff the (u,v)-entry of the canonical basis matrix with label L is nonzero. For distance-regular graphs this coincides with the association scheme defined by the graph.
+      </div>
+
+      <p>The T-algebra structure constants with respect to this basis encode the combinatorial relationships between distance layers relative to the base vertex. The irreducible T-modules (ITMs) decompose the standard module ℝ<sup>n</sup> into subspaces on which T(x) acts irreducibly, and their dimensions d<sub>1</sub>, d<sub>2</sub>, … satisfy:</p>
+
+      <div class="math-block">
+        dim T(x) = d<sub>1</sub>² + d<sub>2</sub>² + · · · + d<sub>k</sub>²
+      </div>
+
+      <p>This sum-of-squares formula, visible in the table on the main page, is a consequence of the Artin–Wedderburn theorem applied to the semisimple algebra T(x).</p>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="section">
+    <div class="section-body">
+      <p style="margin-bottom: 16px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim);">Why the algorithm is sound</p>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="s-num" style="color: var(--accent);">✓</span>
+          <div class="s-label">Correct generators</div>
+        </div>
+        <div class="summary-item">
+          <span class="s-num" style="color: var(--accent2);">✓</span>
+          <div class="s-label">Gram–Schmidt is exact</div>
+        </div>
+        <div class="summary-item">
+          <span class="s-num" style="color: var(--accent3);">✓</span>
+          <div class="s-label">BFS is complete</div>
+        </div>
+        <div class="summary-item">
+          <span class="s-num" style="color: var(--green);">✓</span>
+          <div class="s-label">Terminates in finite steps</div>
+        </div>
+        <div class="summary-item">
+          <span class="s-num" style="color: var(--accent);">✓</span>
+          <div class="s-label">RREF is canonical</div>
+        </div>
+        <div class="summary-item">
+          <span class="s-num" style="color: var(--accent2);">✓</span>
+          <div class="s-label">Cell partition is well-defined</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- References -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title" style="font-size: 14px; color: var(--dim);">References</div>
+    </div>
+    <div class="section-body" style="font-size: 12px; line-height: 1.9; color: var(--dim);">
+      <p>P. Terwilliger, <em>The subconstituent algebra of an association scheme (Part I)</em>, Journal of Algebraic Combinatorics <strong style="color: var(--text);">1</strong> (1992), 363–388.</p>
+      <p>P. Terwilliger, <em>The subconstituent algebra of an association scheme (Parts II and III)</em>, Journal of Algebraic Combinatorics <strong style="color: var(--text);">2</strong> (1993), 73–103, 177–210.</p>
+      <p>A. E. Brouwer, A. M. Cohen, A. Neumaier, <em>Distance-Regular Graphs</em>, Springer-Verlag, 1989.</p>
+      <p>B. Valkó et al., <em>Irreducible T-modules of Distance-Regular Graphs with Valency Three</em>, 2026.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Mathematical justification of the Terwilliger algebra basis algorithm. &nbsp;·&nbsp; Barnabás Valkó &nbsp;·&nbsp; University of Wisconsin–Madison
+</footer>
+
+</body>
+</html>
