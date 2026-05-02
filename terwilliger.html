@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terwilliger Algebra — Tutte's 8-Cage</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+
+  :root {
+    --bg:       #0d0f14;
+    --surface:  #141720;
+    --border:   #252a36;
+    --text:     #c8cdd8;
+    --dim:      #5a6070;
+    --accent:   #e8c97a;
+    --accent2:  #7ab8e8;
+    --accent3:  #a87ae8;
+    --cell-size: 22px;
+    --cell-font: 9px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 32px 24px 60px;
+  }
+
+  header {
+    max-width: 1100px;
+    margin: 0 auto 36px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    color: #eaeef7;
+    margin-bottom: 4px;
+  }
+  header h1 em { font-style: italic; color: var(--accent); }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .stats-row {
+    max-width: 1100px;
+    margin: 0 auto 28px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .stat-box strong {
+    display: block;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    line-height: 1.2;
+  }
+
+  .main-layout {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: auto 280px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* ── Matrix panel ── */
+  .matrix-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: auto;
+    padding: 16px;
+  }
+
+  .matrix-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    margin-bottom: 12px;
+  }
+
+  .matrix-container {
+    display: inline-block;
+  }
+
+  .row-labels, .col-labels {
+    display: flex;
+  }
+  .col-labels {
+    padding-left: var(--cell-size); /* offset for row-label column */
+    margin-bottom: 3px;
+  }
+  .axis-label {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 7px;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+  .matrix-row {
+    display: flex;
+    align-items: center;
+  }
+  .row-label {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 7px;
+    color: var(--dim);
+    flex-shrink: 0;
+  }
+
+  .cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--cell-font);
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: filter 0.1s, transform 0.1s;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    letter-spacing: -0.3px;
+    user-select: none;
+    position: relative;
+  }
+  .cell:hover {
+    filter: brightness(1.35);
+    transform: scale(1.15);
+    z-index: 10;
+    border-color: rgba(255,255,255,0.25);
+  }
+  .cell.highlighted {
+    filter: brightness(1.5);
+    border-color: rgba(255,255,255,0.5) !important;
+    transform: scale(1.05);
+  }
+  .cell.dimmed {
+    filter: brightness(0.3);
+  }
+
+  /* ── Legend / info panel ── */
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .info-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .info-box h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 13px;
+    color: #eaeef7;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+
+  .hover-info {
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--dim);
+    min-height: 80px;
+  }
+  .hover-info .hi-label {
+    font-size: 22px;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .hover-info .hi-triple {
+    color: var(--accent2);
+    font-weight: 500;
+  }
+  .hover-info .hi-count {
+    color: var(--accent3);
+  }
+
+  .legend-scroll {
+    max-height: 440px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .legend-scroll::-webkit-scrollbar { width: 4px; }
+  .legend-scroll::-webkit-scrollbar-track { background: transparent; }
+  .legend-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.12s;
+    font-size: 10px;
+  }
+  .legend-row:hover { background: rgba(255,255,255,0.05); }
+  .legend-row.active-leg { background: rgba(232,201,122,0.1); }
+  .legend-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .legend-lbl { font-weight: 500; color: #eaeef7; min-width: 22px; }
+  .legend-desc { color: var(--dim); flex: 1; }
+  .legend-cnt {
+    color: var(--dim);
+    font-size: 9px;
+    min-width: 30px;
+    text-align: right;
+  }
+
+  .basis-progress {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .basis-progress h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 13px;
+    color: #eaeef7;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 10px;
+  }
+  .progress-lbl { color: var(--dim); min-width: 60px; }
+  .progress-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .progress-val { color: var(--accent); min-width: 20px; text-align: right; font-weight: 500; }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .filter-btn {
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  footer {
+    max-width: 1100px;
+    margin: 32px auto 0;
+    font-size: 10px;
+    color: var(--dim);
+    text-align: center;
+    line-height: 1.8;
+  }
+  footer span { color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Terwilliger Algebra — <em>T</em>(x)</h1>
+  <div class="subtitle">Tutte's 8-Cage &nbsp;·&nbsp; Subconstituent Algebra &nbsp;·&nbsp; Base vertex x = v₁</div>
+</header>
+
+<div class="stats-row" id="statsRow"></div>
+
+<div class="main-layout">
+  <div>
+    <div class="matrix-wrap">
+      <div class="matrix-title">30 × 30 Structure Matrix — each cell labeled by orbit class under Stab(x)</div>
+      <div class="filter-row" id="filterRow"></div>
+      <div class="matrix-container" id="matrixContainer"></div>
+    </div>
+  </div>
+  <div class="side-panel">
+    <div class="info-box">
+      <h3>Cell Inspector</h3>
+      <div class="hover-info" id="hoverInfo">
+        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its orbit class.</div>
+      </div>
+    </div>
+    <div class="basis-progress">
+      <h3>Basis Growth by Word Length</h3>
+      <div id="basisProgress"></div>
+    </div>
+    <div class="info-box">
+      <h3>Legend — 42 Orbit Classes</h3>
+      <div class="legend-scroll" id="legendScroll"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>dim T(x) = 49</span> &nbsp;·&nbsp;
+  42 orbit classes from E<sub>i</sub>*A<sub>j</sub>E<sub>k</sub>* triples &nbsp;+&nbsp; 7 additional dimensions from higher-order products &nbsp;·&nbsp;
+  Intersection array {3,2,2,2 ; 1,1,1,3} &nbsp;·&nbsp; Diameter D = 4
+</footer>
+
+<script>
+// ─── Graph data ────────────────────────────────────────────────────────────────
+const N = 30;
+const EDGES = [
+  [1,2],[1,3],[1,4],[2,5],[2,6],[3,7],[3,8],[4,9],[4,10],
+  [5,11],[5,12],[6,13],[6,14],[7,15],[7,16],[8,17],[8,18],
+  [9,19],[9,20],[10,21],[10,22],[11,23],[11,24],[12,25],[12,26],
+  [13,27],[13,28],[14,29],[14,30],[15,24],[15,27],[16,26],[16,29],
+  [17,23],[17,28],[18,25],[18,30],[19,24],[19,30],[20,26],[20,28],
+  [21,23],[21,29],[22,25],[22,27]
+];
+
+// Build adjacency (0-indexed)
+const adj = Array.from({length:N}, ()=>new Array(N).fill(0));
+for (const [a,b] of EDGES) {
+  adj[a-1][b-1]=1; adj[b-1][a-1]=1;
+}
+
+// BFS distances
+function bfs(src) {
+  const dist = new Array(N).fill(-1);
+  dist[src]=0; const q=[src];
+  while (q.length) {
+    const v=q.shift();
+    for (let u=0;u<N;u++) if (adj[v][u] && dist[u]===-1) { dist[u]=dist[v]+1; q.push(u); }
+  }
+  return dist;
+}
+
+const distMatrix = Array.from({length:N}, (_,i)=>bfs(i));
+const X=0;
+const distX = distMatrix[X];
+
+// ─── Build orbit-class label grid ──────────────────────────────────────────────
+// Each cell (r,c) -> triple (dist(x,r), dist(r,c), dist(x,c))
+const tripleSet = new Map();
+const tripleOrder = [];
+for (let r=0;r<N;r++) for (let c=0;c<N;c++) {
+  const key = `${distX[r]},${distMatrix[r][c]},${distX[c]}`;
+  if (!tripleSet.has(key)) { tripleSet.set(key, tripleOrder.length); tripleOrder.push(key); }
+}
+tripleOrder.sort((a,b)=>{
+  const [a0,a1,a2]=a.split(',').map(Number), [b0,b1,b2]=b.split(',').map(Number);
+  return a0-b0||a1-b1||a2-b2;
+});
+const tripleIndex = new Map(tripleOrder.map((t,i)=>[t,i]));
+
+function idxToLabel(i) {
+  const L='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if (i<26) return L[i];
+  i-=26; return L[Math.floor(i/26)]+L[i%26];
+}
+
+// Count cells per orbit
+const orbitCount = new Array(tripleOrder.length).fill(0);
+const labelGrid = Array.from({length:N},()=>new Array(N));
+for (let r=0;r<N;r++) for (let c=0;c<N;c++) {
+  const key=`${distX[r]},${distMatrix[r][c]},${distX[c]}`;
+  const idx=tripleIndex.get(key);
+  labelGrid[r][c]=idx;
+  orbitCount[idx]++;
+}
+
+// ─── Color palette — 42 colors ─────────────────────────────────────────────────
+// Generate visually distinct colors grouped by dist(x,r) band
+function hsl(h,s,l){ return `hsl(${h},${s}%,${l}%)`; }
+
+const BAND_HUE = [210, 140, 50, 20, 300]; // hue per dist(x,r) = 0..4
+const COLORS = tripleOrder.map((t,i)=>{
+  const [band,j,k] = t.split(',').map(Number);
+  const baseHue = BAND_HUE[band];
+  // vary hue slightly and lightness based on dist(r,c)
+  const hue = (baseHue + j*18 + k*5) % 360;
+  const sat = 60 + (j%3)*12;
+  const lit = 32 + j*7 - band*2;
+  return hsl(hue, sat, Math.max(20, Math.min(60, lit)));
+});
+
+// text contrast per color (simple: use white or dark)
+const TEXT_COLORS = COLORS.map(c=>'rgba(255,255,255,0.9)');
+
+// ─── Basis growth data ─────────────────────────────────────────────────────────
+const basisGrowth = [
+  {level:'Generators', dim:6,  added:6},
+  {level:'Length 2',   dim:14, added:8},
+  {level:'Length 3',   dim:25, added:11},
+  {level:'Length 4',   dim:39, added:14},
+  {level:'Length 5',   dim:49, added:10},
+  {level:'Length 6',   dim:49, added:0},
+];
+
+// ─── Render stats ──────────────────────────────────────────────────────────────
+const statsRow = document.getElementById('statsRow');
+const stats = [
+  {label:'Algebra Dimension', val:'49'},
+  {label:'Vertices', val:'30'},
+  {label:'Edges', val:'45'},
+  {label:'Diameter', val:'4'},
+  {label:'Girth', val:'8'},
+  {label:'Orbit Classes', val:'42'},
+];
+stats.forEach(s=>{
+  const b=document.createElement('div'); b.className='stat-box';
+  b.innerHTML=`<strong>${s.val}</strong>${s.label}`;
+  statsRow.appendChild(b);
+});
+
+// ─── Render basis progress ─────────────────────────────────────────────────────
+const bpEl = document.getElementById('basisProgress');
+basisGrowth.forEach(row=>{
+  const d=document.createElement('div'); d.className='progress-row';
+  d.innerHTML=`
+    <span class="progress-lbl">${row.level}</span>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" style="width:${(row.dim/49)*100}%;background:${
+        row.dim===49?'var(--accent)':'var(--accent2)'}"></div>
+    </div>
+    <span class="progress-val">${row.dim}</span>`;
+  bpEl.appendChild(d);
+});
+
+// ─── Filter buttons ────────────────────────────────────────────────────────────
+const filterRow = document.getElementById('filterRow');
+let activeFilter = null;
+
+['All',...[0,1,2,3,4].map(i=>`Band dist(x,r)=${i}`)].forEach((label,fi)=>{
+  const btn=document.createElement('button'); btn.className='filter-btn'+(fi===0?' active':'');
+  btn.textContent=label;
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = fi===0 ? null : fi-1;
+    applyFilter();
+  });
+  filterRow.appendChild(btn);
+});
+
+function applyFilter(){
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const band=parseInt(cell.dataset.band);
+    if (activeFilter===null || band===activeFilter) {
+      cell.classList.remove('dimmed');
+    } else {
+      cell.classList.add('dimmed');
+      cell.classList.remove('highlighted');
+    }
+  });
+  // update legend
+  document.querySelectorAll('.legend-row').forEach(row=>{
+    const band=parseInt(row.dataset.band);
+    row.style.opacity = (activeFilter===null || band===activeFilter)?'1':'0.3';
+  });
+}
+
+// ─── Render matrix ─────────────────────────────────────────────────────────────
+const mc = document.getElementById('matrixContainer');
+
+// Column labels
+const colLabRow = document.createElement('div'); colLabRow.className='col-labels';
+const spacer=document.createElement('div'); spacer.style.width='22px'; colLabRow.appendChild(spacer);
+for(let c=0;c<N;c++){
+  const el=document.createElement('div'); el.className='axis-label';
+  el.textContent=(c+1); colLabRow.appendChild(el);
+}
+mc.appendChild(colLabRow);
+
+let activeLegendIdx = null;
+
+for(let r=0;r<N;r++){
+  const rowEl=document.createElement('div'); rowEl.className='matrix-row';
+  const rl=document.createElement('div'); rl.className='row-label'; rl.textContent=r+1;
+  rowEl.appendChild(rl);
+
+  for(let c=0;c<N;c++){
+    const idx=labelGrid[r][c];
+    const triple=tripleOrder[idx];
+    const [band,j,k]=triple.split(',').map(Number);
+    const lbl=idxToLabel(idx);
+
+    const cell=document.createElement('div');
+    cell.className='cell';
+    cell.textContent=lbl;
+    cell.dataset.idx=idx;
+    cell.dataset.band=band;
+    cell.dataset.r=r;
+    cell.dataset.c=c;
+    cell.style.background=COLORS[idx];
+    cell.style.color=TEXT_COLORS[idx];
+
+    cell.addEventListener('mouseenter',()=>{
+      if(activeLegendIdx!==null) return; // lock active legend overrides
+      highlightClass(idx, r, c);
+    });
+    cell.addEventListener('mouseleave',()=>{
+      if(activeLegendIdx!==null) return;
+      clearHighlight();
+      document.getElementById('hoverInfo').innerHTML=`<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its orbit class.</div>`;
+    });
+    cell.addEventListener('click',()=>{
+      if(activeLegendIdx===idx){ activeLegendIdx=null; clearHighlight(); }
+      else { activeLegendIdx=idx; highlightClass(idx, r, c); }
+    });
+
+    rowEl.appendChild(cell);
+  }
+  mc.appendChild(rowEl);
+}
+
+function highlightClass(idx, r, c){
+  const triple=tripleOrder[idx];
+  const [band,j,k]=triple.split(',').map(Number);
+  const lbl=idxToLabel(idx);
+
+  document.querySelectorAll('.cell').forEach(cell=>{
+    const ci=parseInt(cell.dataset.idx);
+    if(ci===idx) cell.classList.add('highlighted');
+    else cell.classList.remove('highlighted');
+  });
+
+  document.querySelectorAll('.legend-row').forEach(row=>{
+    row.classList.toggle('active-leg', parseInt(row.dataset.idx)===idx);
+  });
+
+  const hoverEl=document.getElementById('hoverInfo');
+  const pos = r!==undefined ? `<div style="color:var(--dim);font-size:10px;">Position (${r+1}, ${c+1})</div>` : '';
+  hoverEl.innerHTML=`
+    <div class="hi-label" style="color:${COLORS[idx]}">${lbl}</div>
+    <div class="hi-triple">dist(x, row) = ${band}</div>
+    <div class="hi-triple">dist(row, col) = ${j}</div>
+    <div class="hi-triple">dist(x, col) = ${k}</div>
+    <div class="hi-count">${orbitCount[idx]} cells in this class</div>
+    ${pos}
+  `;
+}
+
+function clearHighlight(){
+  document.querySelectorAll('.cell').forEach(cell=>cell.classList.remove('highlighted'));
+  document.querySelectorAll('.legend-row').forEach(row=>row.classList.remove('active-leg'));
+}
+
+// ─── Legend ─────────────────────────────────────────────────────────────────────
+const legendScroll=document.getElementById('legendScroll');
+tripleOrder.forEach((t,idx)=>{
+  const [band,j,k]=t.split(',').map(Number);
+  const lbl=idxToLabel(idx);
+  const row=document.createElement('div'); row.className='legend-row'; row.dataset.idx=idx; row.dataset.band=band;
+  row.innerHTML=`
+    <div class="legend-swatch" style="background:${COLORS[idx]}"></div>
+    <span class="legend-lbl">${lbl}</span>
+    <span class="legend-desc">(${band},${j},${k})</span>
+    <span class="legend-cnt">${orbitCount[idx]}c</span>
+  `;
+  row.addEventListener('mouseenter',()=>{ if(activeLegendIdx===null) highlightClass(idx); });
+  row.addEventListener('mouseleave',()=>{ if(activeLegendIdx===null) clearHighlight(); });
+  row.addEventListener('click',()=>{
+    if(activeLegendIdx===idx){ activeLegendIdx=null; clearHighlight(); }
+    else { activeLegendIdx=idx; highlightClass(idx); }
+  });
+  legendScroll.appendChild(row);
+});
+</script>
+</body>
+</html>
