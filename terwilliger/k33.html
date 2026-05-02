@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K₃,₃ — Terwilliger Algebra</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+
+  :root {
+    --bg:       #0d0f14;
+    --surface:  #141720;
+    --border:   #252a36;
+    --text:     #c8cdd8;
+    --dim:      #5a6070;
+    --accent:   #e8c97a;
+    --accent2:  #7ab8e8;
+    --accent3:  #a87ae8;
+    --cell-size: 22px;
+    --cell-font: 16px; /* Larger font for the 6x6 matrix */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 32px 24px 60px;
+  }
+
+  header {
+    max-width: 1100px;
+    margin: 0 auto 30px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 28px;
+    color: #eaeef7;
+    margin-bottom: 4px;
+  }
+  
+  .back-link {
+    color: var(--dim);
+    text-decoration: none;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--accent2); }
+
+  /* ── Stats & Controls ── */
+  .stats-row {
+    max-width: 1100px;
+    margin: 0 auto 20px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .stat-box strong {
+    display: block;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    line-height: 1.2;
+  }
+
+  #btnShowGraph {
+    cursor: pointer; 
+    border-color: var(--accent2); 
+    background: rgba(122, 184, 232, 0.05); 
+    transition: background 0.15s;
+  }
+  #btnShowGraph:hover {
+    background: rgba(122, 184, 232, 0.15);
+  }
+
+  .controls-row {
+    max-width: 1100px;
+    margin: 0 auto 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .filter-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-label {
+    font-size: 10px;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-right: 4px;
+  }
+
+  .filter-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .filter-btn.active { background: var(--accent2); color: var(--bg); border-color: var(--accent2); font-weight: bold;}
+
+  .overlay-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .overlay-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: bold;}
+
+  /* ── Layout ── */
+  .main-layout {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: auto 320px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* ── Dynamic Width Matrix Grid ── */
+  .matrix-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  .matrix-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .matrix-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+  }
+
+  .matrix-container { 
+    display: flex; 
+    flex-direction: column; 
+    width: 100%; 
+    max-width: 440px; /* Constrains max stretch for a 6x6 matrix */
+    margin: 0 auto;
+  }
+
+  .col-labels { display: flex; margin-bottom: 4px; width: 100%; }
+  .matrix-row { display: flex; align-items: center; width: 100%; }
+  
+  .axis-label, .row-label {
+    flex: 1 1 0; 
+    aspect-ratio: 1; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--dim);
+  }
+
+  .cell {
+    flex: 1 1 0; 
+    aspect-ratio: 1; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--cell-font);
+    font-weight: 700;
+    -webkit-font-smoothing: antialiased;
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.6);
+    border-radius: 3px;
+    border: 1px solid transparent;
+    user-select: none;
+    background: rgba(255,255,255,0.02);
+    color: #fff;
+    transition: filter 0.1s, transform 0.1s, opacity 0.2s;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .cell:hover {
+    border-color: rgba(255,255,255,0.8);
+    transform: scale(1.1);
+    z-index: 10;
+    filter: brightness(1.2);
+    opacity: 1 !important; 
+  }
+
+  .cell.highlighted {
+    filter: brightness(1.4);
+    border-color: rgba(255,255,255,0.6) !important;
+    transform: scale(1.05);
+  }
+  
+  .cell.dimmed { filter: brightness(0.25); text-shadow: none; }
+  .cell.filtered-out { opacity: 0.1; pointer-events: none; }
+
+  .cell.is-adj::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border: 2px solid var(--accent);
+    border-radius: 3px;
+    pointer-events: none;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+  }
+
+  .cell.not-adj {
+    opacity: 0.15;
+    filter: grayscale(100%) brightness(0.5);
+    text-shadow: none;
+  }
+
+  /* ── Sidebar ── */
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+  }
+
+  .info-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .scrollable-box {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .info-box h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 13px;
+    color: #eaeef7;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+
+  .word-list {
+    overflow-y: auto;
+    padding-right: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+  .word-list::-webkit-scrollbar { width: 4px; }
+  .word-list::-webkit-scrollbar-track { background: transparent; }
+  .word-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .word-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text);
+    text-align: left;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Mono', monospace;
+  }
+  .word-btn:hover { background: rgba(255,255,255,0.05); }
+  
+  .word-idx { 
+    font-size: 13px; 
+    font-weight: bold;
+    width: 20px; 
+    font-family: 'Fraunces', serif;
+    text-align: center;
+  }
+
+  .hover-info {
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--dim);
+    min-height: 120px;
+  }
+  .hi-label {
+    font-size: 26px;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .hi-triple { color: #eaeef7; font-size: 12px; margin-bottom: 4px; }
+  
+  footer {
+    max-width: 1100px;
+    margin: 32px auto 0;
+    font-size: 10px;
+    color: var(--dim);
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  /* ── Image Modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 15, 20, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    border-radius: 8px;
+    position: relative;
+    max-width: 90vw;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  }
+  .modal-close {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: monospace;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .modal-close:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  .modal-img {
+    max-width: 100%;
+    max-height: calc(95vh - 90px);
+    object-fit: contain;
+    border-radius: 4px;
+  }
+  .modal-caption {
+    margin-top: 16px;
+    color: var(--dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'DM Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>K₃,₃ — <em style="color: var(--accent);">T</em>(x)</h1>
+    <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em;">
+      Distance-Regular Graph with Valency Three &nbsp;·&nbsp; Base vertex x
+    </div>
+  </div>
+  <a href="terwilliger.html" class="back-link">← Back to Index</a>
+</header>
+
+<div class="stats-row" id="statsRow">
+  <div class="stat-box" id="btnShowGraph">
+    <strong style="color: var(--accent2);">View Graph</strong>x-Indexed Labeling
+  </div>
+  <div class="stat-box"><strong>6</strong>Vertices</div>
+  <div class="stat-box"><strong>2</strong>Diameter</div>
+  <div class="stat-box"><strong>4</strong>Girth</div>
+  <div class="stat-box"><strong>{3, 2; 1, 3}</strong>Intersection Array</div>
+  <div class="stat-box"><strong>11</strong>Dimension of <em style="color: var(--accent);">T</em></div>
+</div>
+
+<div class="controls-row">
+  <div class="filter-group" id="filterRow">
+    <span class="filter-label">Subconstituent Filter:</span>
+    </div>
+  <div class="filter-group" id="overlayRow">
+    <span class="filter-label">Overlay Graph Adjacency:</span>
+    <button class="filter-btn overlay-btn active" data-pow="0">None</button>
+    <button class="filter-btn overlay-btn" data-pow="1">A</button>
+    <button class="filter-btn overlay-btn" data-pow="2">A²</button>
+  </div>
+</div>
+
+<div class="main-layout">
+  <div class="matrix-wrap">
+    <div class="matrix-header">
+      <div class="matrix-title">Full Algebra Basis (Classes A–K)</div>
+    </div>
+    <div class="matrix-container" id="matrixContainer"></div>
+  </div>
+
+  <div class="side-panel">
+    <div class="info-box">
+      <h3>Cell Inspector</h3>
+      <div class="hover-info" id="hoverInfo">
+        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its basis class and values.</div>
+      </div>
+    </div>
+    <div class="info-box scrollable-box">
+      <h3>Linear Combinations</h3>
+      <div class="word-list" id="wordList">
+        <div style="text-align: center; color: var(--dim); font-size: 11px; padding: 20px;">Fetching k33_classes.json...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Data derived via brute force based off dim T calculations from "Irreducible T-modules of Distance-Regular Graphs with Valency Three" by Valkó et al. 2026. <br> This website is designed and maintained by <span style="color:var(--accent2);">Barnabás Valkó</span> (UW-Madison Math/Stats 2027).
+</footer>
+
+<div class="modal-overlay" id="graphModal">
+  <div class="modal-content">
+    <button class="modal-close" id="btnCloseModal">✕</button>
+    <img src="k33_viz.png" alt="K3,3 Graph" class="modal-img">
+    <div class="modal-caption">A labeling of K₃,₃</div>
+  </div>
+</div>
+
+<script>
+const N = 6;
+let tClasses = [];
+const gridCells = [];
+
+// ─── Modal Logic ──────────────────────────────────────────────────────────────
+const btnShowGraph = document.getElementById('btnShowGraph');
+const graphModal = document.getElementById('graphModal');
+const btnCloseModal = document.getElementById('btnCloseModal');
+
+btnShowGraph.addEventListener('click', () => graphModal.classList.add('active'));
+btnCloseModal.addEventListener('click', () => graphModal.classList.remove('active'));
+graphModal.addEventListener('click', (e) => {
+  if (e.target === graphModal) graphModal.classList.remove('active');
+});
+
+// ─── Math: Graph BFS & Matrix Multiplication ──────────────────────────────────
+const A_flat = [
+  0,1,1,1,0,0,
+  1,0,0,0,1,1,
+  1,0,0,0,1,1,
+  1,0,0,0,1,1,
+  0,1,1,1,0,0,
+  0,1,1,1,0,0
+];
+
+const A1 = Array.from({length: N}, (_, r) => A_flat.slice(r * N, r * N + N));
+
+function bfs(src) {
+  const dist = new Array(N).fill(-1);
+  dist[src] = 0; 
+  const q = [src];
+  while (q.length) {
+    const v = q.shift();
+    for (let u = 0; u < N; u++) if (A1[v][u] && dist[u] === -1) { dist[u] = dist[v] + 1; q.push(u); }
+  }
+  return dist;
+}
+const distX = bfs(0); 
+
+function multiply(A, B) {
+  let res = Array(N).fill(0).map(()=>Array(N).fill(0));
+  for (let i=0; i<N; i++)
+    for (let j=0; j<N; j++)
+      for (let k=0; k<N; k++)
+        res[i][j] += A[i][k] * B[k][j];
+  return res;
+}
+const A2 = multiply(A1, A1);
+const POWERS_OF_A = [null, A1, A2];
+
+// ─── Formatting & Colors ──────────────────────────────────────────────────────
+function formatComboHTML(comboStr) {
+  return comboStr
+    .replace(/E_(\d+)\^\*/g, "E<sub>$1</sub><sup>*</sup>")
+    .replace(/A/g, "A");
+}
+
+const COLORS = Array.from({length: 80}, (_, i) => {
+  const hue = (i * 137.5) % 360; 
+  return `hsl(${hue}, 60%, 45%)`;
+});
+
+function labelToColorIndex(lbl) {
+  if (lbl.length === 1) return lbl.charCodeAt(0) - 65;
+  return 26 + (lbl.charCodeAt(1) - 65);
+}
+
+// ─── Build DOM Grid ───────────────────────────────────────────────────────────
+const mc = document.getElementById('matrixContainer');
+const colLabRow = document.createElement('div'); colLabRow.className='col-labels';
+const spacer=document.createElement('div'); spacer.className='axis-label'; 
+colLabRow.appendChild(spacer);
+for(let c=0;c<N;c++){
+  const el=document.createElement('div'); el.className='axis-label';
+  el.textContent = c === 0 ? 'x' : c; 
+  colLabRow.appendChild(el);
+}
+mc.appendChild(colLabRow);
+
+for(let r=0;r<N;r++){
+  const rowEl=document.createElement('div'); rowEl.className='matrix-row';
+  const rl=document.createElement('div'); rl.className='row-label'; 
+  rl.textContent = r === 0 ? 'x' : r;
+  rowEl.appendChild(rl);
+  
+  const rowCells = [];
+  for(let c=0;c<N;c++){
+    const cell=document.createElement('div');
+    cell.className='cell';
+    cell.dataset.r = r;
+    cell.dataset.c = c;
+    cell.dataset.band = distX[r]; 
+    
+    cell.addEventListener('mouseenter', () => highlightCell(r, c));
+    cell.addEventListener('mouseleave', clearHighlight);
+    
+    rowCells.push(cell);
+    rowEl.appendChild(cell);
+  }
+  gridCells.push(rowCells);
+  mc.appendChild(rowEl);
+}
+
+// ─── Controls State ───────────────────────────────────────────────────────────
+let activeFilter = null;
+let activeOverlay = 0; 
+
+const filterRow = document.getElementById('filterRow');
+const subLabels = ['All', 'E<sub>0</sub><sup>*</sup>V', 'E<sub>1</sub><sup>*</sup>V', 'E<sub>2</sub><sup>*</sup>V'];
+
+subLabels.forEach((labelHTML, fi) => {
+  const btn = document.createElement('button'); 
+  btn.className = 'filter-btn' + (fi === 0 ? ' active' : '');
+  btn.innerHTML = labelHTML;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn:not(.overlay-btn)').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = fi === 0 ? null : fi - 1;
+    applyGridState();
+  });
+  filterRow.appendChild(btn);
+});
+
+document.querySelectorAll('.overlay-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.overlay-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    activeOverlay = parseInt(e.target.dataset.pow);
+    applyGridState();
+  });
+});
+
+function applyGridState() {
+  const overlayMatrix = POWERS_OF_A[activeOverlay];
+  
+  gridCells.forEach((row, r) => row.forEach((cell, c) => {
+    const band = parseInt(cell.dataset.band);
+    if (activeFilter === null || band === activeFilter) {
+      cell.classList.remove('filtered-out');
+    } else {
+      cell.classList.add('filtered-out');
+    }
+    
+    if (overlayMatrix) {
+      if (overlayMatrix[r][c] > 0) {
+        cell.classList.add('is-adj');
+        cell.classList.remove('not-adj');
+      } else {
+        cell.classList.remove('is-adj');
+        cell.classList.add('not-adj');
+      }
+    } else {
+      cell.classList.remove('is-adj');
+      cell.classList.remove('not-adj');
+    }
+  }));
+}
+
+// ─── Render Functions ─────────────────────────────────────────────────────────
+function populateGrid(cellLabels) {
+  for(let r=0;r<N;r++){
+    for(let c=0;c<N;c++){
+      const lbl = cellLabels[r][c];
+      const cell = gridCells[r][c];
+      
+      if(lbl === "") {
+        cell.style.background = 'transparent';
+        continue;
+      }
+      
+      const cIdx = labelToColorIndex(lbl);
+      cell.textContent = lbl;
+      cell.dataset.lbl = lbl;
+      cell.style.backgroundColor = COLORS[cIdx];
+    }
+  }
+}
+
+function buildSidebar(classes) {
+  const listEl = document.getElementById('wordList');
+  listEl.innerHTML = '';
+  
+  classes.forEach((cls) => {
+    const cIdx = labelToColorIndex(cls.label);
+    const color = COLORS[cIdx];
+    
+    const btn = document.createElement('button');
+    btn.className = 'word-btn';
+    btn.innerHTML = `
+      <span class="word-idx" style="color:${color}">${cls.label}</span>
+      <span style="flex:1;">${formatComboHTML(cls.linear_combination)}</span>
+    `;
+    
+    btn.addEventListener('mouseenter', () => highlightClass(cls.label));
+    btn.addEventListener('mouseleave', clearHighlight);
+    listEl.appendChild(btn);
+  });
+}
+
+function highlightClass(targetLbl) {
+  if (!targetLbl) return;
+  
+  gridCells.forEach(row => row.forEach(cell => {
+    if (cell.dataset.lbl === targetLbl) cell.classList.add('highlighted');
+    else cell.classList.add('dimmed');
+  }));
+}
+
+function highlightCell(r, c) {
+  const cell = gridCells[r][c];
+  const targetLbl = cell.dataset.lbl;
+  
+  if (targetLbl) {
+    highlightClass(targetLbl);
+    
+    const clsData = tClasses.find(c => c.label === targetLbl);
+    const color = COLORS[labelToColorIndex(targetLbl)];
+    
+    let overlayStr = '';
+    if (activeOverlay > 0) {
+      const val = POWERS_OF_A[activeOverlay][r][c];
+      const pStr = activeOverlay === 1 ? 'A' : `A<sup>${activeOverlay}</sup>`;
+      overlayStr = `<div style="margin-top: 10px; color: var(--accent); font-weight: bold;">Overlay Entry (${pStr}): ${val}</div>`;
+    }
+
+    const rowLbl = r === 0 ? 'x' : r;
+    const colLbl = c === 0 ? 'x' : c;
+
+    document.getElementById('hoverInfo').innerHTML = `
+      <div class="hi-label" style="color:${color}">Class ${clsData.label}</div>
+      <div style="font-size: 10px; color: var(--dim); margin-bottom: 2px;">Linear Combination:</div>
+      <div class="hi-triple">${formatComboHTML(clsData.linear_combination)}</div>
+      <div style="margin-top: 8px; color: var(--dim); font-size: 10px;">Position: Row ${rowLbl}, Col ${colLbl}</div>
+      ${overlayStr}
+    `;
+  }
+}
+
+function clearHighlight() {
+  gridCells.forEach(row => row.forEach(cell => {
+    cell.classList.remove('highlighted');
+    cell.classList.remove('dimmed');
+  }));
+  
+  document.getElementById('hoverInfo').innerHTML = `<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its basis class and values.</div>`;
+}
+
+// ─── Dynamic Layout Sizing ────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  fetch('k33_classes.json')
+    .then(r => r.json())
+    .then(data => {
+      tClasses = data.classes;
+      populateGrid(data.cell_labels);
+      buildSidebar(tClasses);
+      
+      document.querySelector('.side-panel').style.maxHeight = `min(calc(100vh - 40px), ${document.querySelector('.matrix-wrap').offsetHeight}px)`;
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('wordList').innerHTML = `<span style="color: #e87a7a; padding: 10px;">Error loading JSON. Ensure 'k33_classes.json' is in the directory.</span>`;
+    });
+});
+</script>
+</body>
+</html>
