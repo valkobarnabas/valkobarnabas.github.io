@@ -312,6 +312,40 @@
   }
   .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
   .filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  /* ── Adjacency Matrix Overlay ── */
+  .controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 20px;
+  }
+  
+  .adj-toggle {
+    font-size: 11px;
+    color: var(--accent2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 0;
+  }
+
+  .cell.is-adj::after {
+    content: '';
+    position: absolute;
+    inset: 2px; /* Inner border */
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  
+  .show-adj .cell.is-adj::after {
+    opacity: 1;
+  }
 
   footer {
     max-width: 1100px;
@@ -337,7 +371,12 @@
   <div>
     <div class="matrix-wrap">
       <div class="matrix-title">30 × 30 Structure Matrix — each cell labeled by orbit class under Stab(x)</div>
-      <div class="filter-row" id="filterRow"></div>
+      <div class="controls-row">
+        <div class="filter-row" id="filterRow" style="margin-bottom: 0;"></div>
+        <label class="adj-toggle">
+          <input type="checkbox" id="adjToggle"> Overlay Adjacency (A)
+        </label>
+      </div>
       <div class="matrix-container" id="matrixContainer"></div>
     </div>
   </div>
@@ -490,13 +529,16 @@ basisGrowth.forEach(row=>{
 const filterRow = document.getElementById('filterRow');
 let activeFilter = null;
 
-['All',...[0,1,2,3,4].map(i=>`Band dist(x,r)=${i}`)].forEach((label,fi)=>{
-  const btn=document.createElement('button'); btn.className='filter-btn'+(fi===0?' active':'');
-  btn.textContent=label;
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+const subLabels = ['All Subconstituents', '0th Subconstituent', '1st Subconstituent', '2nd Subconstituent', '3rd Subconstituent', '4th Subconstituent'];
+
+subLabels.forEach((label, fi) => {
+  const btn = document.createElement('button'); 
+  btn.className = 'filter-btn' + (fi === 0 ? ' active' : '');
+  btn.textContent = label;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    activeFilter = fi===0 ? null : fi-1;
+    activeFilter = fi === 0 ? null : fi - 1;
     applyFilter();
   });
   filterRow.appendChild(btn);
@@ -518,6 +560,15 @@ function applyFilter(){
     row.style.opacity = (activeFilter===null || band===activeFilter)?'1':'0.3';
   });
 }
+  // ─── Adjacency Overlay ─────────────────────────────────────────────────────────
+const mc = document.getElementById('matrixContainer');
+document.getElementById('adjToggle').addEventListener('change', (e) => {
+  if (e.target.checked) {
+    mc.classList.add('show-adj');
+  } else {
+    mc.classList.remove('show-adj');
+  }
+});
 
 // ─── Render matrix ─────────────────────────────────────────────────────────────
 const mc = document.getElementById('matrixContainer');
@@ -554,6 +605,8 @@ for(let r=0;r<N;r++){
     cell.style.background=COLORS[idx];
     cell.style.color=TEXT_COLORS[idx];
 
+    if (j === 1) cell.classList.add('is-adj');
+
     cell.addEventListener('mouseenter',()=>{
       if(activeLegendIdx!==null) return; // lock active legend overrides
       highlightClass(idx, r, c);
@@ -572,7 +625,7 @@ for(let r=0;r<N;r++){
   }
   mc.appendChild(rowEl);
 }
-
+  
 function highlightClass(idx, r, c){
   const triple=tripleOrder[idx];
   const [band,j,k]=triple.split(',').map(Number);
@@ -592,6 +645,9 @@ function highlightClass(idx, r, c){
   const pos = r!==undefined ? `<div style="color:var(--dim);font-size:10px;">Position (${r+1}, ${c+1})</div>` : '';
   hoverEl.innerHTML=`
     <div class="hi-label" style="color:${COLORS[idx]}">${lbl}</div>
+    <div class="hi-triple" style="color:#eaeef7; font-size: 13px; margin: 4px 0;">
+      E<sub>${band}</sub><sup>*</sup> A<sub>${j}</sub> E<sub>${k}</sub><sup>*</sup>
+    </div>
     <div class="hi-triple">dist(x, row) = ${band}</div>
     <div class="hi-triple">dist(row, col) = ${j}</div>
     <div class="hi-triple">dist(x, col) = ${k}</div>
@@ -611,10 +667,10 @@ tripleOrder.forEach((t,idx)=>{
   const [band,j,k]=t.split(',').map(Number);
   const lbl=idxToLabel(idx);
   const row=document.createElement('div'); row.className='legend-row'; row.dataset.idx=idx; row.dataset.band=band;
-  row.innerHTML=`
+row.innerHTML=`
     <div class="legend-swatch" style="background:${COLORS[idx]}"></div>
     <span class="legend-lbl">${lbl}</span>
-    <span class="legend-desc">(${band},${j},${k})</span>
+    <span class="legend-desc">E<sub>${band}</sub><sup>*</sup>A<sub>${j}</sub>E<sub>${k}</sub><sup>*</sup></span>
     <span class="legend-cnt">${orbitCount[idx]}c</span>
   `;
   row.addEventListener('mouseenter',()=>{ if(activeLegendIdx===null) highlightClass(idx); });
