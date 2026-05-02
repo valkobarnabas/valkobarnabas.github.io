@@ -411,7 +411,7 @@
   <div>
     <h1>Tutte's 8-Cage — <em>T</em>(x)</h1>
     <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em;">
-      Distance-Regular Graph with Valency Three &nbsp;·&nbsp; Base vertex x
+      Distance-Regular Graph &nbsp;·&nbsp; Base vertex x = v₁
     </div>
   </div>
   <a href="terwilliger.html" class="back-link">← Back to Index</a>
@@ -419,7 +419,7 @@
 
 <div class="stats-row" id="statsRow">
   <div class="stat-box" id="btnShowGraph">
-    <strong style="color: var(--accent2);">View Labeling</strong>
+    <strong style="color: var(--accent2);">View Graph</strong>1-Indexed Labeling
   </div>
   <div class="stat-box"><strong>30</strong>Vertices</div>
   <div class="stat-box"><strong>4</strong>Diameter</div>
@@ -556,14 +556,14 @@ const spacer=document.createElement('div'); spacer.className='axis-label';
 colLabRow.appendChild(spacer);
 for(let c=0;c<N;c++){
   const el=document.createElement('div'); el.className='axis-label';
-  el.textContent=(c+1); 
+  el.textContent = c + 1; 
   colLabRow.appendChild(el);
 }
 mc.appendChild(colLabRow);
 
 for(let r=0;r<N;r++){
   const rowEl=document.createElement('div'); rowEl.className='matrix-row';
-  const rl=document.createElement('div'); rl.className='row-label'; rl.textContent=r+1;
+  const rl=document.createElement('div'); rl.className='row-label'; rl.textContent = r + 1;
   rowEl.appendChild(rl);
   
   const rowCells = [];
