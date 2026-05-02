@@ -16,8 +16,6 @@
     --accent:   #e8c97a;
     --accent2:  #7ab8e8;
     --accent3:  #a87ae8;
-    --cell-size: 22px;
-    --cell-font: 11px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -144,13 +142,13 @@
     align-items: start;
   }
 
-  /* ── Matrix Grid ── */
+  /* ── Dynamic Width Matrix Grid ── */
   .matrix-wrap {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 16px;
-    overflow-x: auto;
+    overflow: hidden;
   }
 
   .matrix-header {
@@ -167,34 +165,36 @@
     color: var(--dim);
   }
 
-  .matrix-container { display: inline-block; }
+  .matrix-container { 
+    display: flex; 
+    flex-direction: column; 
+    width: 100%; 
+  }
 
-  .col-labels { display: flex; margin-bottom: 3px; }
-  .matrix-row { display: flex; align-items: center; }
+  .col-labels { display: flex; margin-bottom: 3px; width: 100%; }
+  .matrix-row { display: flex; align-items: center; width: 100%; }
   
   .axis-label, .row-label {
-    width: var(--cell-size);
-    height: var(--cell-size);
+    flex: 1 1 0; /* Dynamic stretch */
+    aspect-ratio: 1; /* Keep perfect square */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 7px;
+    font-size: 9px;
     color: var(--dim);
-    flex-shrink: 0;
   }
 
   .cell {
-    width: var(--cell-size);
-    height: var(--cell-size);
+    flex: 1 1 0; /* Dynamic stretch */
+    aspect-ratio: 1; /* Keep perfect square */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--cell-font);
+    font-size: 13px; /* Slightly larger since cells span the column width */
     font-weight: 700;
     -webkit-font-smoothing: antialiased;
     text-shadow: 0px 1px 2px rgba(0,0,0,0.6);
     border-radius: 2px;
-    flex-shrink: 0;
     border: 1px solid transparent;
     user-select: none;
     background: rgba(255,255,255,0.02);
@@ -409,9 +409,9 @@
 
 <header>
   <div>
-    <h1>Dodecahedron — <em style="color: var(--accent);">T</em>(x)</h1>
+    <h1>Dodecahedron — <em>T</em>(x)</h1>
     <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em;">
-      Distance-Regular Graph with Valency Three &nbsp;·&nbsp; Base vertex x
+      Distance-Regular Graph &nbsp;·&nbsp; Base vertex x = v₁
     </div>
   </div>
   <a href="terwilliger.html" class="back-link">← Back to Index</a>
@@ -422,10 +422,10 @@
     <strong style="color: var(--accent2);">View Graph</strong>x-Indexed Labeling
   </div>
   <div class="stat-box"><strong>20</strong>Vertices</div>
-  <div class="stat-box"><strong>{3,2,1,1,1;1,1,1,2,3}</strong>Intersection Array</div>
   <div class="stat-box"><strong>5</strong>Diameter</div>
   <div class="stat-box"><strong>5</strong>Girth</div>
-  <div class="stat-box"><strong>76</strong>Dimension of <em style="color: var(--accent);">T</em></div>
+  <div class="stat-box"><strong>{3,2,1,1,1; 1,1,1,2,3}</strong>Intersection Array</div>
+  <div class="stat-box"><strong>76</strong>Algebra Dimension</div>
 </div>
 
 <div class="controls-row">
@@ -439,13 +439,14 @@
     <button class="filter-btn overlay-btn" data-pow="2">A²</button>
     <button class="filter-btn overlay-btn" data-pow="3">A³</button>
     <button class="filter-btn overlay-btn" data-pow="4">A⁴</button>
+    <button class="filter-btn overlay-btn" data-pow="5">A⁵</button>
   </div>
 </div>
 
 <div class="main-layout">
   <div class="matrix-wrap">
     <div class="matrix-header">
-      <div class="matrix-title">Full Algebra Basis (Classes A–AW)</div>
+      <div class="matrix-title">Full Algebra Basis (Classes A–BX)</div>
     </div>
     <div class="matrix-container" id="matrixContainer"></div>
   </div>
@@ -460,16 +461,14 @@
     <div class="info-box scrollable-box">
       <h3>Linear Combinations</h3>
       <div class="word-list" id="wordList">
-        <div style="text-align: center; color: var(--dim); font-size: 11px; padding: 20px;">Fetching 8cage_classes.json...</div>
+        <div style="text-align: center; color: var(--dim); font-size: 11px; padding: 20px;">Fetching dodec_classes.json...</div>
       </div>
     </div>
   </div>
 </div>
 
 <footer>
-  Data derived via brute force based off dim T calculations from "Irreducible T-modules of Distance-Regular Graphs with Valency Three" by Valkó et al. 2026. <br> This website is designed and maintained by <span style="color:var(--accent2);">
-  Barnabás Valkó
-</span> (UW-Madison Math/Stats 2027).
+  Data derived via brute force based off dim T calculations from "Irreducible T-modules of Distance-Regular Graphs with Valency Three" by Valkó et al. (2026).
 </footer>
 
 <div class="modal-overlay" id="graphModal">
@@ -499,10 +498,10 @@ graphModal.addEventListener('click', (e) => {
 // ─── Math: Graph BFS & Matrix Multiplication ──────────────────────────────────
 const EDGES = [
   [1,2], [1,3], [1,4], [2,5], [2,6], [3,7], [3,8],
-[4,9], [4,10], [5,9], [5,11], [6,7], [6,12],
-[7,13], [8,10], [8,14], [9,15], [10,16], [11,12],
-[11,17], [12,18], [13,14], [13,18], [14,19],
-[15,16], [15,17], [16,19], [17,20], [18,20], [19,20]
+  [4,9], [4,10], [5,9], [5,11], [6,7], [6,12],
+  [7,13], [8,10], [8,14], [9,15], [10,16], [11,12],
+  [11,17], [12,18], [13,14], [13,18], [14,19],
+  [15,16], [15,17], [16,19], [17,20], [18,20], [19,20]
 ];
 
 const A1 = Array.from({length:N}, ()=>new Array(N).fill(0));
@@ -519,7 +518,7 @@ function bfs(src) {
 }
 const distX = bfs(0); 
 
-// Calculate Adjacency Powers
+// Calculate Adjacency Powers dynamically up to A^5
 function multiply(A, B) {
   let res = Array(N).fill(0).map(()=>Array(N).fill(0));
   for (let i=0; i<N; i++)
@@ -531,7 +530,8 @@ function multiply(A, B) {
 const A2 = multiply(A1, A1);
 const A3 = multiply(A2, A1);
 const A4 = multiply(A3, A1);
-const POWERS_OF_A = [null, A1, A2, A3, A4];
+const A5 = multiply(A4, A1);
+const POWERS_OF_A = [null, A1, A2, A3, A4, A5];
 
 // ─── Formatting & Colors ──────────────────────────────────────────────────────
 function formatComboHTML(comboStr) {
@@ -540,7 +540,7 @@ function formatComboHTML(comboStr) {
     .replace(/A/g, "A");
 }
 
-const COLORS = Array.from({length: 49}, (_, i) => {
+const COLORS = Array.from({length: 80}, (_, i) => {
   const hue = (i * 137.5) % 360; 
   return `hsl(${hue}, 60%, 45%)`;
 });
@@ -557,7 +557,6 @@ const spacer=document.createElement('div'); spacer.className='axis-label';
 colLabRow.appendChild(spacer);
 for(let c=0;c<N;c++){
   const el=document.createElement('div'); el.className='axis-label';
-  // 0 is 'x', otherwise standard index
   el.textContent = c === 0 ? 'x' : c; 
   colLabRow.appendChild(el);
 }
@@ -566,7 +565,6 @@ mc.appendChild(colLabRow);
 for(let r=0;r<N;r++){
   const rowEl=document.createElement('div'); rowEl.className='matrix-row';
   const rl=document.createElement('div'); rl.className='row-label'; 
-  // 0 is 'x', otherwise standard index
   rl.textContent = r === 0 ? 'x' : r;
   rowEl.appendChild(rl);
   
@@ -593,7 +591,7 @@ let activeFilter = null;
 let activeOverlay = 0; 
 
 const filterRow = document.getElementById('filterRow');
-const subLabels = ['All', 'E<sub>0</sub><sup>*</sup>V', 'E<sub>1</sub><sup>*</sup>V', 'E<sub>2</sub><sup>*</sup>V', 'E<sub>3</sub><sup>*</sup>V', 'E<sub>4</sub><sup>*</sup>V'];
+const subLabels = ['All', 'E<sub>0</sub><sup>*</sup>V', 'E<sub>1</sub><sup>*</sup>V', 'E<sub>2</sub><sup>*</sup>V', 'E<sub>3</sub><sup>*</sup>V', 'E<sub>4</sub><sup>*</sup>V', 'E<sub>5</sub><sup>*</sup>V'];
 
 subLabels.forEach((labelHTML, fi) => {
   const btn = document.createElement('button'); 
@@ -700,7 +698,7 @@ function highlightCell(r, c) {
   if (targetLbl) {
     highlightClass(targetLbl);
     
-    const clsData = tClasses.find(cls => cls.label === targetLbl);
+    const clsData = tClasses.find(c => c.label === targetLbl);
     const color = COLORS[labelToColorIndex(targetLbl)];
     
     let overlayStr = '';
@@ -743,7 +741,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(err => {
       console.error(err);
-      document.getElementById('wordList').innerHTML = `<span style="color: #e87a7a; padding: 10px;">Error loading JSON. Ensure '8cage_classes.json' is in the directory.</span>`;
+      document.getElementById('wordList').innerHTML = `<span style="color: #e87a7a; padding: 10px;">Error loading JSON. Ensure 'dodec_classes.json' is in the directory.</span>`;
     });
 });
 </script>
