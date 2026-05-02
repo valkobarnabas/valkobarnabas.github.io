@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terwilliger Algebra — Tutte's 8-Cage</title>
+<title>Terwilliger Algebras — Distance-Regular Graphs</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
 
@@ -16,8 +16,6 @@
     --accent:   #e8c97a;
     --accent2:  #7ab8e8;
     --accent3:  #a87ae8;
-    --cell-size: 22px;
-    --cell-font: 9px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,734 +25,284 @@
     color: var(--text);
     font-family: 'DM Mono', monospace;
     min-height: 100vh;
-    padding: 32px 24px 60px;
+    padding: 40px 24px 80px;
   }
 
   header {
-    max-width: 1100px;
-    margin: 0 auto 36px;
+    max-width: 900px;
+    margin: 0 auto 40px;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 20px;
+    padding-bottom: 24px;
+    text-align: center;
   }
 
   header h1 {
     font-family: 'Fraunces', serif;
     font-weight: 300;
-    font-size: 28px;
+    font-size: 32px;
     letter-spacing: -0.5px;
     color: #eaeef7;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
   }
+
   header h1 em { font-style: italic; color: var(--accent); }
 
   .subtitle {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--dim);
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    line-height: 1.6;
   }
 
-  .stats-row {
-    max-width: 1100px;
-    margin: 0 auto 28px;
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  .stat-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px 18px;
-    font-size: 11px;
-    color: var(--dim);
-  }
-  .stat-box strong {
-    display: block;
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--accent);
-    font-family: 'Fraunces', serif;
-    line-height: 1.2;
-  }
-
-  .main-layout {
-    max-width: 1100px;
+  .main-container {
+    max-width: 900px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: auto 280px;
-    gap: 28px;
-    align-items: start;
   }
 
-  /* ── Matrix panel ── */
-  .matrix-wrap {
+  .intro-text {
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  /* ── Table Styling ── */
+  .table-wrap {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
-    overflow: auto;
-    padding: 16px;
+    overflow: hidden;
   }
 
-  .matrix-title {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  thead {
+    background: #1a1e28;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    padding: 16px 20px;
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--dim);
-    margin-bottom: 12px;
-  }
-
-  .matrix-container {
-    display: inline-block;
-  }
-
-  .row-labels, .col-labels {
-    display: flex;
-  }
-  .col-labels {
-    padding-left: var(--cell-size); /* offset for row-label column */
-    margin-bottom: 3px;
-  }
-  .axis-label {
-    width: var(--cell-size);
-    height: var(--cell-size);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 7px;
-    color: var(--dim);
-    flex-shrink: 0;
-  }
-  .matrix-row {
-    display: flex;
-    align-items: center;
-  }
-  .row-label {
-    width: var(--cell-size);
-    height: var(--cell-size);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 7px;
-    color: var(--dim);
-    flex-shrink: 0;
-  }
-
-  .cell {
-    width: var(--cell-size);
-    height: var(--cell-size);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--cell-font);
     font-weight: 500;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: filter 0.1s, transform 0.1s;
-    flex-shrink: 0;
-    border: 1px solid transparent;
-    letter-spacing: -0.3px;
-    user-select: none;
-    position: relative;
-  }
-  .cell:hover {
-    filter: brightness(1.35);
-    transform: scale(1.15);
-    z-index: 10;
-    border-color: rgba(255,255,255,0.25);
-  }
-  .cell.highlighted {
-    filter: brightness(1.5);
-    border-color: rgba(255,255,255,0.5) !important;
-    transform: scale(1.05);
-  }
-  .cell.dimmed {
-    filter: brightness(0.3);
   }
 
-  /* ── Legend / info panel ── */
-  .side-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .info-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 16px;
-  }
-  .info-box h3 {
-    font-family: 'Fraunces', serif;
-    font-weight: 300;
-    font-size: 13px;
-    color: #eaeef7;
-    margin-bottom: 10px;
+  td {
+    padding: 14px 20px;
+    font-size: 12px;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    color: var(--text);
   }
 
-  .hover-info {
-    font-size: 11px;
-    line-height: 1.7;
-    color: var(--dim);
-    min-height: 80px;
+  tbody tr {
+    transition: background 0.15s ease;
+    cursor: pointer;
   }
-  .hover-info .hi-label {
-    font-size: 22px;
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .graph-name {
     font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: var(--accent);
-    line-height: 1;
-    margin-bottom: 4px;
+    font-size: 16px;
+    font-weight: 300;
+    color: #eaeef7;
   }
-  .hover-info .hi-triple {
+
+  .highlight-val {
     color: var(--accent2);
     font-weight: 500;
   }
-  .hover-info .hi-count {
-    color: var(--accent3);
-  }
 
-  .legend-scroll {
-    max-height: 440px;
-    overflow-y: auto;
-    padding-right: 4px;
-  }
-  .legend-scroll::-webkit-scrollbar { width: 4px; }
-  .legend-scroll::-webkit-scrollbar-track { background: transparent; }
-  .legend-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .legend-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 3px 4px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.12s;
-    font-size: 10px;
-  }
-  .legend-row:hover { background: rgba(255,255,255,0.05); }
-  .legend-row.active-leg { background: rgba(232,201,122,0.1); }
-  .legend-swatch {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    flex-shrink: 0;
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-  .legend-lbl { font-weight: 500; color: #eaeef7; min-width: 22px; }
-  .legend-desc { color: var(--dim); flex: 1; }
-  .legend-cnt {
+  .math-formula {
     color: var(--dim);
-    font-size: 9px;
-    min-width: 30px;
-    text-align: right;
+    font-size: 11px;
+    white-space: nowrap;
   }
 
-  .basis-progress {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 16px;
-  }
-  .basis-progress h3 {
-    font-family: 'Fraunces', serif;
-    font-weight: 300;
+  .math-formula strong {
+    color: var(--accent);
     font-size: 13px;
-    color: #eaeef7;
-    margin-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 6px;
+    margin-left: 6px;
   }
 
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
-  .filter-btn {
-    padding: 4px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--dim);
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    cursor: pointer;
-    transition: all 0.15s;
+  .explore-link {
+    color: var(--accent3);
+    text-decoration: none;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
-  
-  /* ── Adjacency Matrix Overlay ── */
-  .controls-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
-    gap: 20px;
-  }
-  
-  .adj-toggle {
-    font-size: 11px;
-    color: var(--accent2);
     display: flex;
     align-items: center;
     gap: 6px;
-    cursor: pointer;
-    user-select: none;
-    padding: 4px 0;
+    transition: color 0.15s;
   }
 
-  .cell.is-adj::after {
-    content: '';
-    position: absolute;
-    inset: 2px; /* Inner border */
-    border: 1px solid var(--accent);
-    border-radius: 2px;
-    opacity: 0;
-    transition: opacity 0.2s;
-    pointer-events: none;
+  tbody tr:hover .explore-link {
+    color: #c4a1ff;
   }
-  
-  .show-adj .cell.is-adj::after {
-    opacity: 1;
-  }
-
-  /* ── JSON Loader & Basis Explorer ── */
-  .basis-controls {
-    display: none; /* Hidden until JSON loaded */
-    align-items: center;
-    gap: 12px;
-    margin-top: 10px;
-    background: #1a1e28;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid var(--accent3);
-  }
-  .basis-controls button {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 4px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'DM Mono', monospace;
-  }
-  .basis-controls button:hover { border-color: var(--accent3); color: var(--accent3); }
-  .basis-idx-display { font-size: 12px; color: var(--accent3); font-weight: bold; width: 60px; text-align: center; }
-
-  input[type="file"]::file-selector-button {
-    border: 1px solid var(--border);
-    padding: 4px 8px;
-    border-radius: 4px;
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-  }
-  input[type="file"] { color: var(--dim); font-size: 10px; }
 
   footer {
-    max-width: 1100px;
-    margin: 32px auto 0;
+    max-width: 900px;
+    margin: 40px auto 0;
     font-size: 10px;
     color: var(--dim);
     text-align: center;
     line-height: 1.8;
   }
-  footer span { color: var(--accent2); }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Terwilliger Algebra — <em>T</em>(x)</h1>
-  <div class="subtitle">Tutte's 8-Cage &nbsp;·&nbsp; Subconstituent Algebra &nbsp;·&nbsp; Base vertex x = v₁</div>
+  <h1>Terwilliger Algebras — <em>T</em>(x)</h1>
+  <div class="subtitle">Distance-Regular Graphs with Valency Three</div>
 </header>
 
-<div class="stats-row" id="statsRow"></div>
-
-<div class="main-layout">
-  <div>
-    <div class="matrix-wrap">
-      <div class="matrix-title" style="display: flex; justify-content: space-between; align-items: center;">
-        <span>30 × 30 Structure Matrix</span>
-        <input type="file" id="jsonLoader" accept=".json" title="Load t_algebra_basis.json">
-      </div>
-      
-      <div class="controls-row" id="topControls">
-        <div class="filter-row" id="filterRow" style="margin-bottom: 0;"></div>
-        <label class="adj-toggle">
-          <input type="checkbox" id="adjToggle"> Overlay Adjacency (A)
-        </label>
-      </div>
-
-      <div class="basis-controls" id="basisControls">
-        <span style="font-size: 10px; color: var(--dim); text-transform: uppercase;">Exact Basis Mode</span>
-        <button id="btnPrevBasis">◀</button>
-        <span class="basis-idx-display" id="basisDisplay">M 1/49</span>
-        <button id="btnNextBasis">▶</button>
-        <button id="btnExitBasis" style="margin-left: auto; border-color: #e87a7a; color: #e87a7a;">Exit Exact Mode</button>
-      </div>
-
-      <div class="matrix-container" id="matrixContainer" style="margin-top: 16px;"></div>
-    </div>
+<div class="main-container">
+  <div class="intro-text">
+    A summary of the irreducible <em>T</em>-modules (ITMs) and corresponding dimensions of the Terwilliger algebra (dim <em>T</em>) for the 13 cubic distance-regular graphs. Select a graph to explore its structural basis matrix and interactively view its subconstituents.
   </div>
-  <div class="side-panel">
-    <div class="info-box">
-      <h3>Cell Inspector</h3>
-      <div class="hover-info" id="hoverInfo">
-        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its properties.</div>
-      </div>
-    </div>
-    <div class="info-box">
-      <h3>Legend — 42 Orbit Classes</h3>
-      <div class="legend-scroll" id="legendScroll"></div>
-    </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Graph Γ</th>
+          <th>|Γ|</th>
+          <th># ITMs</th>
+          <th># Types</th>
+          <th>dim T Formulation</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr onclick="window.location.href='k4.html'">
+          <td class="graph-name">K₄</td>
+          <td class="highlight-val">4</td>
+          <td>3</td>
+          <td>2</td>
+          <td class="math-formula">2<sup>2</sup> + 1<sup>2</sup> = <strong>5</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='k33.html'">
+          <td class="graph-name">K₃,₃</td>
+          <td class="highlight-val">6</td>
+          <td>4</td>
+          <td>3</td>
+          <td class="math-formula">3<sup>2</sup> + 1<sup>2</sup> + 1<sup>2</sup> = <strong>11</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='petersen.html'">
+          <td class="graph-name">Petersen</td>
+          <td class="highlight-val">10</td>
+          <td>6</td>
+          <td>4</td>
+          <td class="math-formula">3<sup>2</sup> + 2<sup>2</sup> + 1<sup>2</sup> + 1<sup>2</sup> = <strong>15</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='3cube.html'">
+          <td class="graph-name">3-cube</td>
+          <td class="highlight-val">8</td>
+          <td>3</td>
+          <td>2</td>
+          <td class="math-formula">4<sup>2</sup> + 2<sup>2</sup> = <strong>20</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='heawood.html'">
+          <td class="graph-name">Heawood</td>
+          <td class="highlight-val">14</td>
+          <td>6</td>
+          <td>3</td>
+          <td class="math-formula">4<sup>2</sup> + 2<sup>2</sup> + 2<sup>2</sup> = <strong>24</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='pappus.html'">
+          <td class="graph-name">Pappus</td>
+          <td class="highlight-val">18</td>
+          <td>7</td>
+          <td>5</td>
+          <td class="math-formula">5<sup>2</sup> + 3<sup>2</sup> + 1<sup>2</sup> + 2<sup>2</sup> + 2<sup>2</sup> = <strong>43</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='tuttes8cage.html'">
+          <td class="graph-name">Tutte's 8-cage</td>
+          <td class="highlight-val">30</td>
+          <td>13</td>
+          <td>6</td>
+          <td class="math-formula">5<sup>2</sup> + 3<sup>2</sup> + 3<sup>2</sup> + 1<sup>2</sup> + 2<sup>2</sup> + 1<sup>2</sup> = <strong>49</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='desargues.html'">
+          <td class="graph-name">Desargues</td>
+          <td class="highlight-val">20</td>
+          <td>6</td>
+          <td>4</td>
+          <td class="math-formula">6<sup>2</sup> + 4<sup>2</sup> + 2<sup>2</sup> + 2<sup>2</sup> = <strong>60</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='coxeter.html'">
+          <td class="graph-name">Coxeter</td>
+          <td class="highlight-val">28</td>
+          <td>8</td>
+          <td>6</td>
+          <td class="math-formula">5<sup>2</sup> + 5<sup>2</sup> + 2<sup>2</sup> + 4<sup>2</sup> + 1<sup>2</sup> + 2<sup>2</sup> = <strong>75</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='dodecahedron.html'">
+          <td class="graph-name">Dodecahedron</td>
+          <td class="highlight-val">20</td>
+          <td>4</td>
+          <td>3</td>
+          <td class="math-formula">6<sup>2</sup> + 6<sup>2</sup> + 2<sup>2</sup> = <strong>76</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='tuttes12cage.html'">
+          <td class="graph-name">Tutte's 12-cage</td>
+          <td class="highlight-val">126</td>
+          <td>37</td>
+          <td>10</td>
+          <td class="math-formula">7<sup>2</sup> + 4(5<sup>2</sup>) + 3<sup>2</sup> + 2(2<sup>2</sup>) + 2(1<sup>2</sup>) = <strong>168</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='foster.html'">
+          <td class="graph-name">Foster</td>
+          <td class="highlight-val">90</td>
+          <td>18</td>
+          <td>9</td>
+          <td class="math-formula">9<sup>2</sup> + 2(7<sup>2</sup>) + 5<sup>2</sup> + 3(4<sup>2</sup>) + 2<sup>2</sup> + 1<sup>2</sup> = <strong>257</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+        <tr onclick="window.location.href='biggssmith.html'">
+          <td class="graph-name">Biggs-Smith</td>
+          <td class="highlight-val">102</td>
+          <td>10</td>
+          <td>5</td>
+          <td class="math-formula">8<sup>2</sup> + 13<sup>2</sup> + 11<sup>2</sup> + 9<sup>2</sup> + 4<sup>2</sup> = <strong>451</strong></td>
+          <td><span class="explore-link">Explore →</span></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
-<script>
-// ─── Graph data ────────────────────────────────────────────────────────────────
-const N = 30;
-const EDGES = [
-  [1,2],[1,3],[1,4],[2,5],[2,6],[3,7],[3,8],[4,9],[4,10],
-  [5,11],[5,12],[6,13],[6,14],[7,15],[7,16],[8,17],[8,18],
-  [9,19],[9,20],[10,21],[10,22],[11,23],[11,24],[12,25],[12,26],
-  [13,27],[13,28],[14,29],[14,30],[15,24],[15,27],[16,26],[16,29],
-  [17,23],[17,28],[18,25],[18,30],[19,24],[19,30],[20,26],[20,28],
-  [21,23],[21,29],[22,25],[22,27]
-];
+<footer>
+  Data derived from brute-force computations of the algebra basis, based off derivations from the paper "Irreducible T -modules of Distance-Regular Graphs with Valency Three" by Valkó et al.
+</footer>
 
-// Build adjacency (0-indexed)
-const adj = Array.from({length:N}, ()=>new Array(N).fill(0));
-for (const [a,b] of EDGES) {
-  adj[a-1][b-1]=1; adj[b-1][a-1]=1;
-}
-
-// BFS distances
-function bfs(src) {
-  const dist = new Array(N).fill(-1);
-  dist[src]=0; const q=[src];
-  while (q.length) {
-    const v=q.shift();
-    for (let u=0;u<N;u++) if (adj[v][u] && dist[u]===-1) { dist[u]=dist[v]+1; q.push(u); }
-  }
-  return dist;
-}
-
-const distMatrix = Array.from({length:N}, (_,i)=>bfs(i));
-const X=0;
-const distX = distMatrix[X];
-
-// ─── Build orbit-class label grid ──────────────────────────────────────────────
-const tripleSet = new Map();
-const tripleOrder = [];
-for (let r=0;r<N;r++) for (let c=0;c<N;c++) {
-  const key = `${distX[r]},${distMatrix[r][c]},${distX[c]}`;
-  if (!tripleSet.has(key)) { tripleSet.set(key, tripleOrder.length); tripleOrder.push(key); }
-}
-tripleOrder.sort((a,b)=>{
-  const [a0,a1,a2]=a.split(',').map(Number), [b0,b1,b2]=b.split(',').map(Number);
-  return a0-b0||a1-b1||a2-b2;
-});
-const tripleIndex = new Map(tripleOrder.map((t,i)=>[t,i]));
-
-function idxToLabel(i) {
-  const L='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  if (i<26) return L[i];
-  i-=26; return L[Math.floor(i/26)]+L[i%26];
-}
-
-const orbitCount = new Array(tripleOrder.length).fill(0);
-const labelGrid = Array.from({length:N},()=>new Array(N));
-for (let r=0;r<N;r++) for (let c=0;c<N;c++) {
-  const key=`${distX[r]},${distMatrix[r][c]},${distX[c]}`;
-  const idx=tripleIndex.get(key);
-  labelGrid[r][c]=idx;
-  orbitCount[idx]++;
-}
-
-// ─── Color palette — 42 colors ─────────────────────────────────────────────────
-function hsl(h,s,l){ return `hsl(${h},${s}%,${l}%)`; }
-const BAND_HUE = [210, 140, 50, 20, 300]; 
-const COLORS = tripleOrder.map((t,i)=>{
-  const [band,j,k] = t.split(',').map(Number);
-  const baseHue = BAND_HUE[band];
-  const hue = (baseHue + j*18 + k*5) % 360;
-  const sat = 60 + (j%3)*12;
-  const lit = 32 + j*7 - band*2;
-  return hsl(hue, sat, Math.max(20, Math.min(60, lit)));
-});
-const TEXT_COLORS = COLORS.map(c=>'rgba(255,255,255,0.9)');
-
-// ─── Render stats ──────────────────────────────────────────────────────────────
-const statsRow = document.getElementById('statsRow');
-const stats = [
-  {label:'Algebra Dimension', val:'49'},
-  {label:'Vertices', val:'30'},
-  {label:'Edges', val:'45'},
-  {label:'Diameter', val:'4'},
-  {label:'Girth', val:'8'},
-  {label:'Orbit Classes', val:'42'},
-];
-stats.forEach(s=>{
-  const b=document.createElement('div'); b.className='stat-box';
-  b.innerHTML=`<strong>${s.val}</strong>${s.label}`;
-  statsRow.appendChild(b);
-});
-
-// ─── Filter buttons ────────────────────────────────────────────────────────────
-const filterRow = document.getElementById('filterRow');
-let activeFilter = null;
-
-const subLabels = ['All Subconstituents', '0th Subconstituent', '1st Subconstituent', '2nd Subconstituent', '3rd Subconstituent', '4th Subconstituent'];
-subLabels.forEach((label, fi) => {
-  const btn = document.createElement('button'); 
-  btn.className = 'filter-btn' + (fi === 0 ? ' active' : '');
-  btn.textContent = label;
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeFilter = fi === 0 ? null : fi - 1;
-    applyFilter();
-  });
-  filterRow.appendChild(btn);
-});
-
-function applyFilter(){
-  if (isExactMode) return; // Filters disabled in exact mode
-  document.querySelectorAll('.cell').forEach(cell=>{
-    const band=parseInt(cell.dataset.band);
-    if (activeFilter===null || band===activeFilter) {
-      cell.classList.remove('dimmed');
-    } else {
-      cell.classList.add('dimmed');
-      cell.classList.remove('highlighted');
-    }
-  });
-  document.querySelectorAll('.legend-row').forEach(row=>{
-    const band=parseInt(row.dataset.band);
-    row.style.opacity = (activeFilter===null || band===activeFilter)?'1':'0.3';
-  });
-}
-
-// ─── Adjacency Overlay ─────────────────────────────────────────────────────────
-const mc = document.getElementById('matrixContainer');
-document.getElementById('adjToggle').addEventListener('change', (e) => {
-  if (e.target.checked) mc.classList.add('show-adj');
-  else mc.classList.remove('show-adj');
-});
-
-// ─── JSON Loader & Exact Basis Explorer Logic ──────────────────────────────────
-let exactBasisMatrices = [];
-let currentBasisIdx = 0;
-let isExactMode = false;
-
-document.getElementById('jsonLoader').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      exactBasisMatrices = data.basis_matrices;
-      document.getElementById('topControls').style.display = 'none';
-      document.getElementById('basisControls').style.display = 'flex';
-      enterExactMode();
-    } catch(err) {
-      alert("Error parsing JSON: " + err);
-    }
-  };
-  reader.readAsText(file);
-});
-
-function enterExactMode() {
-  isExactMode = true;
-  currentBasisIdx = 0;
-  renderExactBasis();
-}
-
-function exitExactMode() {
-  isExactMode = false;
-  document.getElementById('topControls').style.display = 'flex';
-  document.getElementById('basisControls').style.display = 'none';
-  document.getElementById('jsonLoader').value = ""; // reset uploader
-  
-  // Restore original grid styling
-  document.querySelectorAll('.cell').forEach(cell => {
-    const idx = cell.dataset.idx;
-    cell.textContent = idxToLabel(idx);
-    cell.style.background = COLORS[idx];
-    cell.style.color = TEXT_COLORS[idx];
-  });
-  applyFilter();
-}
-
-document.getElementById('btnPrevBasis').addEventListener('click', () => {
-  if(currentBasisIdx > 0) { currentBasisIdx--; renderExactBasis(); }
-});
-document.getElementById('btnNextBasis').addEventListener('click', () => {
-  if(currentBasisIdx < exactBasisMatrices.length - 1) { currentBasisIdx++; renderExactBasis(); }
-});
-document.getElementById('btnExitBasis').addEventListener('click', exitExactMode);
-
-function renderExactBasis() {
-  document.getElementById('basisDisplay').textContent = `M ${currentBasisIdx + 1}/${exactBasisMatrices.length}`;
-  const matrix = exactBasisMatrices[currentBasisIdx];
-  
-  document.querySelectorAll('.cell').forEach(cell => {
-    const r = parseInt(cell.dataset.r);
-    const c = parseInt(cell.dataset.c);
-    const val = matrix[r][c];
-    
-    if (Math.abs(val) < 1e-7) {
-      cell.textContent = '';
-      cell.style.background = 'transparent';
-      cell.classList.add('dimmed');
-    } else {
-      // Format number neatly (e.g., 1, -1, 0.5)
-      cell.textContent = Number.isInteger(val) ? val : parseFloat(val.toFixed(2));
-      cell.style.background = 'rgba(168, 122, 232, 0.3)'; // Highlight non-zeros
-      cell.style.color = '#fff';
-      cell.classList.remove('dimmed');
-    }
-  });
-}
-
-// ─── Render matrix ─────────────────────────────────────────────────────────────
-// Column labels
-const colLabRow = document.createElement('div'); colLabRow.className='col-labels';
-const spacer=document.createElement('div'); spacer.style.width='22px'; colLabRow.appendChild(spacer);
-for(let c=0;c<N;c++){
-  const el=document.createElement('div'); el.className='axis-label';
-  el.textContent=(c+1); colLabRow.appendChild(el);
-}
-mc.appendChild(colLabRow);
-
-let activeLegendIdx = null;
-
-for(let r=0;r<N;r++){
-  const rowEl=document.createElement('div'); rowEl.className='matrix-row';
-  const rl=document.createElement('div'); rl.className='row-label'; rl.textContent=r+1;
-  rowEl.appendChild(rl);
-
-  for(let c=0;c<N;c++){
-    const idx=labelGrid[r][c];
-    const triple=tripleOrder[idx];
-    const [band,j,k]=triple.split(',').map(Number);
-    const lbl=idxToLabel(idx);
-
-    const cell=document.createElement('div');
-    cell.className='cell';
-    cell.textContent=lbl;
-    cell.dataset.idx=idx;
-    cell.dataset.band=band;
-    cell.dataset.r=r;
-    cell.dataset.c=c;
-    cell.style.background=COLORS[idx];
-    cell.style.color=TEXT_COLORS[idx];
-
-    if (j === 1) cell.classList.add('is-adj');
-
-    cell.addEventListener('mouseenter',()=>{
-      if(activeLegendIdx!==null) return; 
-      highlightClass(idx, r, c);
-    });
-    cell.addEventListener('mouseleave',()=>{
-      if(activeLegendIdx!==null) return;
-      clearHighlight();
-      document.getElementById('hoverInfo').innerHTML=`<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its properties.</div>`;
-    });
-    cell.addEventListener('click',()=>{
-      if(activeLegendIdx===idx){ activeLegendIdx=null; clearHighlight(); }
-      else { activeLegendIdx=idx; highlightClass(idx, r, c); }
-    });
-
-    rowEl.appendChild(cell);
-  }
-  mc.appendChild(rowEl);
-}
-
-function highlightClass(idx, r, c){
-  const triple=tripleOrder[idx];
-  const [band,j,k]=triple.split(',').map(Number);
-  const lbl=idxToLabel(idx);
-
-  if (!isExactMode) {
-    document.querySelectorAll('.cell').forEach(cell=>{
-      const ci=parseInt(cell.dataset.idx);
-      if(ci===idx) cell.classList.add('highlighted');
-      else cell.classList.remove('highlighted');
-    });
-  }
-
-  document.querySelectorAll('.legend-row').forEach(row=>{
-    row.classList.toggle('active-leg', parseInt(row.dataset.idx)===idx);
-  });
-
-  const hoverEl=document.getElementById('hoverInfo');
-  const pos = r!==undefined ? `<div style="color:var(--dim);font-size:10px;">Position (${r+1}, ${c+1})</div>` : '';
-  
-  let valStr = '';
-  if (isExactMode && r !== undefined) {
-    const val = exactBasisMatrices[currentBasisIdx][r][c];
-    valStr = `<div class="hi-count" style="margin-top: 6px;">Exact Value in Matrix ${currentBasisIdx+1}: <strong>${val}</strong></div>`;
-  }
-
-  hoverEl.innerHTML=`
-    <div class="hi-label" style="color:${COLORS[idx]}">${lbl}</div>
-    <div class="hi-triple" style="color:#eaeef7; font-size: 13px; margin: 4px 0;">
-      E<sub>${band}</sub><sup>*</sup> A<sub>${j}</sub> E<sub>${k}</sub><sup>*</sup>
-    </div>
-    <div class="hi-triple">dist(x, row) = ${band}</div>
-    <div class="hi-triple">dist(row, col) = ${j}</div>
-    <div class="hi-triple">dist(x, col) = ${k}</div>
-    <div class="hi-count">${orbitCount[idx]} cells in this class</div>
-    ${pos}
-    ${valStr}
-  `;
-}
-
-function clearHighlight(){
-  if (!isExactMode) {
-    document.querySelectorAll('.cell').forEach(cell=>cell.classList.remove('highlighted'));
-  }
-  document.querySelectorAll('.legend-row').forEach(row=>row.classList.remove('active-leg'));
-}
-
-// ─── Legend ─────────────────────────────────────────────────────────────────────
-const legendScroll=document.getElementById('legendScroll');
-tripleOrder.forEach((t,idx)=>{
-  const [band,j,k]=t.split(',').map(Number);
-  const lbl=idxToLabel(idx);
-  const row=document.createElement('div'); row.className='legend-row'; row.dataset.idx=idx; row.dataset.band=band;
-  row.innerHTML=`
-    <div class="legend-swatch" style="background:${COLORS[idx]}"></div>
-    <span class="legend-lbl">${lbl}</span>
-    <span class="legend-desc">E<sub>${band}</sub><sup>*</sup>A<sub>${j}</sub>E<sub>${k}</sub><sup>*</sup></span>
-    <span class="legend-cnt">${orbitCount[idx]}c</span>
-  `;
-  row.addEventListener('mouseenter',()=>{ if(activeLegendIdx===null) highlightClass(idx); });
-  row.addEventListener('mouseleave',()=>{ if(activeLegendIdx===null) clearHighlight(); });
-  row.addEventListener('click',()=>{
-    if(activeLegendIdx===idx){ activeLegendIdx=null; clearHighlight(); }
-    else { activeLegendIdx=idx; highlightClass(idx); }
-  });
-  legendScroll.appendChild(row);
-});
-</script>
 </body>
 </html>
