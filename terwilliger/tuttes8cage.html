@@ -62,7 +62,7 @@
     max-width: 1100px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: auto 300px;
+    grid-template-columns: auto 320px;
     gap: 28px;
     align-items: start;
   }
@@ -113,14 +113,14 @@
     align-items: center;
     justify-content: center;
     font-size: var(--cell-font);
-    font-weight: 600;
+    font-weight: 500;
     border-radius: 2px;
     flex-shrink: 0;
     border: 1px solid transparent;
     user-select: none;
     background: rgba(255,255,255,0.02);
-    color: var(--dim);
-    transition: transform 0.1s, filter 0.1s;
+    color: #fff;
+    transition: filter 0.1s, transform 0.1s;
   }
 
   .cell:hover {
@@ -129,8 +129,14 @@
     z-index: 10;
     filter: brightness(1.3);
   }
+
+  .cell.highlighted {
+    filter: brightness(1.5);
+    border-color: rgba(255,255,255,0.5) !important;
+    transform: scale(1.05);
+  }
   
-  .cell.dimmed { filter: brightness(0.3); color: transparent; }
+  .cell.dimmed { filter: brightness(0.2); }
 
   /* ── Sidebar ── */
   .side-panel {
@@ -174,42 +180,27 @@
   .word-btn {
     background: transparent;
     border: 1px solid transparent;
-    color: var(--dim);
+    color: var(--text);
     text-align: left;
     padding: 6px 8px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     transition: all 0.15s;
     display: flex;
     align-items: center;
     gap: 10px;
+    font-family: 'DM Mono', monospace;
   }
-  .word-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
-  .word-btn.active { 
-    background: rgba(255,255,255,0.1); 
-    border-color: var(--accent); 
-    color: #fff; 
-  }
+  .word-btn:hover { background: rgba(255,255,255,0.05); }
+  .word-btn.active { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
   
   .word-idx { 
-    font-size: 12px; 
+    font-size: 13px; 
     font-weight: bold;
-    width: 22px; 
+    width: 20px; 
     font-family: 'Fraunces', serif;
-  }
-  
-  .current-selection-display {
-    font-size: 20px;
-    font-family: 'Fraunces', serif;
-    color: var(--accent);
-    margin-bottom: 10px;
     text-align: center;
-    min-height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
   }
 
   .hover-info {
@@ -219,15 +210,14 @@
     min-height: 80px;
   }
   .hi-label {
-    font-size: 28px;
+    font-size: 26px;
     font-family: 'Fraunces', serif;
     font-weight: 600;
     line-height: 1;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
-  .hi-triple { color: #eaeef7; font-size: 14px; margin-bottom: 4px; }
-  .hi-count { color: var(--accent3); font-size: 13px; }
-
+  .hi-triple { color: #eaeef7; font-size: 12px; margin-bottom: 4px; }
+  
 </style>
 </head>
 <body>
@@ -236,7 +226,7 @@
   <div>
     <h1>Tutte's 8-Cage — <em>T</em>(x)</h1>
     <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em;">
-      Dimension: 49 &nbsp;·&nbsp; Vertices: 30
+      Basis Dimension: 49 &nbsp;·&nbsp; Vertices: 30
     </div>
   </div>
   <a href="terwilliger.html" class="back-link">← Back to Index</a>
@@ -245,13 +235,8 @@
 <div class="main-layout">
   <div class="matrix-wrap">
     <div class="matrix-header">
-      <div class="matrix-title">Terwilliger Basis Matrix View</div>
+      <div class="matrix-title">Full Algebra Basis (Classes A–AW)</div>
     </div>
-    
-    <div class="current-selection-display" id="selectionDisplay">
-      <span id="displayWord" style="color: var(--dim); font-size: 14px;">Loading JSON...</span>
-    </div>
-    
     <div class="matrix-container" id="matrixContainer"></div>
   </div>
 
@@ -259,13 +244,13 @@
     <div class="info-box">
       <h3>Cell Inspector</h3>
       <div class="hover-info" id="hoverInfo">
-        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any active cell to view its algebraic properties.</div>
+        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its basis class.</div>
       </div>
     </div>
     <div class="info-box" style="flex: 1;">
-      <h3>Basis Dimensions (A–AW)</h3>
+      <h3>Linear Combinations (dim T = 49)</h3>
       <div class="word-list" id="wordList">
-        <div style="text-align: center; color: var(--dim); font-size: 11px; padding: 20px;">Loading 8cage_words.json...</div>
+        <div style="text-align: center; color: var(--dim); font-size: 11px; padding: 20px;">Fetching 8cage_classes.json...</div>
       </div>
     </div>
   </div>
@@ -273,27 +258,27 @@
 
 <script>
 const N = 30;
-let basisData = [];
-let currentExactIdx = 0;
+let tClasses = [];
+const gridCells = [];
 
-// ─── Utility Functions ────────────────────────────────────────────────────────
-function idxToLabel(i) {
-  const L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  if (i < 26) return L[i];
-  i -= 26; 
-  return L[Math.floor(i/26)] + L[i%26];
+// Format e.g., "E_1*AE_2*" into sub/superscripts
+function formatComboHTML(comboStr) {
+  return comboStr
+    .replace(/E_(\d+)\^*/g, "E<sub>$1</sub><sup>*</sup>")
+    .replace(/A/g, "A");
 }
 
-function formatWordHTML(wordStr) {
-  if (wordStr === "I") return "I (Identity)";
-  return wordStr.replace(/E_(\d+)\^*/g, "E<sub>$1</sub><sup>*</sup>").replace(/A/g, "A");
-}
-
-// Generate 49 distinct colors evenly distributed across the hue spectrum
-const COLORS = Array.from({length: 50}, (_, i) => {
+// Generate 49 distinct colors across hue spectrum
+const COLORS = Array.from({length: 49}, (_, i) => {
   const hue = (i * 137.5) % 360; 
-  return `hsl(${hue}, 65%, 45%)`;
+  return `hsl(${hue}, 60%, 45%)`;
 });
+
+// Map letters A..AW to color indexes
+function labelToColorIndex(lbl) {
+  if (lbl.length === 1) return lbl.charCodeAt(0) - 65;
+  return 26 + (lbl.charCodeAt(1) - 65);
+}
 
 // ─── Build DOM Grid ───────────────────────────────────────────────────────────
 const mc = document.getElementById('matrixContainer');
@@ -306,7 +291,6 @@ for(let c=0;c<N;c++){
 }
 mc.appendChild(colLabRow);
 
-const gridCells = [];
 for(let r=0;r<N;r++){
   const rowEl=document.createElement('div'); rowEl.className='matrix-row';
   const rl=document.createElement('div'); rl.className='row-label'; rl.textContent=r+1;
@@ -315,11 +299,12 @@ for(let r=0;r<N;r++){
   const rowCells = [];
   for(let c=0;c<N;c++){
     const cell=document.createElement('div');
-    cell.className='cell dimmed';
+    cell.className='cell';
     cell.dataset.r = r;
     cell.dataset.c = c;
     
-    cell.addEventListener('mouseenter', () => highlightCell(r, c));
+    // Interactions
+    cell.addEventListener('mouseenter', () => highlightClass(cell.dataset.lbl));
     cell.addEventListener('mouseleave', clearHighlight);
     
     rowCells.push(cell);
@@ -329,97 +314,89 @@ for(let r=0;r<N;r++){
   mc.appendChild(rowEl);
 }
 
-// ─── Interaction Logic ────────────────────────────────────────────────────────
-function renderDimension(idx) {
-  currentExactIdx = idx;
-  const data = basisData[idx];
-  const lbl = idxToLabel(idx);
-  const color = COLORS[idx];
-  
-  document.getElementById('displayWord').innerHTML = `Basis ${lbl}: &nbsp; <span style="color:#eaeef7">${formatWordHTML(data.word)}</span>`;
-  
-  document.querySelectorAll('.word-btn').forEach((b, i) => {
-    b.classList.toggle('active', i === idx);
-    if(i === idx) b.style.borderColor = color;
-    else b.style.borderColor = 'transparent';
-  });
-  
+// ─── Render Functions ─────────────────────────────────────────────────────────
+function populateGrid(cellLabels) {
   for(let r=0;r<N;r++){
     for(let c=0;c<N;c++){
-      const val = data.matrix[r][c];
+      const lbl = cellLabels[r][c];
       const cell = gridCells[r][c];
       
-      cell.dataset.val = val; // Store exact value for hover info
-      
-      if (Math.abs(val) < 1e-7) {
-        cell.textContent = '';
-        cell.className = 'cell dimmed';
-        cell.style.backgroundColor = 'rgba(255,255,255,0.02)';
-      } else {
-        cell.textContent = lbl;
-        cell.className = 'cell';
-        cell.style.backgroundColor = color;
-        cell.style.color = '#fff';
+      if(lbl === "") {
+        cell.style.background = 'transparent';
+        continue;
       }
+      
+      const cIdx = labelToColorIndex(lbl);
+      cell.textContent = lbl;
+      cell.dataset.lbl = lbl;
+      cell.style.backgroundColor = COLORS[cIdx];
     }
   }
 }
 
-function highlightCell(r, c) {
-  const cell = gridCells[r][c];
-  const val = parseFloat(cell.dataset.val);
+function buildSidebar(classes) {
+  const listEl = document.getElementById('wordList');
+  listEl.innerHTML = '';
   
-  if (Math.abs(val) < 1e-7) return; // Ignore zero cells
+  classes.forEach((cls) => {
+    const cIdx = labelToColorIndex(cls.label);
+    const color = COLORS[cIdx];
+    
+    const btn = document.createElement('button');
+    btn.className = 'word-btn';
+    btn.innerHTML = `
+      <span class="word-idx" style="color:${color}">${cls.label}</span>
+      <span style="flex:1;">${formatComboHTML(cls.linear_combination)}</span>
+    `;
+    
+    btn.addEventListener('mouseenter', () => highlightClass(cls.label));
+    btn.addEventListener('mouseleave', clearHighlight);
+    listEl.appendChild(btn);
+  });
+}
+
+function highlightClass(targetLbl) {
+  if (!targetLbl) return;
+  const clsData = tClasses.find(c => c.label === targetLbl);
+  if (!clsData) return;
+
+  const color = COLORS[labelToColorIndex(targetLbl)];
   
-  const lbl = idxToLabel(currentExactIdx);
-  const word = formatWordHTML(basisData[currentExactIdx].word);
-  const color = COLORS[currentExactIdx];
+  // Update grid cells
+  gridCells.forEach(row => row.forEach(cell => {
+    if (cell.dataset.lbl === targetLbl) cell.classList.add('highlighted');
+    else cell.classList.add('dimmed');
+  }));
   
+  // Update info box
   document.getElementById('hoverInfo').innerHTML = `
-    <div class="hi-label" style="color:${color}">Dimension ${lbl}</div>
-    <div class="hi-triple">Generator: ${word}</div>
-    <div style="font-size: 10px; color: var(--dim); margin-top: 8px;">Matrix Position:</div>
-    <div style="font-size: 13px; color: #eaeef7;">Row ${r+1}, Col ${c+1}</div>
-    <div class="hi-count" style="margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border);">
-      Exact Value:<br>
-      <strong style="font-size:20px;">${Number.isInteger(val) ? val : parseFloat(val.toFixed(2))}</strong>
-    </div>
+    <div class="hi-label" style="color:${color}">Class ${clsData.label}</div>
+    <div style="font-size: 10px; color: var(--dim); margin-bottom: 2px;">Linear Combination:</div>
+    <div class="hi-triple">${formatComboHTML(clsData.linear_combination)}</div>
   `;
 }
 
 function clearHighlight() {
-  document.getElementById('hoverInfo').innerHTML = `<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any active cell to view its algebraic properties.</div>`;
+  gridCells.forEach(row => row.forEach(cell => {
+    cell.classList.remove('highlighted');
+    cell.classList.remove('dimmed');
+  }));
+  
+  document.getElementById('hoverInfo').innerHTML = `<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its basis class.</div>`;
 }
 
-// ─── Data Initialization ──────────────────────────────────────────────────────
+// ─── Initialization ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  fetch('8cage_words.json')
-    .then(r => {
-      if (!r.ok) throw new Error("JSON not found");
-      return r.json();
-    })
+  fetch('8cage_classes.json')
+    .then(r => r.json())
     .then(data => {
-      basisData = data.basis;
-      const listEl = document.getElementById('wordList');
-      listEl.innerHTML = '';
-      
-      basisData.forEach((item, idx) => {
-        const lbl = idxToLabel(idx);
-        const color = COLORS[idx];
-        
-        const btn = document.createElement('button');
-        btn.className = 'word-btn';
-        btn.innerHTML = `<span class="word-idx" style="color:${color}">${lbl}</span><span style="flex:1;">${formatWordHTML(item.word)}</span>`;
-        btn.addEventListener('click', () => renderDimension(idx));
-        listEl.appendChild(btn);
-      });
-      
-      // Auto-load the first dimension
-      if (basisData.length > 0) renderDimension(0);
+      tClasses = data.classes;
+      populateGrid(data.cell_labels);
+      buildSidebar(tClasses);
     })
     .catch(err => {
-      document.getElementById('selectionDisplay').innerHTML = `<span style="color: #e87a7a; font-size: 14px;">Error: Could not load 8cage_words.json</span>`;
-      document.getElementById('wordList').innerHTML = '';
+      console.error(err);
+      document.getElementById('wordList').innerHTML = `<span style="color: #e87a7a; padding: 10px;">Error loading JSON.</span>`;
     });
 });
 </script>
