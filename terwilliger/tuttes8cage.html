@@ -17,7 +17,7 @@
     --accent2:  #7ab8e8;
     --accent3:  #a87ae8;
     --cell-size: 22px;
-    --cell-font: 9px;
+    --cell-font: 11px; /* Increased for legibility */
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -58,7 +58,7 @@
   }
   .back-link:hover { color: var(--accent2); }
 
-  /* ── Stats & Filters ── */
+  /* ── Stats & Controls ── */
   .stats-row {
     max-width: 1100px;
     margin: 0 auto 20px;
@@ -83,13 +83,30 @@
     line-height: 1.2;
   }
 
-  .filter-row {
+  .controls-row {
     max-width: 1100px;
     margin: 0 auto 28px;
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .filter-group {
+    display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    align-items: center;
   }
+  .filter-label {
+    font-size: 10px;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-right: 4px;
+  }
+
   .filter-btn {
     padding: 6px 12px;
     border-radius: 4px;
@@ -102,16 +119,19 @@
     transition: all 0.15s;
   }
   .filter-btn:hover { border-color: var(--accent2); color: var(--accent2); }
-  .filter-btn.active { background: var(--accent2); color: var(--bg); border-color: var(--accent2); }
+  .filter-btn.active { background: var(--accent2); color: var(--bg); border-color: var(--accent2); font-weight: bold;}
 
-  /* ── Layout (Locked Height) ── */
+  .overlay-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .overlay-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: bold;}
+
+  /* ── Layout (Scrollbar Fix) ── */
   .main-layout {
     max-width: 1100px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: auto 320px;
     gap: 28px;
-    align-items: stretch; /* Forces sidebar to match matrix height */
+    align-items: start; /* Prevents grid stretching */
   }
 
   /* ── Matrix Grid ── */
@@ -160,7 +180,9 @@
     align-items: center;
     justify-content: center;
     font-size: var(--cell-font);
-    font-weight: 600;
+    font-weight: 700; /* Bolder for legibility */
+    -webkit-font-smoothing: antialiased;
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.6); /* Helps letters pop */
     border-radius: 2px;
     flex-shrink: 0;
     border: 1px solid transparent;
@@ -168,29 +190,45 @@
     background: rgba(255,255,255,0.02);
     color: #fff;
     transition: filter 0.1s, transform 0.1s, opacity 0.2s;
+    position: relative;
   }
 
   .cell:hover {
-    border-color: rgba(255,255,255,0.5);
+    border-color: rgba(255,255,255,0.8);
     transform: scale(1.15);
     z-index: 10;
-    filter: brightness(1.3);
+    filter: brightness(1.2);
   }
 
   .cell.highlighted {
-    filter: brightness(1.5);
-    border-color: rgba(255,255,255,0.5) !important;
+    filter: brightness(1.4);
+    border-color: rgba(255,255,255,0.6) !important;
     transform: scale(1.05);
   }
   
-  .cell.dimmed { filter: brightness(0.2); }
-  .cell.filtered-out { opacity: 0.1; pointer-events: none; } /* Used by subconstituent filter */
+  .cell.dimmed { filter: brightness(0.25); text-shadow: none; }
+  .cell.filtered-out { opacity: 0.1; pointer-events: none; }
+
+  /* Adjacency Overlay Border */
+  .cell.is-adj::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border: 1.5px solid var(--accent);
+    border-radius: 2px;
+    pointer-events: none;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+  }
 
   /* ── Sidebar ── */
   .side-panel {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    position: sticky;
+    top: 20px; /* Locks sidebar to viewport */
+    height: calc(100vh - 40px); /* Constrains height to force scrollbar inside */
+    max-height: 800px;
   }
 
   .info-box {
@@ -200,11 +238,14 @@
     padding: 14px 16px;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
   }
 
   .scrollable-box {
     flex: 1;
-    min-height: 0; /* Critical for flex child scrolling */
+    min-height: 0; /* Crucial flexbox fix for internal scrolling */
+    display: flex;
+    flex-direction: column;
   }
 
   .info-box h3 {
@@ -258,7 +299,7 @@
     font-size: 11px;
     line-height: 1.7;
     color: var(--dim);
-    min-height: 80px;
+    min-height: 120px;
   }
   .hi-label {
     font-size: 26px;
@@ -300,8 +341,19 @@
   <div class="stat-box"><strong>{3,2,2,2;1,1,1,3}</strong>Intersection Array</div>
 </div>
 
-<div class="filter-row" id="filterRow">
+<div class="controls-row">
+  <div class="filter-group" id="filterRow">
+    <span class="filter-label">Subconstituent Filter:</span>
+    </div>
+  <div class="filter-group" id="overlayRow">
+    <span class="filter-label">Overlay Graph Adjacency:</span>
+    <button class="filter-btn overlay-btn active" data-pow="0">None</button>
+    <button class="filter-btn overlay-btn" data-pow="1">A</button>
+    <button class="filter-btn overlay-btn" data-pow="2">A²</button>
+    <button class="filter-btn overlay-btn" data-pow="3">A³</button>
+    <button class="filter-btn overlay-btn" data-pow="4">A⁴</button>
   </div>
+</div>
 
 <div class="main-layout">
   <div class="matrix-wrap">
@@ -315,7 +367,7 @@
     <div class="info-box">
       <h3>Cell Inspector</h3>
       <div class="hover-info" id="hoverInfo">
-        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its basis class.</div>
+        <div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its basis class and values.</div>
       </div>
     </div>
     <div class="info-box scrollable-box">
@@ -336,7 +388,7 @@ const N = 30;
 let tClasses = [];
 const gridCells = [];
 
-// ─── Graph BFS to support filtering ───────────────────────────────────────────
+// ─── Math: Graph BFS & Matrix Multiplication ──────────────────────────────────
 const EDGES = [
   [1,2],[1,3],[1,4],[2,5],[2,6],[3,7],[3,8],[4,9],[4,10],
   [5,11],[5,12],[6,13],[6,14],[7,15],[7,16],[8,17],[8,18],
@@ -346,22 +398,35 @@ const EDGES = [
   [21,23],[21,29],[22,25],[22,27]
 ];
 
-const adj = Array.from({length:N}, ()=>new Array(N).fill(0));
-for (const [a,b] of EDGES) { adj[a-1][b-1]=1; adj[b-1][a-1]=1; }
+const A1 = Array.from({length:N}, ()=>new Array(N).fill(0));
+for (const [a,b] of EDGES) { A1[a-1][b-1]=1; A1[b-1][a-1]=1; }
 
 function bfs(src) {
   const dist = new Array(N).fill(-1);
   dist[src]=0; const q=[src];
   while (q.length) {
     const v=q.shift();
-    for (let u=0;u<N;u++) if (adj[v][u] && dist[u]===-1) { dist[u]=dist[v]+1; q.push(u); }
+    for (let u=0;u<N;u++) if (A1[v][u] && dist[u]===-1) { dist[u]=dist[v]+1; q.push(u); }
   }
   return dist;
 }
 const distX = bfs(0); // 0-indexed base vertex
 
+// Calculate Adjacency Powers
+function multiply(A, B) {
+  let res = Array(N).fill(0).map(()=>Array(N).fill(0));
+  for (let i=0; i<N; i++)
+    for (let j=0; j<N; j++)
+      for (let k=0; k<N; k++)
+        res[i][j] += A[i][k] * B[k][j];
+  return res;
+}
+const A2 = multiply(A1, A1);
+const A3 = multiply(A2, A1);
+const A4 = multiply(A3, A1);
+const POWERS_OF_A = [null, A1, A2, A3, A4];
+
 // ─── Formatting & Colors ──────────────────────────────────────────────────────
-// Fixed Regex: correctly escapes the literal * character
 function formatComboHTML(comboStr) {
   return comboStr
     .replace(/E_(\d+)\^\*/g, "E<sub>$1</sub><sup>*</sup>")
@@ -400,9 +465,9 @@ for(let r=0;r<N;r++){
     cell.className='cell';
     cell.dataset.r = r;
     cell.dataset.c = c;
-    cell.dataset.band = distX[r]; // Store subconstituent distance
+    cell.dataset.band = distX[r]; 
     
-    cell.addEventListener('mouseenter', () => highlightClass(cell.dataset.lbl));
+    cell.addEventListener('mouseenter', () => highlightCell(r, c));
     cell.addEventListener('mouseleave', clearHighlight);
     
     rowCells.push(cell);
@@ -412,31 +477,54 @@ for(let r=0;r<N;r++){
   mc.appendChild(rowEl);
 }
 
-// ─── Subconstituent Filters ───────────────────────────────────────────────────
+// ─── Controls State ───────────────────────────────────────────────────────────
+let activeFilter = null;
+let activeOverlay = 0; // 0=None, 1=A, 2=A^2...
+
+// Subconstituent Filters
 const filterRow = document.getElementById('filterRow');
 const subLabels = ['All', 'E<sub>0</sub><sup>*</sup>V', 'E<sub>1</sub><sup>*</sup>V', 'E<sub>2</sub><sup>*</sup>V', 'E<sub>3</sub><sup>*</sup>V', 'E<sub>4</sub><sup>*</sup>V'];
-let activeFilter = null;
 
 subLabels.forEach((labelHTML, fi) => {
   const btn = document.createElement('button'); 
   btn.className = 'filter-btn' + (fi === 0 ? ' active' : '');
   btn.innerHTML = labelHTML;
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-btn:not(.overlay-btn)').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeFilter = fi === 0 ? null : fi - 1;
-    applyFilter();
+    applyGridState();
   });
   filterRow.appendChild(btn);
 });
 
-function applyFilter() {
-  gridCells.forEach(row => row.forEach(cell => {
+// Adjacency Overlays
+document.querySelectorAll('.overlay-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.overlay-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    activeOverlay = parseInt(e.target.dataset.pow);
+    applyGridState();
+  });
+});
+
+function applyGridState() {
+  const overlayMatrix = POWERS_OF_A[activeOverlay];
+  
+  gridCells.forEach((row, r) => row.forEach((cell, c) => {
+    // 1. Apply Subconstituent Filter
     const band = parseInt(cell.dataset.band);
     if (activeFilter === null || band === activeFilter) {
       cell.classList.remove('filtered-out');
     } else {
       cell.classList.add('filtered-out');
+    }
+    
+    // 2. Apply Adjacency Overlay Border
+    if (overlayMatrix && overlayMatrix[r][c] > 0) {
+      cell.classList.add('is-adj');
+    } else {
+      cell.classList.remove('is-adj');
     }
   }));
 }
@@ -484,21 +572,38 @@ function buildSidebar(classes) {
 
 function highlightClass(targetLbl) {
   if (!targetLbl) return;
-  const clsData = tClasses.find(c => c.label === targetLbl);
-  if (!clsData) return;
-
-  const color = COLORS[labelToColorIndex(targetLbl)];
   
   gridCells.forEach(row => row.forEach(cell => {
     if (cell.dataset.lbl === targetLbl) cell.classList.add('highlighted');
     else cell.classList.add('dimmed');
   }));
+}
+
+function highlightCell(r, c) {
+  const cell = gridCells[r][c];
+  const targetLbl = cell.dataset.lbl;
   
-  document.getElementById('hoverInfo').innerHTML = `
-    <div class="hi-label" style="color:${color}">Class ${clsData.label}</div>
-    <div style="font-size: 10px; color: var(--dim); margin-bottom: 2px;">Linear Combination:</div>
-    <div class="hi-triple">${formatComboHTML(clsData.linear_combination)}</div>
-  `;
+  if (targetLbl) {
+    highlightClass(targetLbl);
+    
+    const clsData = tClasses.find(c => c.label === targetLbl);
+    const color = COLORS[labelToColorIndex(targetLbl)];
+    
+    let overlayStr = '';
+    if (activeOverlay > 0) {
+      const val = POWERS_OF_A[activeOverlay][r][c];
+      const pStr = activeOverlay === 1 ? 'A' : `A<sup>${activeOverlay}</sup>`;
+      overlayStr = `<div style="margin-top: 10px; color: var(--accent); font-weight: bold;">Overlay Entry (${pStr}): ${val}</div>`;
+    }
+
+    document.getElementById('hoverInfo').innerHTML = `
+      <div class="hi-label" style="color:${color}">Class ${clsData.label}</div>
+      <div style="font-size: 10px; color: var(--dim); margin-bottom: 2px;">Linear Combination:</div>
+      <div class="hi-triple">${formatComboHTML(clsData.linear_combination)}</div>
+      <div style="margin-top: 8px; color: var(--dim); font-size: 10px;">Position: Row ${r+1}, Col ${c+1}</div>
+      ${overlayStr}
+    `;
+  }
 }
 
 function clearHighlight() {
@@ -507,7 +612,7 @@ function clearHighlight() {
     cell.classList.remove('dimmed');
   }));
   
-  document.getElementById('hoverInfo').innerHTML = `<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its basis class.</div>`;
+  document.getElementById('hoverInfo').innerHTML = `<div style="color:var(--dim);font-size:11px;padding-top:8px;">Hover over any cell to inspect its basis class and values.</div>`;
 }
 
 // ─── Initialization ───────────────────────────────────────────────────────────
@@ -521,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(err => {
       console.error(err);
-      document.getElementById('wordList').innerHTML = `<span style="color: #e87a7a; padding: 10px;">Error loading JSON.</span>`;
+      document.getElementById('wordList').innerHTML = `<span style="color: #e87a7a; padding: 10px;">Error loading JSON. Ensure '8cage_classes.json' is in the directory.</span>`;
     });
 });
 </script>
