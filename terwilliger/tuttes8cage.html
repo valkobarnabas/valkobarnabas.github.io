@@ -419,7 +419,7 @@
 
 <div class="stats-row" id="statsRow">
   <div class="stat-box" id="btnShowGraph">
-    <strong style="color: var(--accent2);">View Graph</strong>1-Indexed Labeling
+    <strong style="color: var(--accent2);">View Graph</strong>x-Indexed Labeling
   </div>
   <div class="stat-box"><strong>30</strong>Vertices</div>
   <div class="stat-box"><strong>4</strong>Diameter</div>
@@ -556,14 +556,17 @@ const spacer=document.createElement('div'); spacer.className='axis-label';
 colLabRow.appendChild(spacer);
 for(let c=0;c<N;c++){
   const el=document.createElement('div'); el.className='axis-label';
-  el.textContent = c + 1; 
+  // 0 is 'x', otherwise standard index
+  el.textContent = c === 0 ? 'x' : c; 
   colLabRow.appendChild(el);
 }
 mc.appendChild(colLabRow);
 
 for(let r=0;r<N;r++){
   const rowEl=document.createElement('div'); rowEl.className='matrix-row';
-  const rl=document.createElement('div'); rl.className='row-label'; rl.textContent = r + 1;
+  const rl=document.createElement('div'); rl.className='row-label'; 
+  // 0 is 'x', otherwise standard index
+  rl.textContent = r === 0 ? 'x' : r;
   rowEl.appendChild(rl);
   
   const rowCells = [];
@@ -696,7 +699,7 @@ function highlightCell(r, c) {
   if (targetLbl) {
     highlightClass(targetLbl);
     
-    const clsData = tClasses.find(c => c.label === targetLbl);
+    const clsData = tClasses.find(cls => cls.label === targetLbl);
     const color = COLORS[labelToColorIndex(targetLbl)];
     
     let overlayStr = '';
@@ -706,11 +709,14 @@ function highlightCell(r, c) {
       overlayStr = `<div style="margin-top: 10px; color: var(--accent); font-weight: bold;">Overlay Entry (${pStr}): ${val}</div>`;
     }
 
+    const rowLbl = r === 0 ? 'x' : r;
+    const colLbl = c === 0 ? 'x' : c;
+
     document.getElementById('hoverInfo').innerHTML = `
       <div class="hi-label" style="color:${color}">Class ${clsData.label}</div>
       <div style="font-size: 10px; color: var(--dim); margin-bottom: 2px;">Linear Combination:</div>
       <div class="hi-triple">${formatComboHTML(clsData.linear_combination)}</div>
-      <div style="margin-top: 8px; color: var(--dim); font-size: 10px;">Position: Row ${r+1}, Col ${c+1}</div>
+      <div style="margin-top: 8px; color: var(--dim); font-size: 10px;">Position: Row ${rowLbl}, Col ${colLbl}</div>
       ${overlayStr}
     `;
   }
