@@ -17,7 +17,7 @@
     --accent2:  #7ab8e8;
     --accent3:  #a87ae8;
     --cell-size: 22px;
-    --cell-font: 11px; /* Increased for legibility */
+    --cell-font: 11px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -131,7 +131,7 @@
     display: grid;
     grid-template-columns: auto 320px;
     gap: 28px;
-    align-items: start; /* Prevents grid stretching */
+    align-items: start;
   }
 
   /* ── Matrix Grid ── */
@@ -180,9 +180,9 @@
     align-items: center;
     justify-content: center;
     font-size: var(--cell-font);
-    font-weight: 700; /* Bolder for legibility */
+    font-weight: 700;
     -webkit-font-smoothing: antialiased;
-    text-shadow: 0px 1px 2px rgba(0,0,0,0.6); /* Helps letters pop */
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.6);
     border-radius: 2px;
     flex-shrink: 0;
     border: 1px solid transparent;
@@ -198,6 +198,7 @@
     transform: scale(1.15);
     z-index: 10;
     filter: brightness(1.2);
+    opacity: 1 !important; /* Forces hover to show even if dimmed */
   }
 
   .cell.highlighted {
@@ -209,7 +210,7 @@
   .cell.dimmed { filter: brightness(0.25); text-shadow: none; }
   .cell.filtered-out { opacity: 0.1; pointer-events: none; }
 
-  /* Adjacency Overlay Border */
+  /* Adjacency Overlay Styles */
   .cell.is-adj::after {
     content: '';
     position: absolute;
@@ -220,14 +221,20 @@
     box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
   }
 
+  .cell.not-adj {
+    opacity: 0.15;
+    filter: grayscale(100%) brightness(0.5);
+    text-shadow: none;
+  }
+
   /* ── Sidebar ── */
   .side-panel {
     display: flex;
     flex-direction: column;
     gap: 16px;
     position: sticky;
-    top: 20px; /* Locks sidebar to viewport */
-    height: calc(100vh - 40px); /* Constrains height to force scrollbar inside */
+    top: 20px;
+    height: calc(100vh - 40px);
     max-height: 800px;
   }
 
@@ -243,7 +250,7 @@
 
   .scrollable-box {
     flex: 1;
-    min-height: 0; /* Crucial flexbox fix for internal scrolling */
+    min-height: 0;
     display: flex;
     flex-direction: column;
   }
@@ -520,11 +527,18 @@ function applyGridState() {
       cell.classList.add('filtered-out');
     }
     
-    // 2. Apply Adjacency Overlay Border
-    if (overlayMatrix && overlayMatrix[r][c] > 0) {
-      cell.classList.add('is-adj');
+    // 2. Apply Adjacency Overlay Border and Dimming
+    if (overlayMatrix) {
+      if (overlayMatrix[r][c] > 0) {
+        cell.classList.add('is-adj');
+        cell.classList.remove('not-adj');
+      } else {
+        cell.classList.remove('is-adj');
+        cell.classList.add('not-adj');
+      }
     } else {
       cell.classList.remove('is-adj');
+      cell.classList.remove('not-adj');
     }
   }));
 }
