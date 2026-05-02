@@ -240,16 +240,15 @@
     text-shadow: none;
   }
 
-  /* ── Sidebar ── */
   .side-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    position: sticky;
-    top: 20px;
-    height: calc(100vh - 40px);
-    max-height: 800px;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 20px;
+  height: fit-content;             /* Shrinks perfectly for small graphs */
+  max-height: calc(100vh - 40px);  /* Enables scrolling for large graphs */
+}
 
   .info-box {
     background: var(--surface);
@@ -737,6 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tClasses = data.classes;
       populateGrid(data.cell_labels);
       buildSidebar(tClasses);
+      document.querySelector('.side-panel').style.maxHeight = `min(calc(100vh - 40px), ${document.querySelector('.matrix-wrap').offsetHeight}px)`;
     })
     .catch(err => {
       console.error(err);
