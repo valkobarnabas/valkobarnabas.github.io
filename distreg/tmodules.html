@@ -41,7 +41,12 @@
         /* SVG Elements */
         .node { stroke: #fff; transition: fill 0.4s ease; }
         .link { stroke: #bbb; stroke-opacity: 0.6; }
+        
+        /* Label for current value inside the node */
         .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 3px rgba(255,255,255,1), -1px -1px 3px rgba(255,255,255,1), 1px -1px 3px rgba(255,255,255,1), -1px 1px 3px rgba(255,255,255,1); transition: font-size 0.3s ease, fill 0.3s ease; }
+        
+        /* Label for the static vertex ID (x, 1, 2...) below the node */
+        .id-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: hanging; fill: #000; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -225,6 +230,7 @@
                 .attr("x1", d => nodes[d.source].x).attr("y1", d => nodes[d.source].y)
                 .attr("x2", d => nodes[d.target].x).attr("y2", d => nodes[d.target].y);
 
+            // Draw nodes
             svg.append("g").selectAll("circle")
                 .data(nodes).join("circle")
                 .attr("class", "node")
@@ -234,13 +240,23 @@
                 .attr("cx", d => d.x).attr("cy", d => d.y)
                 .attr("fill", d => getNodeColor(d.id, nodeValues[d.id]));
 
-            svg.append("g").selectAll("text")
+            // Draw dynamic value labels (inside nodes)
+            svg.append("g").selectAll("text.node-label")
                 .data(nodes).join("text")
                 .attr("class", "node-label")
                 .attr("id", d => `label-${d.id}`)
                 .attr("font-size", `${rBase * 0.85}px`)
                 .attr("x", d => d.x).attr("y", d => d.y)
-                .text(d => Math.abs(nodeValues[d.id]) < ZERO_TOLERANCE ? "" : parseFloat(nodeValues[d.id].toFixed(2)));
+                .text(d => Math.abs(nodeValues[d.id]) < ZERO_TOLERANCE ? "" : Math.round(nodeValues[d.id]));
+
+            // Draw permanent static vertex ID labels (below nodes)
+            svg.append("g").selectAll("text.id-label")
+                .data(nodes).join("text")
+                .attr("class", "id-label")
+                .attr("font-size", `${rBase * 0.55}px`)
+                .attr("x", d => d.x)
+                .attr("y", d => d.y + rBase * 1.15) // Position nicely below the circle
+                .text(d => d.id === 0 ? "x" : d.id);
 
             updateMathDisplay(currentCoeffs);
         }
@@ -290,7 +306,7 @@
                     if (Math.abs(val) < ZERO_TOLERANCE) {
                         labelSelect.text("");
                     } else {
-                        labelSelect.text(parseFloat(val.toFixed(2)));
+                        labelSelect.text(Math.round(val));
                     }
                 });
 
@@ -333,7 +349,7 @@
                     pGroup.append("text")
                         .attr("class", "node-label")
                         .attr("font-size", `${particleFontSize}px`)
-                        .text(parseFloat(valS.toFixed(2)));
+                        .text(Math.round(valS));
 
                     pGroup.transition()
                         .duration(flowDuration)
@@ -355,7 +371,7 @@
                     pGroup.append("text")
                         .attr("class", "node-label")
                         .attr("font-size", `${particleFontSize}px`)
-                        .text(parseFloat(valT.toFixed(2)));
+                        .text(Math.round(valT));
 
                     pGroup.transition()
                         .duration(flowDuration)
@@ -385,7 +401,7 @@
                             let sum = 0;
                             
                             incoming.forEach((val, idx) => {
-                                let v = parseFloat(val.toFixed(2));
+                                let v = Math.round(val);
                                 if (idx === 0) sumStr += v;
                                 else if (v >= 0) sumStr += " + " + v;
                                 else sumStr += " - " + Math.abs(v);
@@ -393,7 +409,7 @@
                             });
                             
                             if (incoming.length > 1) {
-                                sumStr += " = " + parseFloat(sum.toFixed(2));
+                                sumStr += " = " + Math.round(sum);
                             }
                             
                             labelSelect.text(sumStr)
@@ -417,10 +433,11 @@
         function updateMathDisplay(coeffs) {
             let terms = [];
             for (let j = 0; j < coeffs.length; j++) {
-                let val = coeffs[j];
-                if (Math.abs(val) > ZERO_TOLERANCE) {
+                let val = Math.round(coeffs[j]);
+                // Only include the term if its rounded value is non-zero
+                if (Math.abs(val) > 0) {
                     let colorHex = customColors[j % customColors.length];
-                    terms.push(`\\color{${colorHex}}{${val.toFixed(2)} \\mathbf{v}_{${j+1}}}`);
+                    terms.push(`\\color{${colorHex}}{${val} \\mathbf{v}_{${j+1}}}`);
                 }
             }
             
