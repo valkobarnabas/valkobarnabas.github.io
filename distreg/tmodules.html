@@ -37,7 +37,8 @@
         /* SVG Elements */
         .node { stroke: #fff; transition: fill 0.4s ease; }
         .link { stroke: #bbb; stroke-opacity: 0.6; }
-        .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 2px rgba(255,255,255,0.9), -1px -1px 2px rgba(255,255,255,0.9), 1px -1px 2px rgba(255,255,255,0.9), -1px 1px 2px rgba(255,255,255,0.9); }
+        /* High contrast text shadow so equations remain readable even if they bleed over links */
+        .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 3px rgba(255,255,255,1), -1px -1px 3px rgba(255,255,255,1), 1px -1px 3px rgba(255,255,255,1), -1px 1px 3px rgba(255,255,255,1); transition: font-size 0.3s ease, fill 0.3s ease; }
     </style>
 </head>
 <body>
@@ -239,9 +240,20 @@
 
             let nextValues = new Array(nodes.length).fill(0);
             
+            // Track the incoming mathematical blobs for each node so we can display the equation
+            let incomingVals = Array.from({length: nodes.length}, () => []);
+            
             links.forEach(l => {
-                nextValues[l.source] += nodeValues[l.target];
-                nextValues[l.target] += nodeValues[l.source];
+                let sId = l.source;
+                let tId = l.target;
+                let valS = nodeValues[sId];
+                let valT = nodeValues[tId];
+
+                nextValues[sId] += valT;
+                nextValues[tId] += valS;
+
+                if (Math.abs(valT) >= ZERO_TOLERANCE) incomingVals[sId].push(valT);
+                if (Math.abs(valS) >= ZERO_TOLERANCE) incomingVals[tId].push(valS);
             });
 
             let nextValuesMat = math.matrix(nextValues);
@@ -266,8 +278,7 @@
                 // Source to Target Flow
                 if (Math.abs(valS) >= ZERO_TOLERANCE) {
                     activeFlows++;
-                    let pGroup = flowG.append("g")
-                        .attr("transform", `translate(${s.x},${s.y})`);
+                    let pGroup = flowG.append("g").attr("transform", `translate(${s.x},${s.y})`);
 
                     pGroup.append("circle")
                         .attr("r", particleR)
@@ -290,8 +301,7 @@
                 // Target to Source Flow
                 if (Math.abs(valT) >= ZERO_TOLERANCE) {
                     activeFlows++;
-                    let pGroup = flowG.append("g")
-                        .attr("transform", `translate(${t.x},${t.y})`);
+                    let pGroup = flowG.append("g").attr("transform", `translate(${t.x},${t.y})`);
 
                     pGroup.append("circle")
                         .attr("r", particleR)
@@ -317,18 +327,64 @@
             function checkEnd() {
                 if (activeFlows === 0) {
                     flowG.transition().duration(200).style("opacity", 0).remove();
-                    finalizeUpdate();
+
+                    // Phase 2: Equation Display
+                    nodes.forEach(n => {
+                        let incoming = incomingVals[n.id];
+                        let labelSelect = d3.select(`#label-${n.id}`);
+                        
+                        if (incoming.length > 0) {
+                            let sumStr = "";
+                            let sum = 0;
+                            
+                            // Build the equation string
+                            incoming.forEach((val, idx) => {
+                                let v = parseFloat(val.toFixed(2));
+                                if (idx === 0) sumStr += v;
+                                else if (v >= 0) sumStr += " + " + v;
+                                else sumStr += " - " + Math.abs(v);
+                                sum += v;
+                            });
+                            
+                            // Only append "= X" if there are multiple terms being summed
+                            if (incoming.length > 1) {
+                                sumStr += " = " + parseFloat(sum.toFixed(2));
+                            }
+                            
+                            labelSelect.text(sumStr)
+                                       // Shrink the font size so the equation fits on screen
+                                       .attr("font-size", `${rBase * 0.45}px`) 
+                                       .attr("fill", "#c5050c"); // Highlight color for the calculation
+                        } else {
+                            // If a node receives nothing, it calculates to 0. Gray it out temporarily.
+                            labelSelect.text("0")
+                                       .attr("font-size", `${rBase * 0.85}px`)
+                                       .attr("fill", "#999");
+                        }
+                    });
+
+                    // Phase 3: Hold the equation for 2 seconds, then settle to the final numeric state
+                    setTimeout(() => {
+                        finalizeUpdate();
+                    }, 2000);
                 }
             }
 
             function finalizeUpdate() {
                 nodeValues = nextValues; 
 
+                const firstNode = svg.select(".node");
+                const rBase = firstNode.empty() ? 10 : parseFloat(firstNode.attr("r"));
+
                 nodes.forEach(n => {
                     let val = nodeValues[n.id];
                     d3.select(`#node-${n.id}`).attr("fill", getNodeColor(n.id, val));
                     
                     let labelSelect = d3.select(`#label-${n.id}`);
+                    
+                    // Reset the styling from the calculation phase
+                    labelSelect.attr("font-size", `${rBase * 0.85}px`).attr("fill", "#111");
+
                     if (Math.abs(val) < ZERO_TOLERANCE) {
                         labelSelect.text("");
                     } else {
