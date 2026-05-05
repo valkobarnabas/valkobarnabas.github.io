@@ -23,6 +23,10 @@
         button:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; }
         select:disabled { background-color: #f5f5f5; cursor: not-allowed; }
         
+        .checkbox-container { display: flex; align-items: center; margin-top: 5px; margin-bottom: 15px; }
+        .checkbox-container input { width: auto; margin: 0 8px 0 0; cursor: pointer; transform: scale(1.2); }
+        .checkbox-container label { font-size: 14px; cursor: pointer; user-select: none; }
+        
         .legend-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
         .legend-item { display: flex; align-items: center; font-family: monospace; font-size: 13px; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd;}
         .legend-color { width: 14px; height: 14px; border-radius: 50%; margin-right: 6px; display: inline-block; }
@@ -37,7 +41,6 @@
         /* SVG Elements */
         .node { stroke: #fff; transition: fill 0.4s ease; }
         .link { stroke: #bbb; stroke-opacity: 0.6; }
-        /* High contrast text shadow so equations remain readable even if they bleed over links */
         .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 3px rgba(255,255,255,1), -1px -1px 3px rgba(255,255,255,1), 1px -1px 3px rgba(255,255,255,1), -1px 1px 3px rgba(255,255,255,1); transition: font-size 0.3s ease, fill 0.3s ease; }
     </style>
 </head>
@@ -62,6 +65,12 @@
             <hr style="margin: 25px 0 15px 0; border: 0; border-top: 1px solid #eee;">
 
             <h3 style="margin-top: 0;">Action</h3>
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="anim-toggle" checked>
+                <label for="anim-toggle">Animate Action</label>
+            </div>
+            
             <button id="apply-A">Apply A (Sum Neighbors)</button>
             <button id="reset-v" style="background-color: #6c757d;">Reset to Initial State</button>
         </div>
@@ -135,6 +144,7 @@
             document.getElementById("vector-select").disabled = disabled;
             document.getElementById("apply-A").disabled = disabled;
             document.getElementById("reset-v").disabled = disabled;
+            document.getElementById("anim-toggle").disabled = disabled;
         }
 
         function renderGraph() {
@@ -236,11 +246,13 @@
         }
 
         function applyAdjacencyAction() {
-            setControlsState(true); 
+            const doAnimate = document.getElementById("anim-toggle").checked;
+            
+            if (doAnimate) {
+                setControlsState(true); 
+            }
 
             let nextValues = new Array(nodes.length).fill(0);
-            
-            // Track the incoming mathematical blobs for each node so we can display the equation
             let incomingVals = Array.from({length: nodes.length}, () => []);
             
             links.forEach(l => {
@@ -260,6 +272,39 @@
             let newCoeffsMat = math.multiply(projMatrix, nextValuesMat);
             let newCoeffs = newCoeffsMat.toArray().map(c => Math.abs(c) < ZERO_TOLERANCE ? 0 : c);
 
+            // Function to instantly finish the state update
+            function finalizeUpdate() {
+                nodeValues = nextValues; 
+
+                const firstNode = svg.select(".node");
+                const rBase = firstNode.empty() ? 10 : parseFloat(firstNode.attr("r"));
+
+                nodes.forEach(n => {
+                    let val = nodeValues[n.id];
+                    d3.select(`#node-${n.id}`).attr("fill", getNodeColor(n.id, val));
+                    
+                    let labelSelect = d3.select(`#label-${n.id}`);
+                    
+                    labelSelect.attr("font-size", `${rBase * 0.85}px`).attr("fill", "#111");
+
+                    if (Math.abs(val) < ZERO_TOLERANCE) {
+                        labelSelect.text("");
+                    } else {
+                        labelSelect.text(parseFloat(val.toFixed(2)));
+                    }
+                });
+
+                updateMathDisplay(newCoeffs);
+                setControlsState(false); 
+            }
+
+            // Bypass Animation path
+            if (!doAnimate) {
+                finalizeUpdate();
+                return;
+            }
+
+            // --- Animation Path ---
             const firstNode = svg.select(".node");
             const rBase = firstNode.empty() ? 10 : parseFloat(firstNode.attr("r"));
             const particleR = rBase * 0.55; 
@@ -275,7 +320,6 @@
                 let valS = nodeValues[s.id];
                 let valT = nodeValues[t.id];
 
-                // Source to Target Flow
                 if (Math.abs(valS) >= ZERO_TOLERANCE) {
                     activeFlows++;
                     let pGroup = flowG.append("g").attr("transform", `translate(${s.x},${s.y})`);
@@ -298,7 +342,6 @@
                         .on("end", () => { activeFlows--; checkEnd(); });
                 }
                 
-                // Target to Source Flow
                 if (Math.abs(valT) >= ZERO_TOLERANCE) {
                     activeFlows++;
                     let pGroup = flowG.append("g").attr("transform", `translate(${t.x},${t.y})`);
@@ -328,7 +371,6 @@
                 if (activeFlows === 0) {
                     flowG.transition().duration(200).style("opacity", 0).remove();
 
-                    // Phase 2: Equation Display
                     nodes.forEach(n => {
                         let incoming = incomingVals[n.id];
                         let labelSelect = d3.select(`#label-${n.id}`);
@@ -337,7 +379,6 @@
                             let sumStr = "";
                             let sum = 0;
                             
-                            // Build the equation string
                             incoming.forEach((val, idx) => {
                                 let v = parseFloat(val.toFixed(2));
                                 if (idx === 0) sumStr += v;
@@ -346,54 +387,24 @@
                                 sum += v;
                             });
                             
-                            // Only append "= X" if there are multiple terms being summed
                             if (incoming.length > 1) {
                                 sumStr += " = " + parseFloat(sum.toFixed(2));
                             }
                             
                             labelSelect.text(sumStr)
-                                       // Shrink the font size so the equation fits on screen
                                        .attr("font-size", `${rBase * 0.45}px`) 
-                                       .attr("fill", "#c5050c"); // Highlight color for the calculation
+                                       .attr("fill", "#c5050c"); 
                         } else {
-                            // If a node receives nothing, it calculates to 0. Gray it out temporarily.
                             labelSelect.text("0")
                                        .attr("font-size", `${rBase * 0.85}px`)
                                        .attr("fill", "#999");
                         }
                     });
 
-                    // Phase 3: Hold the equation for 2 seconds, then settle to the final numeric state
                     setTimeout(() => {
                         finalizeUpdate();
                     }, 2000);
                 }
-            }
-
-            function finalizeUpdate() {
-                nodeValues = nextValues; 
-
-                const firstNode = svg.select(".node");
-                const rBase = firstNode.empty() ? 10 : parseFloat(firstNode.attr("r"));
-
-                nodes.forEach(n => {
-                    let val = nodeValues[n.id];
-                    d3.select(`#node-${n.id}`).attr("fill", getNodeColor(n.id, val));
-                    
-                    let labelSelect = d3.select(`#label-${n.id}`);
-                    
-                    // Reset the styling from the calculation phase
-                    labelSelect.attr("font-size", `${rBase * 0.85}px`).attr("fill", "#111");
-
-                    if (Math.abs(val) < ZERO_TOLERANCE) {
-                        labelSelect.text("");
-                    } else {
-                        labelSelect.text(parseFloat(val.toFixed(2)));
-                    }
-                });
-
-                updateMathDisplay(newCoeffs);
-                setControlsState(false); 
             }
         }
 
