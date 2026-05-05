@@ -235,7 +235,7 @@
         }
 
         function applyAdjacencyAction() {
-            setControlsState(true); // Disable controls during animation
+            setControlsState(true); 
 
             let nextValues = new Array(nodes.length).fill(0);
             
@@ -244,64 +244,74 @@
                 nextValues[l.target] += nodeValues[l.source];
             });
 
-            // Math execution for next state
             let nextValuesMat = math.matrix(nextValues);
             let newCoeffsMat = math.multiply(projMatrix, nextValuesMat);
             let newCoeffs = newCoeffsMat.toArray().map(c => Math.abs(c) < ZERO_TOLERANCE ? 0 : c);
 
-            // Fetch current radius for the flow particles
             const firstNode = svg.select(".node");
             const rBase = firstNode.empty() ? 10 : parseFloat(firstNode.attr("r"));
+            const particleR = rBase * 0.55; 
+            const particleFontSize = rBase * 0.55; 
             
             const flowG = svg.append("g").attr("class", "flow-layer");
             let activeFlows = 0;
-            const flowDuration = 1200;
+            const flowDuration = 1500;
 
-            // Spawn flow particles
             links.forEach(l => {
                 let s = nodes[l.source];
                 let t = nodes[l.target];
                 let valS = nodeValues[s.id];
                 let valT = nodeValues[t.id];
 
-                // Source to Target
+                // Source to Target Flow
                 if (Math.abs(valS) >= ZERO_TOLERANCE) {
                     activeFlows++;
-                    flowG.append("circle")
-                        .attr("r", rBase * 0.45)
+                    let pGroup = flowG.append("g")
+                        .attr("transform", `translate(${s.x},${s.y})`);
+
+                    pGroup.append("circle")
+                        .attr("r", particleR)
                         .attr("fill", getNodeColor(s.id, valS))
                         .attr("stroke", "#fff")
-                        .attr("stroke-width", rBase * 0.1)
-                        .attr("cx", s.x)
-                        .attr("cy", s.y)
-                        .transition()
+                        .attr("stroke-width", particleR * 0.1);
+
+                    pGroup.append("text")
+                        .attr("class", "node-label")
+                        .attr("font-size", `${particleFontSize}px`)
+                        .text(parseFloat(valS.toFixed(2)));
+
+                    pGroup.transition()
                         .duration(flowDuration)
                         .ease(d3.easeCubicInOut)
-                        .attr("cx", t.x)
-                        .attr("cy", t.y)
+                        .attr("transform", `translate(${t.x},${t.y})`)
                         .on("end", () => { activeFlows--; checkEnd(); });
                 }
                 
-                // Target to Source
+                // Target to Source Flow
                 if (Math.abs(valT) >= ZERO_TOLERANCE) {
                     activeFlows++;
-                    flowG.append("circle")
-                        .attr("r", rBase * 0.45)
+                    let pGroup = flowG.append("g")
+                        .attr("transform", `translate(${t.x},${t.y})`);
+
+                    pGroup.append("circle")
+                        .attr("r", particleR)
                         .attr("fill", getNodeColor(t.id, valT))
                         .attr("stroke", "#fff")
-                        .attr("stroke-width", rBase * 0.1)
-                        .attr("cx", t.x)
-                        .attr("cy", t.y)
-                        .transition()
+                        .attr("stroke-width", particleR * 0.1);
+
+                    pGroup.append("text")
+                        .attr("class", "node-label")
+                        .attr("font-size", `${particleFontSize}px`)
+                        .text(parseFloat(valT.toFixed(2)));
+
+                    pGroup.transition()
                         .duration(flowDuration)
                         .ease(d3.easeCubicInOut)
-                        .attr("cx", s.x)
-                        .attr("cy", s.y)
+                        .attr("transform", `translate(${s.x},${s.y})`)
                         .on("end", () => { activeFlows--; checkEnd(); });
                 }
             });
 
-            // If state was entirely zeros, bypass animation
             if (activeFlows === 0) finalizeUpdate();
 
             function checkEnd() {
@@ -327,7 +337,7 @@
                 });
 
                 updateMathDisplay(newCoeffs);
-                setControlsState(false); // Re-enable controls
+                setControlsState(false); 
             }
         }
 
