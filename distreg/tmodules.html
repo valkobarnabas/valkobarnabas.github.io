@@ -371,10 +371,15 @@
                 if (activeFlows === 0) {
                     flowG.transition().duration(200).style("opacity", 0).remove();
 
+                    // Phase 2: Show calculation and instantly update the background color
                     nodes.forEach(n => {
                         let incoming = incomingVals[n.id];
                         let labelSelect = d3.select(`#label-${n.id}`);
+                        let nodeSelect = d3.select(`#node-${n.id}`);
                         
+                        // Instantly snap the node background color to its new future state
+                        nodeSelect.attr("fill", getNodeColor(n.id, nextValues[n.id]));
+
                         if (incoming.length > 0) {
                             let sumStr = "";
                             let sum = 0;
@@ -401,6 +406,7 @@
                         }
                     });
 
+                    // Hold the equation for 2 seconds, then clean up the text
                     setTimeout(() => {
                         finalizeUpdate();
                     }, 2000);
