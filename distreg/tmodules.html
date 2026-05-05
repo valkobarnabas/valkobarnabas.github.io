@@ -9,23 +9,33 @@
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; background-color: #f8f9fa; }
-        .container { display: flex; gap: 30px; width: 100%; max-width: 1400px; }
-        .controls { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; min-width: 350px; }
-        .visualization { flex: 2; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; position: relative; height: 800px; overflow: hidden; }
-        select, button { padding: 10px; margin: 10px 0; width: 100%; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
-        button { background-color: #c5050c; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        /* Strict single-page layout */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 15px; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background-color: #f8f9fa; overflow: hidden; }
+        h1 { margin: 0 0 15px 0; font-size: 24px; text-align: center; flex: 0 0 auto; }
+        
+        .container { display: flex; gap: 20px; width: 100%; max-width: 1400px; flex: 1; min-height: 0; /* Allows flex children to shrink */ }
+        
+        /* Left Column: Controls */
+        .controls { flex: 0 0 320px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow-y: auto; }
+        select, button { padding: 10px; margin: 10px 0; width: 100%; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; box-sizing: border-box; }
+        button { background-color: #c5050c; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s; margin-top: 15px; }
         button:hover { background-color: #9a0409; }
         
+        .legend-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .legend-item { display: flex; align-items: center; font-family: monospace; font-size: 13px; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd;}
+        .legend-color { width: 14px; height: 14px; border-radius: 50%; margin-right: 6px; display: inline-block; }
+
+        /* Right Column: Graph and Math */
+        .viz-column { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
+        .visualization { flex: 1; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; min-height: 0; overflow: hidden; }
+        
+        #math-output { flex: 0 0 auto; padding: 15px 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80px; overflow-x: auto; }
+        #equation-display { font-size: 1.1em; margin-top: 10px; width: 100%; text-align: center; }
+
+        /* SVG Elements */
         .node { stroke: #fff; transition: fill 0.5s ease; }
         .link { stroke: #bbb; stroke-opacity: 0.6; }
         .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 2px rgba(255,255,255,0.9), -1px -1px 2px rgba(255,255,255,0.9), 1px -1px 2px rgba(255,255,255,0.9), -1px 1px 2px rgba(255,255,255,0.9); }
-        
-        #math-output { margin-top: auto; padding: 15px; background: #f1f3f5; border-radius: 4px; min-height: 80px; overflow-x: auto;}
-        
-        .legend-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px; }
-        .legend-item { display: flex; align-items: center; font-family: monospace; font-size: 14px; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd;}
-        .legend-color { width: 16px; height: 16px; border-radius: 50%; margin-right: 8px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -34,7 +44,7 @@
     
     <div class="container">
         <div class="controls">
-            <h3>Configuration</h3>
+            <h3 style="margin-top: 0;">Configuration</h3>
             <label for="graph-select">Select Graph:</label>
             <select id="graph-select"></select>
 
@@ -46,19 +56,21 @@
 
             <div class="legend-container" id="legend-container"></div>
 
-            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <hr style="margin: 25px 0 15px 0; border: 0; border-top: 1px solid #eee;">
 
-            <h3>Action</h3>
+            <h3 style="margin-top: 0;">Action</h3>
             <button id="apply-A">Apply A (Sum Neighbors)</button>
             <button id="reset-v" style="background-color: #6c757d;">Reset to Initial State</button>
-
-            <div id="math-output">
-                <strong>Current Linear Combination:</strong> <br>
-                <div id="equation-display" style="font-size: 1.1em;">Select a vector to begin.</div>
-            </div>
         </div>
 
-        <div class="visualization" id="viz-container"></div>
+        <div class="viz-column">
+            <div class="visualization" id="viz-container"></div>
+            
+            <div id="math-output">
+                <strong>Current Linear Combination</strong>
+                <div id="equation-display">Select a vector to begin.</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -82,6 +94,11 @@
             document.getElementById("vector-select").addEventListener("change", renderGraph);
             document.getElementById("apply-A").addEventListener("click", applyAdjacencyAction);
             document.getElementById("reset-v").addEventListener("click", renderGraph);
+            
+            // Handle window resizing
+            window.addEventListener("resize", () => {
+                if(nodes.length > 0) renderGraph();
+            });
             
             updateGraphOptions();
         });
@@ -116,7 +133,6 @@
             const basisKeys = Object.keys(basisDict);
             basisVectors = Object.values(basisDict);
             
-            // Build pseudo-inverse projection matrix (V^T V)^-1 V^T
             const V_arr = [];
             for (let i = 0; i < globalData[currentGraph].vertices; i++) {
                 let row = [];
@@ -132,7 +148,6 @@
             let currentCoeffs = new Array(basisVectors.length).fill(0);
             currentCoeffs[basisKeys.indexOf(startVectorKey)] = 1;
 
-            // Setup Nodes: Map coordinates and find Home Basis
             nodes = globalData[currentGraph].nodes.map((n, i) => {
                 let maxVal = -1;
                 let bestBasis = 0;
@@ -147,7 +162,6 @@
             
             links = globalData[currentGraph].edges.map(d => Object.assign({}, d));
 
-            // Update Legend
             const legendContainer = document.getElementById("legend-container");
             legendContainer.innerHTML = "";
             basisKeys.forEach((key, index) => {
@@ -161,7 +175,6 @@
 
             d3.select("#viz-container").selectAll("*").remove();
 
-            // Native viewBox calculation
             const minX = d3.min(nodes, d => d.x) || 0;
             const maxX = d3.max(nodes, d => d.x) || 1;
             const minY = d3.min(nodes, d => d.y) || 0;
@@ -172,14 +185,14 @@
             if (dx === 0) dx = 1;
             if (dy === 0) dy = 1;
 
-            // Dynamically scale aesthetics based on coordinate bounds
+            // Forced smaller nodes and strictly contained padding
             const maxDim = Math.max(dx, dy);
-            // Smaller radius for denser graphs
-            const rBase = (maxDim / Math.sqrt(nodes.length)) * 0.4; 
+            // Reduced rBase multiplier significantly so nodes are much smaller
+            const rBase = (maxDim / Math.sqrt(nodes.length)) * 0.22; 
             
-            // 15% Padding to ensure nodes don't get clipped
-            const padX = dx * 0.15;
-            const padY = dy * 0.15;
+            // Increased padding from 15% to 25% to guarantee no seepage
+            const padX = dx * 0.25;
+            const padY = dy * 0.25;
 
             svg = d3.select("#viz-container").append("svg")
                 .attr("width", "100%")
@@ -190,7 +203,7 @@
             svg.append("g").selectAll("line")
                 .data(links).join("line")
                 .attr("class", "link")
-                .attr("stroke-width", rBase * 0.1)
+                .attr("stroke-width", rBase * 0.08) // thinner lines
                 .attr("x1", d => nodes[d.source].x).attr("y1", d => nodes[d.source].y)
                 .attr("x2", d => nodes[d.target].x).attr("y2", d => nodes[d.target].y);
 
@@ -199,7 +212,7 @@
                 .attr("class", "node")
                 .attr("id", d => `node-${d.id}`)
                 .attr("r", rBase)
-                .attr("stroke-width", rBase * 0.1)
+                .attr("stroke-width", rBase * 0.08)
                 .attr("cx", d => d.x).attr("cy", d => d.y)
                 .attr("fill", d => getNodeColor(d.id, nodeValues[d.id]));
 
@@ -207,7 +220,7 @@
                 .data(nodes).join("text")
                 .attr("class", "node-label")
                 .attr("id", d => `label-${d.id}`)
-                .attr("font-size", `${rBase * 0.9}px`)
+                .attr("font-size", `${rBase * 0.85}px`)
                 .attr("x", d => d.x).attr("y", d => d.y)
                 .text(d => Math.abs(nodeValues[d.id]) < ZERO_TOLERANCE ? "" : parseFloat(nodeValues[d.id].toFixed(2)));
 
@@ -224,7 +237,6 @@
 
             nodeValues = nextValues; 
 
-            // Calculate exact new basis coefficients mapping
             let nextValuesMat = math.matrix(nextValues);
             let newCoeffsMat = math.multiply(projMatrix, nextValuesMat);
             let newCoeffs = newCoeffsMat.toArray().map(c => Math.abs(c) < ZERO_TOLERANCE ? 0 : c);
@@ -257,7 +269,7 @@
             if (terms.length === 0) terms.push("0");
             
             const mathEl = document.getElementById("equation-display");
-            mathEl.innerHTML = `\\[ \\text{State} = ${terms.join(" + ")} \\]`;
+            mathEl.innerHTML = `\\[ = ${terms.join(" + ")} \\]`;
             
             if (window.MathJax) MathJax.typesetPromise([mathEl]);
         }
