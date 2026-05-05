@@ -13,13 +13,15 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 15px; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background-color: #f8f9fa; overflow: hidden; }
         h1 { margin: 0 0 15px 0; font-size: 24px; text-align: center; flex: 0 0 auto; }
         
-        .container { display: flex; gap: 20px; width: 100%; max-width: 1400px; flex: 1; min-height: 0; /* Allows flex children to shrink */ }
+        .container { display: flex; gap: 20px; width: 100%; max-width: 1400px; flex: 1; min-height: 0; }
         
         /* Left Column: Controls */
         .controls { flex: 0 0 320px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow-y: auto; }
         select, button { padding: 10px; margin: 10px 0; width: 100%; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; box-sizing: border-box; }
         button { background-color: #c5050c; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s; margin-top: 15px; }
-        button:hover { background-color: #9a0409; }
+        button:hover:not(:disabled) { background-color: #9a0409; }
+        button:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; }
+        select:disabled { background-color: #f5f5f5; cursor: not-allowed; }
         
         .legend-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
         .legend-item { display: flex; align-items: center; font-family: monospace; font-size: 13px; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd;}
@@ -33,7 +35,7 @@
         #equation-display { font-size: 1.1em; margin-top: 10px; width: 100%; text-align: center; }
 
         /* SVG Elements */
-        .node { stroke: #fff; transition: fill 0.5s ease; }
+        .node { stroke: #fff; transition: fill 0.4s ease; }
         .link { stroke: #bbb; stroke-opacity: 0.6; }
         .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 2px rgba(255,255,255,0.9), -1px -1px 2px rgba(255,255,255,0.9), 1px -1px 2px rgba(255,255,255,0.9), -1px 1px 2px rgba(255,255,255,0.9); }
     </style>
@@ -95,7 +97,6 @@
             document.getElementById("apply-A").addEventListener("click", applyAdjacencyAction);
             document.getElementById("reset-v").addEventListener("click", renderGraph);
             
-            // Handle window resizing
             window.addEventListener("resize", () => {
                 if(nodes.length > 0) renderGraph();
             });
@@ -127,7 +128,16 @@
             return customColors[nodes[nodeId].homeBasis % customColors.length];
         }
 
+        function setControlsState(disabled) {
+            document.getElementById("graph-select").disabled = disabled;
+            document.getElementById("module-select").disabled = disabled;
+            document.getElementById("vector-select").disabled = disabled;
+            document.getElementById("apply-A").disabled = disabled;
+            document.getElementById("reset-v").disabled = disabled;
+        }
+
         function renderGraph() {
+            setControlsState(false);
             const startVectorKey = document.getElementById("vector-select").value;
             const basisDict = globalData[currentGraph].modules[currentModule].basis;
             const basisKeys = Object.keys(basisDict);
@@ -185,12 +195,9 @@
             if (dx === 0) dx = 1;
             if (dy === 0) dy = 1;
 
-            // Forced smaller nodes and strictly contained padding
             const maxDim = Math.max(dx, dy);
-            // Reduced rBase multiplier significantly so nodes are much smaller
             const rBase = (maxDim / Math.sqrt(nodes.length)) * 0.22; 
             
-            // Increased padding from 15% to 25% to guarantee no seepage
             const padX = dx * 0.25;
             const padY = dy * 0.25;
 
@@ -203,7 +210,7 @@
             svg.append("g").selectAll("line")
                 .data(links).join("line")
                 .attr("class", "link")
-                .attr("stroke-width", rBase * 0.08) // thinner lines
+                .attr("stroke-width", rBase * 0.08)
                 .attr("x1", d => nodes[d.source].x).attr("y1", d => nodes[d.source].y)
                 .attr("x2", d => nodes[d.target].x).attr("y2", d => nodes[d.target].y);
 
@@ -228,6 +235,8 @@
         }
 
         function applyAdjacencyAction() {
+            setControlsState(true); // Disable controls during animation
+
             let nextValues = new Array(nodes.length).fill(0);
             
             links.forEach(l => {
@@ -235,25 +244,91 @@
                 nextValues[l.target] += nodeValues[l.source];
             });
 
-            nodeValues = nextValues; 
-
+            // Math execution for next state
             let nextValuesMat = math.matrix(nextValues);
             let newCoeffsMat = math.multiply(projMatrix, nextValuesMat);
             let newCoeffs = newCoeffsMat.toArray().map(c => Math.abs(c) < ZERO_TOLERANCE ? 0 : c);
 
-            nodes.forEach(n => {
-                let val = nodeValues[n.id];
-                d3.select(`#node-${n.id}`).attr("fill", getNodeColor(n.id, val));
+            // Fetch current radius for the flow particles
+            const firstNode = svg.select(".node");
+            const rBase = firstNode.empty() ? 10 : parseFloat(firstNode.attr("r"));
+            
+            const flowG = svg.append("g").attr("class", "flow-layer");
+            let activeFlows = 0;
+            const flowDuration = 1200;
+
+            // Spawn flow particles
+            links.forEach(l => {
+                let s = nodes[l.source];
+                let t = nodes[l.target];
+                let valS = nodeValues[s.id];
+                let valT = nodeValues[t.id];
+
+                // Source to Target
+                if (Math.abs(valS) >= ZERO_TOLERANCE) {
+                    activeFlows++;
+                    flowG.append("circle")
+                        .attr("r", rBase * 0.45)
+                        .attr("fill", getNodeColor(s.id, valS))
+                        .attr("stroke", "#fff")
+                        .attr("stroke-width", rBase * 0.1)
+                        .attr("cx", s.x)
+                        .attr("cy", s.y)
+                        .transition()
+                        .duration(flowDuration)
+                        .ease(d3.easeCubicInOut)
+                        .attr("cx", t.x)
+                        .attr("cy", t.y)
+                        .on("end", () => { activeFlows--; checkEnd(); });
+                }
                 
-                let labelSelect = d3.select(`#label-${n.id}`);
-                if (Math.abs(val) < ZERO_TOLERANCE) {
-                    labelSelect.text("");
-                } else {
-                    labelSelect.text(parseFloat(val.toFixed(2)));
+                // Target to Source
+                if (Math.abs(valT) >= ZERO_TOLERANCE) {
+                    activeFlows++;
+                    flowG.append("circle")
+                        .attr("r", rBase * 0.45)
+                        .attr("fill", getNodeColor(t.id, valT))
+                        .attr("stroke", "#fff")
+                        .attr("stroke-width", rBase * 0.1)
+                        .attr("cx", t.x)
+                        .attr("cy", t.y)
+                        .transition()
+                        .duration(flowDuration)
+                        .ease(d3.easeCubicInOut)
+                        .attr("cx", s.x)
+                        .attr("cy", s.y)
+                        .on("end", () => { activeFlows--; checkEnd(); });
                 }
             });
 
-            updateMathDisplay(newCoeffs);
+            // If state was entirely zeros, bypass animation
+            if (activeFlows === 0) finalizeUpdate();
+
+            function checkEnd() {
+                if (activeFlows === 0) {
+                    flowG.transition().duration(200).style("opacity", 0).remove();
+                    finalizeUpdate();
+                }
+            }
+
+            function finalizeUpdate() {
+                nodeValues = nextValues; 
+
+                nodes.forEach(n => {
+                    let val = nodeValues[n.id];
+                    d3.select(`#node-${n.id}`).attr("fill", getNodeColor(n.id, val));
+                    
+                    let labelSelect = d3.select(`#label-${n.id}`);
+                    if (Math.abs(val) < ZERO_TOLERANCE) {
+                        labelSelect.text("");
+                    } else {
+                        labelSelect.text(parseFloat(val.toFixed(2)));
+                    }
+                });
+
+                updateMathDisplay(newCoeffs);
+                setControlsState(false); // Re-enable controls
+            }
         }
 
         function updateMathDisplay(coeffs) {
