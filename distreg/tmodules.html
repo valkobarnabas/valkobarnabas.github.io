@@ -365,7 +365,10 @@
             return customColors[bestBasis % customColors.length];
         }
 
-        function updateNodeVisuals(group, nodeId, coeffs, rBase, isSettlePhase = true) {
+        function updateNodeVisuals(nodeId, coeffs, rBase, isSettlePhase = true) {
+            let bgGroup = d3.select(`#node-group-${nodeId}`);
+            let textGroup = d3.select(`#text-group-${nodeId}`);
+            
             let activeContribs = [];
             let totalVal = 0;
             for (let j = 0; j < basisVectors.length; j++) {
@@ -379,10 +382,10 @@
                 }
             }
 
-            group.selectAll(".node-bg").remove();
+            bgGroup.selectAll(".node-bg").remove();
 
             if (activeContribs.length === 0) {
-                group.insert("circle", ".id-label")
+                bgGroup.append("circle")
                     .attr("class", "node-bg")
                     .attr("r", rBase)
                     .attr("fill", "#e9ecef")
@@ -390,10 +393,10 @@
                     .attr("stroke-width", rBase * 0.08);
                 
                 if (isSettlePhase) {
-                    group.select(".main-label").text("").attr("font-size", `${rBase * 0.85}px`);
+                    textGroup.select(".main-label").text("").attr("font-size", `${rBase * 0.85}px`);
                 }
             } else if (activeContribs.length === 1) {
-                group.insert("circle", ".id-label")
+                bgGroup.append("circle")
                     .attr("class", "node-bg")
                     .attr("r", rBase)
                     .attr("fill", activeContribs[0].color)
@@ -401,14 +404,14 @@
                     .attr("stroke-width", rBase * 0.08);
                 
                 if (isSettlePhase) {
-                    group.select(".main-label").text(totalVal).attr("font-size", `${rBase * 0.85}px`);
+                    textGroup.select(".main-label").text(totalVal).attr("font-size", `${rBase * 0.85}px`);
                 }
             } else {
                 let pie = d3.pie().value(1).sort(null); 
                 let arc = d3.arc().innerRadius(0).outerRadius(rBase);
                 let arcs = pie(activeContribs);
                 
-                group.insert("g", ".id-label")
+                bgGroup.append("g")
                     .attr("class", "node-bg")
                     .selectAll("path")
                     .data(arcs)
@@ -432,7 +435,7 @@
                     if (str.length > 5) fSize = rBase * 0.65;
                     if (str.length > 8) fSize = rBase * 0.45;
                     
-                    group.select(".main-label").text(str).attr("font-size", `${fSize}px`);
+                    textGroup.select(".main-label").text(str).attr("font-size", `${fSize}px`);
                 }
             }
         }
@@ -642,79 +645,92 @@
                 .attr("x1", d => nodes[d.source].x).attr("y1", d => nodes[d.source].y)
                 .attr("x2", d => nodes[d.target].x).attr("y2", d => nodes[d.target].y);
 
-            let nodeGroups = svg.append("g").selectAll(".node-group")
+            // Split rendering into two distinct layers for perfect z-indexing
+            let bgLayer = svg.append("g").attr("class", "bg-layer");
+            let textLayer = svg.append("g").attr("class", "text-layer");
+
+            let nodeGroups = bgLayer.selectAll(".node-group")
                 .data(nodes).join("g")
                 .attr("class", "node-group")
                 .attr("id", d => `node-group-${d.id}`)
                 .attr("transform", d => `translate(${d.x},${d.y})`);
 
-            // --- New Node Tooltip Hover Events ---
-            nodeGroups.on("mouseenter", function(event, d) {
-                if(document.getElementById("apply-A").disabled) return; 
+            let textGroups = textLayer.selectAll(".text-group")
+                .data(nodes).join("g")
+                .attr("class", "text-group")
+                .attr("id", d => `text-group-${d.id}`)
+                .attr("transform", d => `translate(${d.x},${d.y})`);
 
-                let val = Math.round(nodeValues[d.id]);
-                let nodeName = d.id === 0 ? "x" : d.id;
+            // Use a transparent circle in the top layer to flawlessly catch mouse hovers
+            textGroups.append("circle")
+                .attr("r", rBase)
+                .attr("fill", "transparent")
+                .style("cursor", "pointer")
+                .on("mouseenter", function(event, d) {
+                    if(document.getElementById("apply-A").disabled) return; 
 
-                // Calculate all active basis contributions for this specific node
-                let activeContribs = [];
-                for (let j = 0; j < basisVectors.length; j++) {
-                    let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
-                    if (Math.abs(contribVal) > 0) {
-                        activeContribs.push({
-                            idx: j,
-                            val: contribVal,
-                            color: customColors[j % customColors.length],
-                            tex: getBasisLabel(currentGraph, currentModule, j)
-                        });
+                    let val = Math.round(nodeValues[d.id]);
+                    let nodeName = d.id === 0 ? "x" : d.id;
+
+                    let activeContribs = [];
+                    for (let j = 0; j < basisVectors.length; j++) {
+                        let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
+                        if (Math.abs(contribVal) > 0) {
+                            activeContribs.push({
+                                idx: j,
+                                val: contribVal,
+                                color: customColors[j % customColors.length],
+                                tex: getBasisLabel(currentGraph, currentModule, j)
+                            });
+                        }
                     }
-                }
 
-                let basisHtml = "";
-                if (activeContribs.length === 0) {
-                    basisHtml = `<div style="color: #888; font-style: italic; margin-top: 5px;">No active contributions</div>`;
-                } else {
-                    basisHtml = `<div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px; text-align: left;">
-                        <strong style="font-size: 13px;">Contributions from basis vectors:</strong>
-                        <table style="margin-top: 5px; border-collapse: separate; border-spacing: 0 4px; font-size: 13px;">`;
-                    
-                    activeContribs.forEach(c => {
-                        basisHtml += `<tr>
-                            <td style="padding-right: 8px;"><span style="display:inline-block; width:12px; height:12px; background:${c.color}; border-radius:50%; vertical-align: middle;"></span></td>
-                            <td style="padding-right: 12px;"><strong>${c.val}</strong></td>
-                            <td>\\( (\\text{from } \\mathbf{v}_{${c.idx + 1}} = ${c.tex}) \\)</td>
-                        </tr>`;
-                    });
-                    basisHtml += `</table></div>`;
-                }
+                    let basisHtml = "";
+                    if (activeContribs.length === 0) {
+                        basisHtml = `<div style="color: #888; font-style: italic; margin-top: 5px;">No active basis vectors</div>`;
+                    } else {
+                        basisHtml = `<div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px; text-align: left;">
+                            <strong style="font-size: 13px;">As part of basis vector(s):</strong>
+                            <table style="margin-top: 5px; border-collapse: separate; border-spacing: 0 4px; font-size: 13px;">`;
+                        
+                        activeContribs.forEach(c => {
+                            basisHtml += `<tr>
+                                <td style="padding-right: 8px;"><span style="display:inline-block; width:12px; height:12px; background:${c.color}; border-radius:50%; vertical-align: middle;"></span></td>
+                                <td style="padding-right: 12px;"><strong>${c.val}</strong></td>
+                                <td>\\( (\\text{from } \\mathbf{v}_{${c.idx + 1}} = ${c.tex}) \\)</td>
+                            </tr>`;
+                        });
+                        basisHtml += `</table></div>`;
+                    }
 
-                const tooltip = d3.select("#node-tooltip");
-                tooltip.html(`
-                    <div style="text-align: center; min-width: 180px;">
-                        <div style="font-size: 16px; margin-bottom: 5px;"><strong>Vertex ${nodeName}</strong></div>
-                        <div style="font-size: 15px;">Current Value: <strong>${val}</strong></div>
-                        ${basisHtml}
-                    </div>
-                `)
-                .style("left", (event.pageX + 15) + "px")
-                .style("top", (event.pageY + 15) + "px")
-                .style("opacity", 1);
+                    const tooltip = d3.select("#node-tooltip");
+                    tooltip.html(`
+                        <div style="text-align: center; min-width: 180px;">
+                            <div style="font-size: 16px; margin-bottom: 5px;"><strong>Node ${nodeName}</strong></div>
+                            <div style="font-size: 15px;">Current Value: <strong>${val}</strong></div>
+                            ${basisHtml}
+                        </div>
+                    `)
+                    .style("left", (event.pageX + 15) + "px")
+                    .style("top", (event.pageY + 15) + "px")
+                    .style("opacity", 1);
 
-                if(window.MathJax) MathJax.typesetPromise([tooltip.node()]);
-            })
-            .on("mousemove", function(event) {
-                d3.select("#node-tooltip")
-                  .style("left", (event.pageX + 15) + "px")
-                  .style("top", (event.pageY + 15) + "px");
-            })
-            .on("mouseleave", function() {
-                d3.select("#node-tooltip").style("opacity", 0);
-            });
-            // ------------------------------------
+                    if(window.MathJax) MathJax.typesetPromise([tooltip.node()]);
+                })
+                .on("mousemove", function(event) {
+                    d3.select("#node-tooltip")
+                      .style("left", (event.pageX + 15) + "px")
+                      .style("top", (event.pageY + 15) + "px");
+                })
+                .on("mouseleave", function() {
+                    d3.select("#node-tooltip").style("opacity", 0);
+                });
 
-            nodeGroups.append("text")
+            // Appending labels to the top text layer, utilizing dynamic radial outward positioning
+            textGroups.append("text")
                 .attr("class", "id-label")
                 .attr("font-size", `${rBase * 0.55}px`)
-                .attr("dominant-baseline", "central") // Overrides the CSS 'hanging' baseline for centered radial positioning
+                .attr("dominant-baseline", "central")
                 .attr("x", d => {
                     const cx = (minX + maxX) / 2;
                     const cy = (minY + maxY) / 2;
@@ -733,12 +749,12 @@
                 })
                 .text(d => d.id === 0 ? "x" : d.id);
                 
-            nodeGroups.append("text")
+            textGroups.append("text")
                 .attr("class", "node-label main-label")
                 .attr("y", 0);
 
             nodes.forEach(n => {
-                updateNodeVisuals(d3.select(`#node-group-${n.id}`), n.id, currentCoeffs, rBase, true);
+                updateNodeVisuals(n.id, currentCoeffs, rBase, true);
             });
 
             updateMathDisplay(currentCoeffs);
@@ -775,14 +791,13 @@
                 nodeValues = nextValues; 
                 currentCoeffs = newCoeffs; 
 
-                const firstNodeGroups = svg.select(".node-group");
-                const rBaseText = firstNodeGroups.select(".id-label").attr("font-size");
+                const firstTextGroup = svg.select(".text-group");
+                const rBaseText = firstTextGroup.select(".id-label").attr("font-size");
                 const rBase = parseFloat(rBaseText) / 0.55;
 
                 nodes.forEach(n => {
-                    let groupSelect = d3.select(`#node-group-${n.id}`);
-                    groupSelect.select(".main-label").attr("fill", "#111");
-                    updateNodeVisuals(groupSelect, n.id, currentCoeffs, rBase, true);
+                    d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
+                    updateNodeVisuals(n.id, currentCoeffs, rBase, true);
                 });
 
                 if (!skipMathUpdate) updateMathDisplay(newCoeffs);
@@ -794,8 +809,8 @@
                 return;
             }
 
-            const firstNodeGroups = svg.select(".node-group");
-            const rBaseText = firstNodeGroups.select(".id-label").attr("font-size");
+            const firstTextGroup = svg.select(".text-group");
+            const rBaseText = firstTextGroup.select(".id-label").attr("font-size");
             const rBase = parseFloat(rBaseText) / 0.55;
             const particleR = rBase * 0.55; 
             const particleFontSize = rBase * 0.55; 
@@ -865,10 +880,9 @@
 
                     nodes.forEach(n => {
                         let incoming = incomingVals[n.id];
-                        let groupSelect = d3.select(`#node-group-${n.id}`);
-                        let labelSelect = groupSelect.select(".main-label");
+                        let labelSelect = d3.select(`#text-group-${n.id} .main-label`);
                         
-                        updateNodeVisuals(groupSelect, n.id, newCoeffs, rBase, false);
+                        updateNodeVisuals(n.id, newCoeffs, rBase, false);
 
                         if (incoming.length > 0) {
                             let sumStr = "";
