@@ -726,12 +726,16 @@
                     d3.select("#node-tooltip").style("opacity", 0);
                 });
 
-            // Appending labels to the top text layer, utilizing dynamic radial outward positioning
+            // Check if the current graph is one of the massive ones
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
+
             textGroups.append("text")
                 .attr("class", "id-label")
                 .attr("font-size", `${rBase * 0.55}px`)
-                .attr("dominant-baseline", "central")
+                .attr("dominant-baseline", isLargeGraph ? "central" : "hanging")
                 .attr("x", d => {
+                    if (!isLargeGraph) return 0; // Default centered horizontally
+                    
                     const cx = (minX + maxX) / 2;
                     const cy = (minY + maxY) / 2;
                     const vx = d.x - cx;
@@ -740,6 +744,8 @@
                     return len === 0 ? 0 : (vx / len) * (rBase * 1.45);
                 })
                 .attr("y", d => {
+                    if (!isLargeGraph) return rBase * 1.15; // Default hanging slightly below the node
+                    
                     const cx = (minX + maxX) / 2;
                     const cy = (minY + maxY) / 2;
                     const vx = d.x - cx;
@@ -748,14 +754,6 @@
                     return len === 0 ? (rBase * 1.45) : (vy / len) * (rBase * 1.45);
                 })
                 .text(d => d.id === 0 ? "x" : d.id);
-                
-            textGroups.append("text")
-                .attr("class", "node-label main-label")
-                .attr("y", 0);
-
-            nodes.forEach(n => {
-                updateNodeVisuals(n.id, currentCoeffs, rBase, true);
-            });
 
             updateMathDisplay(currentCoeffs);
         }
