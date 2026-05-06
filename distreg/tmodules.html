@@ -42,13 +42,12 @@
         .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 3px rgba(255,255,255,1), -1px -1px 3px rgba(255,255,255,1), 1px -1px 3px rgba(255,255,255,1), -1px 1px 3px rgba(255,255,255,1); transition: font-size 0.3s ease, fill 0.3s ease; }
         .id-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: hanging; fill: #000; opacity: 0.7; }
         
-        /* Tooltip styling for the vector hover effect */
-        .tooltip { position: absolute; background: white; border: 1px solid #ccc; padding: 12px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); pointer-events: none; opacity: 0; transition: opacity 0.15s ease-in-out; z-index: 1000; font-size: 14px; max-height: 90vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .tooltip { position: absolute; background: white; border: 1px solid #ccc; padding: 12px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); pointer-events: none; opacity: 0; transition: opacity 0.15s ease-in-out; z-index: 1000; font-size: 14px; max-height: 90vh; display: flex; align-items: center; justify-content: center; overflow-x: auto; overflow-y: hidden; white-space: nowrap; max-width: 90vw; }
     </style>
 </head>
 <body>
 
-    <h1>Visualizing \(T\)-modules of the 13 Distance-Regular Graphs with Valency 3</h1>
+    <h1>Visualizing \(T\)-modules of the 13 distance-regular graphs with valency 3.</h1>
     
     <div class="container">
         <div class="controls">
@@ -263,13 +262,11 @@
             });
             if (window.MathJax) MathJax.typesetPromise([legendContainer]);
 
-            // Add Event Listeners for the Vector Hover Tooltips
             d3.select("#legend-container").selectAll(".legend-item")
                 .on("mouseenter", function(event) {
                     const idx = +d3.select(this).attr("data-index");
                     const vec = basisVectors[idx];
                     
-                    // Extract the essential part of the vector (from first non-zero to last non-zero)
                     let first = -1, last = -1;
                     for(let i=0; i<vec.length; i++) {
                         if(Math.abs(vec[i]) > ZERO_TOLERANCE) {
@@ -280,14 +277,17 @@
                     if (first === -1) { first = 0; last = 0; }
                     let essential = vec.slice(first, last + 1).map(v => Math.round(v));
                     
-                    // Format as a LaTeX column vector
-                    let tex = `\\begin{bmatrix} ${essential.join(" \\\\ ")} \\end{bmatrix}`;
+                    let tex = `\\begin{bmatrix} ${essential.join(" & ")} \\end{bmatrix}`;
                     
                     const tooltip = d3.select("#vector-tooltip");
-                    // Dynamically scale font size if the vector is massive
-                    tooltip.style("font-size", essential.length > 25 ? "11px" : "14px");
                     
-                    tooltip.html(`\\[ \\mathbf{v}_{${idx + 1}} = ${tex} \\]`)
+                    let fSize = "14px";
+                    if (essential.length > 50) fSize = "8px";
+                    else if (essential.length > 25) fSize = "10px";
+                    else if (essential.length > 15) fSize = "12px";
+
+                    tooltip.style("font-size", fSize)
+                           .html(`\\[ \\mathbf{v}_{${idx + 1}} = ${tex} \\]`)
                            .style("left", (event.pageX + 15) + "px")
                            .style("top", (event.pageY + 15) + "px")
                            .style("opacity", 1);
@@ -316,7 +316,11 @@
             if (dy === 0) dy = 1;
 
             const maxDim = Math.max(dx, dy);
-            const rBase = (maxDim / Math.sqrt(nodes.length)) * 0.22; 
+            let rBase = (maxDim / Math.sqrt(nodes.length)) * 0.22; 
+            
+            if (["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph)) {
+                rBase *= 0.5; 
+            }
             
             const padX = dx * 0.25;
             const padY = dy * 0.25;
@@ -510,8 +514,7 @@
                             }
                             
                             labelSelect.text(sumStr)
-                                       /* ENLARGED FONT FOR THE MATH SUM (Was 0.45) */
-                                       .attr("font-size", `${rBase * 0.55}px`) 
+                                       .attr("font-size", `${rBase * 0.65}px`) 
                                        .attr("fill", "#c5050c"); 
                         } else {
                             labelSelect.text("0")
