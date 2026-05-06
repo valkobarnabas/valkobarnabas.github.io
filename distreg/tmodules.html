@@ -471,7 +471,7 @@
             };
             const displayTitle = titleMap[currentGraph] || currentGraph;
             document.getElementById("graph-info-title").innerHTML = displayTitle;
-            document.getElementById("graph-info-vertices").innerText = `${globalData[currentGraph].vertices} Vertices`;
+            document.getElementById("graph-info-vertices").innerText = `${globalData[currentGraph].vertices} vertices`;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("graph-info-title")]);
 
             // Setup bottom-right module info
