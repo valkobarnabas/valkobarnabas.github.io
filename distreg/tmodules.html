@@ -55,7 +55,7 @@
         /* Module Info (Bottom Right) */
         #module-info { position: absolute; right: 15px; bottom: 15px; z-index: 10; pointer-events: none; background: rgba(255, 255, 255, 0.92); padding: 12px 18px; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); border: 1px solid #ddd; text-align: right; }
         #module-info-title { font-size: 13px; color: #555; margin-bottom: 2px; font-weight: bold; }
-        #module-info-name { font-size: 26px; font-weight: bold; color: #c5050c; }
+        #module-info-name { font-size: 26px; font-weight: bold; color: #111; }
 
         #math-output { flex: 0 0 auto; padding: 15px 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80px; overflow-x: auto; }
         #equation-display { font-size: 1.1em; margin-top: 10px; width: 100%; text-align: center; }
@@ -542,7 +542,7 @@
             };
             const displayTitle = titleMap[currentGraph] || currentGraph;
             document.getElementById("graph-info-title").innerHTML = displayTitle;
-            document.getElementById("graph-info-vertices").innerText = `Number of vertices: ${globalData[currentGraph].vertices}`;
+            document.getElementById("graph-info-vertices").innerText = `${globalData[currentGraph].vertices} Vertices`;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("graph-info-title")]);
 
             // Setup bottom-right module info
