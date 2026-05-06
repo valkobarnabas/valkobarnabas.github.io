@@ -140,6 +140,7 @@
     </div>
     
     <div id="vector-tooltip" class="tooltip"></div>
+    <div id="node-tooltip" class="tooltip" style="flex-direction: column;"></div>
 
     <div class="modal-overlay" id="info-modal">
         <div class="modal-content">
@@ -364,7 +365,6 @@
             return customColors[bestBasis % customColors.length];
         }
 
-        // New function to update a node group (pie chart for multi-vector contributions)
         function updateNodeVisuals(group, nodeId, coeffs, rBase, isSettlePhase = true) {
             let activeContribs = [];
             let totalVal = 0;
@@ -404,7 +404,7 @@
                     group.select(".main-label").text(totalVal).attr("font-size", `${rBase * 0.85}px`);
                 }
             } else {
-                let pie = d3.pie().value(1).sort(null); // Equal area slices
+                let pie = d3.pie().value(1).sort(null); 
                 let arc = d3.arc().innerRadius(0).outerRadius(rBase);
                 let arcs = pie(activeContribs);
                 
@@ -480,7 +480,6 @@
             
             links = globalData[currentGraph].edges.map(d => Object.assign({}, d));
 
-            // --- BFS Subconstituent Calculation ---
             let dists = new Array(nodes.length).fill(-1);
             dists[0] = 0;
             let queue = [0];
@@ -510,7 +509,6 @@
                 subconstituents[d].sort((a,b) => a - b);
             }
 
-            // Populate the right-side Subconstituent Table
             let tableHTML = `
                 <table>
                     <thead>
@@ -535,7 +533,6 @@
             document.getElementById("subconstituent-table").innerHTML = tableHTML;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("subconstituent-table")]);
 
-            // Setup top-left graph info
             const titleMap = {
                 "K4": "\\(K_4\\)",
                 "K3,3": "\\(K_{3,3}\\)"
@@ -545,7 +542,6 @@
             document.getElementById("graph-info-vertices").innerText = `${globalData[currentGraph].vertices} Vertices`;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("graph-info-title")]);
 
-            // Setup bottom-right module info
             const formattedMod = currentModule.replace(/W(\d+)([a-z]+)?/i, function(match, num, letter) {
                 return letter ? `W_{${num},${letter}}` : `W_{${num}}`;
             });
@@ -626,7 +622,7 @@
             let padFactor = 0.25;
             
             if (["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph)) {
-                rBase *= 0.63; 
+                rBase *= 0.65; 
                 padFactor = 0.15; 
             }
             
@@ -646,12 +642,74 @@
                 .attr("x1", d => nodes[d.source].x).attr("y1", d => nodes[d.source].y)
                 .attr("x2", d => nodes[d.target].x).attr("y2", d => nodes[d.target].y);
 
-            // Create Group Elements for Nodes instead of Circles
             let nodeGroups = svg.append("g").selectAll(".node-group")
                 .data(nodes).join("g")
                 .attr("class", "node-group")
                 .attr("id", d => `node-group-${d.id}`)
                 .attr("transform", d => `translate(${d.x},${d.y})`);
+
+            // --- New Node Tooltip Hover Events ---
+            nodeGroups.on("mouseenter", function(event, d) {
+                if(document.getElementById("apply-A").disabled) return; 
+
+                let val = Math.round(nodeValues[d.id]);
+                let nodeName = d.id === 0 ? "x" : d.id;
+
+                // Calculate all active basis contributions for this specific node
+                let activeContribs = [];
+                for (let j = 0; j < basisVectors.length; j++) {
+                    let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
+                    if (Math.abs(contribVal) > 0) {
+                        activeContribs.push({
+                            idx: j,
+                            val: contribVal,
+                            color: customColors[j % customColors.length],
+                            tex: getBasisLabel(currentGraph, currentModule, j)
+                        });
+                    }
+                }
+
+                let basisHtml = "";
+                if (activeContribs.length === 0) {
+                    basisHtml = `<div style="color: #888; font-style: italic; margin-top: 5px;">No active basis vectors</div>`;
+                } else {
+                    basisHtml = `<div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px; text-align: left;">
+                        <strong style="font-size: 13px;">As part of basis vector(s):</strong>
+                        <table style="margin-top: 5px; border-collapse: separate; border-spacing: 0 4px; font-size: 13px;">`;
+                    
+                    activeContribs.forEach(c => {
+                        basisHtml += `<tr>
+                            <td style="padding-right: 8px;"><span style="display:inline-block; width:12px; height:12px; background:${c.color}; border-radius:50%; vertical-align: middle;"></span></td>
+                            <td style="padding-right: 12px;"><strong>${c.val}</strong></td>
+                            <td>\\( (\\text{from } \\mathbf{v}_{${c.idx + 1}} = ${c.tex}) \\)</td>
+                        </tr>`;
+                    });
+                    basisHtml += `</table></div>`;
+                }
+
+                const tooltip = d3.select("#node-tooltip");
+                tooltip.html(`
+                    <div style="text-align: center; min-width: 180px;">
+                        <div style="font-size: 16px; margin-bottom: 5px;"><strong>Node ${nodeName}</strong></div>
+                        <div style="font-size: 15px;">Current Value: <strong>${val}</strong></div>
+                        ${basisHtml}
+                    </div>
+                `)
+                .style("left", (event.pageX + 15) + "px")
+                .style("top", (event.pageY + 15) + "px")
+                .style("opacity", 1);
+
+                if(window.MathJax) MathJax.typesetPromise([tooltip.node()]);
+            })
+            .on("mousemove", function(event) {
+                d3.select("#node-tooltip")
+                  .style("left", (event.pageX + 15) + "px")
+                  .style("top", (event.pageY + 15) + "px");
+            })
+            .on("mouseleave", function() {
+                d3.select("#node-tooltip").style("opacity", 0);
+            });
+            // ------------------------------------
 
             nodeGroups.append("text")
                 .attr("class", "id-label")
@@ -794,7 +852,6 @@
                         let groupSelect = d3.select(`#node-group-${n.id}`);
                         let labelSelect = groupSelect.select(".main-label");
                         
-                        // Instantly update the pie chart background to the new state
                         updateNodeVisuals(groupSelect, n.id, newCoeffs, rBase, false);
 
                         if (incoming.length > 0) {
@@ -816,7 +873,7 @@
                             let fSize = rBase * 0.95;
                             if (sumStr.length > 2) fSize = rBase * 0.75;
                             if (sumStr.length > 5) fSize = rBase * 0.65;
-                            if (sumStr.length > 8) fSize = rBase * 0.35;
+                            if (sumStr.length > 8) fSize = rBase * 0.45;
                             
                             labelSelect.text(sumStr)
                                        .attr("font-size", `${fSize}px`) 
