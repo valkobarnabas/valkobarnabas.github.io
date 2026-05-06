@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>T-modules of Distance-Regular Graphs</title>
+    <link rel="icon" type="image/png" href="mxm.png">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
@@ -58,6 +59,9 @@
         .modal-close { position: absolute; top: 12px; right: 15px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: none; border: none; font-size: 28px; cursor: pointer; color: #666; font-weight: bold; user-select: none; -webkit-user-select: none; }
         .modal-close:hover { color: #000; }
         .modal-close:focus { outline: none; }
+        
+        .modal-footer { margin-top: 25px; font-size: 13px; color: #666; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+        .creator-name { color: #c5050c; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -127,6 +131,10 @@
 
             <h4>Why only show the action of \(A\)?</h4>
             <p>To rigorously verify a \(T\)-module, we must check closure under \(A\) and all \(E_i^*\). However, the basis vectors \(\mathbf{v}_i\) presented here have been intentionally chosen so that each vector lies entirely within a single subconstituent of \(\Gamma\). Because they are already eigenvectors for the dual idempotents (applying \(E_i^*\) returns the vector or zero), they are trivially closed under \(E_i^*\). Therefore, to prove that the subspace is a \(T\)-module, <strong>we only need to demonstrate closure under \(A\)</strong>.</p>
+            
+            <div class="modal-footer">
+                This website is designed and maintained by <span class="creator-name">Barnabás Valkó</span> (UW-Madison Math/Stats 2027).
+            </div>
         </div>
     </div>
 
@@ -320,7 +328,7 @@
             currentCoeffs[basisKeys.indexOf(startVectorKey)] = 1;
 
             nodes = globalData[currentGraph].nodes.map((n, i) => {
-                return { id: i, x: n.x, y: -n.y }; // Inverted Y-axis correctly maps R logic to SVG
+                return { id: i, x: n.x, y: -n.y }; 
             });
             
             links = globalData[currentGraph].edges.map(d => Object.assign({}, d));
@@ -376,7 +384,6 @@
                     const idx = +d3.select(this).attr("data-index");
                     const vec = basisVectors[idx];
                     
-                    // Automatically find which subconstituent this vector belongs to
                     let targetDist = -1;
                     for(let i=0; i<vec.length; i++) {
                         if(Math.abs(vec[i]) > ZERO_TOLERANCE) {
@@ -384,9 +391,8 @@
                             break;
                         }
                     }
-                    if (targetDist === -1) targetDist = 0; // Fallback to 0 if zero vector
+                    if (targetDist === -1) targetDist = 0; 
 
-                    // Extract all entries in that exact subconstituent, capturing true zero values
                     let essential = subconstituents[targetDist].map(nodeIdx => Math.round(vec[nodeIdx]));
                     
                     let tex = `\\begin{bmatrix} ${essential.join(" & ")} \\end{bmatrix}`;
@@ -429,13 +435,16 @@
 
             const maxDim = Math.max(dx, dy);
             let rBase = (maxDim / Math.sqrt(nodes.length)) * 0.22; 
+            let padFactor = 0.25;
             
+            // Adjust scaling and padding for massive graphs
             if (["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph)) {
-                rBase *= 0.5; 
+                rBase *= 0.65; 
+                padFactor = 0.10; 
             }
             
-            const padX = dx * 0.25;
-            const padY = dy * 0.25;
+            const padX = dx * padFactor;
+            const padY = dy * padFactor;
 
             svg = d3.select("#viz-container").append("svg")
                 .attr("width", "100%")
