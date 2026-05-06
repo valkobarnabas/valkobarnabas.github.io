@@ -189,6 +189,8 @@
         let basisVectors = []; 
         let projMatrix; 
         let currentCoeffs = []; 
+        let applyCount = 0; // Tracks the power of A
+        let initialVectorIndex = 0; // Tracks the initial seed vector
         
         // NEW COLOR PALETTE
         const customColors = ["rgb(240,52,38)", "rgb(51,52,102)","rgb(128,188,3)", "rgb(69,169,207)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        const ZERO_TOLERANCE = 1e-8;
@@ -457,8 +459,14 @@
             });
         }
 
-        function renderGraph() {
+function renderGraph() {
             setControlsState(false);
+            
+            // Reset A tracking on new graph, module, or vector selection
+            applyCount = 0;
+            initialVectorIndex = document.getElementById("vector-select").selectedIndex;
+            if (initialVectorIndex === -1) initialVectorIndex = 0;
+            
             const startVectorKey = document.getElementById("vector-select").value;
             const basisDict = globalData[currentGraph].modules[currentModule].basis;
             const basisKeys = Object.keys(basisDict);
@@ -772,7 +780,11 @@
             updateMathDisplay(currentCoeffs);
         }
 
-        function applyAdjacencyAction() {
+function applyAdjacencyAction() {
+            if (document.getElementById("apply-A").disabled) return;
+            
+            applyCount++; // Increment the power of A
+            
             const doAnimate = document.getElementById("anim-toggle").checked;
             
             if (doAnimate) {
@@ -958,13 +970,45 @@
                 }
             }
             
-            if (first) eq = "0";
-            
-            const mathEl = document.getElementById("equation-display");
-            mathEl.innerHTML = `\\[ = ${eq} \\]`;
-            
-            if (window.MathJax) MathJax.typesetPromise([mathEl]);
-        }
+    if (first) eq = "0";
+                
+                // Build the Left Hand Side to show A^k v_i
+                let lhs = `\\mathbf{v}_{${initialVectorIndex + 1}}`;
+                if (applyCount === 1) {
+                    lhs = `A ${lhs}`;
+                } else if (applyCount > 1) {
+                    lhs = `A^{${applyCount}} ${lhs}`;
+                }
+                
+                const mathEl = document.getElementById("equation-display");
+                mathEl.innerHTML = `\\[ ${lhs} = ${eq} \\]`;
+                
+                if (window.MathJax) MathJax.typesetPromise([mathEl]);
+            }
+
+        // --- Keyboard Shortcuts ---
+        document.addEventListener('keydown', function(event) {
+            // Prevent shortcuts from triggering if user is actively using a dropdown menu
+            if (document.activeElement.tagName === 'SELECT') {
+                if (event.key === 'Enter') event.preventDefault();
+                return; 
+            }
+
+            if (event.key === 'Enter' || event.key.toLowerCase() === 'a') {
+                const btn = document.getElementById("apply-A");
+                if (!btn.disabled) {
+                    btn.click();
+                }
+            } else if (event.key.toLowerCase() === 'f') {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Error attempting to enable full-screen mode: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
     </script>
 </body>
 </html>
