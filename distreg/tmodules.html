@@ -10,8 +10,13 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 15px; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background-color: #f8f9fa; overflow: hidden; }
-        h1 { margin: 0 0 15px 0; font-size: 24px; text-align: center; flex: 0 0 auto; }
         
+        .header-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; flex: 0 0 auto; width: 100%; }
+        h1 { margin: 0; font-size: 24px; text-align: center; }
+        
+        .info-btn { width: 26px; height: 26px; background-color: #007bff; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 16px; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); user-select: none; flex-shrink: 0; }
+        .info-btn:hover { background-color: #0056b3; }
+
         .container { display: flex; gap: 20px; width: 100%; max-width: 1400px; flex: 1; min-height: 0; }
         
         .controls { flex: 0 0 340px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow-y: auto; }
@@ -26,8 +31,8 @@
         .checkbox-container label { font-size: 14px; cursor: pointer; user-select: none; }
         
         .legend-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .legend-item { display: flex; align-items: center; font-size: 14px; background: #f8f9fa; padding: 6px 10px; border-radius: 4px; border: 1px solid #ddd; cursor: help; transition: background 0.2s;}
-        .legend-item:hover { background: #e9ecef; }
+        .legend-item { display: flex; align-items: center; font-size: 14px; background: #f8f9fa; padding: 6px 10px; border-radius: 4px; border: 1px solid #ddd; cursor: pointer; transition: background 0.2s, border-color 0.2s; user-select: none; }
+        .legend-item:hover { background: #e9ecef; border-color: #adb5bd; }
         .legend-color { width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; display: inline-block; flex-shrink: 0; }
 
         .viz-column { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
@@ -43,11 +48,23 @@
         .id-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: hanging; fill: #000; opacity: 0.7; }
         
         .tooltip { position: absolute; background: white; border: 1px solid #ccc; padding: 12px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); pointer-events: none; opacity: 0; transition: opacity 0.15s ease-in-out; z-index: 1000; font-size: 14px; max-height: 90vh; display: flex; align-items: center; justify-content: center; overflow-x: auto; overflow-y: hidden; white-space: nowrap; max-width: 90vw; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s ease; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; line-height: 1.6; font-size: 15px; color: #333; }
+        .modal-content h2 { margin-top: 0; color: #c5050c; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .modal-content h4 { margin-bottom: 5px; color: #222; }
+        .modal-content p { margin-top: 0; margin-bottom: 15px; }
+        .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; font-weight: bold; }
+        .modal-close:hover { color: #000; }
     </style>
 </head>
 <body>
 
-    <h1>Visualizing \(T\)-modules of the 13 Distance-Regular Graphs with Valency 3</h1>
+    <div class="header-container">
+        <h1>Visualizing \(T\)-modules of the 13 Distance-Regular Graphs with Valency 3</h1>
+        <div class="info-btn" id="info-btn" title="Mathematical Context">?</div>
+    </div>
     
     <div class="container">
         <div class="controls">
@@ -58,7 +75,7 @@
             <label for="module-select">Select T-module:</label>
             <select id="module-select"></select>
 
-            <label for="vector-select">Start State (Seed Vector):</label>
+            <label for="vector-select">Select Basis Vector:</label>
             <select id="vector-select"></select>
 
             <div class="legend-container" id="legend-container"></div>
@@ -88,6 +105,25 @@
     
     <div id="vector-tooltip" class="tooltip"></div>
 
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="close-modal">&times;</button>
+            <h2>Mathematical Context</h2>
+            
+            <h4>The Terwilliger Algebra (\(T\))</h4>
+            <p>For a distance-regular graph \(\Gamma\), the Terwilliger algebra (or subconstituent algebra) \(T\) is the finite-dimensional, non-commutative algebra generated by the adjacency matrix \(A\) and the dual Bose-Mesner idempotents \(E_0^*, E_1^*, \dots, E_D^*\).</p>
+            
+            <h4>What is a \(T\)-module?</h4>
+            <p>A \(T\)-module is a subspace \(W \subseteq \mathbb{C}^X\) that is invariant under the action of the Terwilliger algebra. Specifically, this means that \(W\) must be closed under multiplication by both the adjacency matrix (\(AW \subseteq W\)) and all dual idempotents (\(E_i^* W \subseteq W\)). An <em>irreducible</em> \(T\)-module contains no non-zero proper \(T\)-submodules.</p>
+
+            <h4>Why only show the action of \(A\)?</h4>
+            <p>To rigorously verify a \(T\)-module, we must check closure under \(A\) and all \(E_i^*\). However, the basis vectors \(\mathbf{v}_i\) presented here have been intentionally chosen so that each vector lies entirely within a single subconstituent of \(\Gamma\). Because they are already eigenvectors for the dual idempotents, they are trivially closed under \(E_i^*\). Therefore, to prove that the subspace is a \(T\)-module, <strong>we only need to demonstrate closure under \(A\)</strong>.</p>
+
+            <h4>Visualizing the Action of \(A\)</h4>
+            <p>The action of the adjacency matrix \(A\) on a column vector \(\mathbf{v}\) assigns to each vertex the sum of the values of its neighbors. When you click "Apply A", this dashboard visually computes \(A \cdot \mathbf{v}\) by flowing the scalar values across the edges of the graph. It proves closure by showing that the resulting new state on the vertices can still be perfectly expressed as a linear combination of the original basis vectors.</p>
+        </div>
+    </div>
+
     <script>
         let globalData = {};
         let currentGraph, currentModule, svg;
@@ -101,6 +137,28 @@
         
         const customColors = ["#007F0E", "#21007F", "#7C6C00", "#FF00DC", "#00C189", "#FF6A00", "#77D1FF", "#d62728", "#9467bd", "#17becf", "#8c564b", "#e377c2", "#bcbd22"];
         const ZERO_TOLERANCE = 1e-8;
+
+        // --- Modal Logic ---
+        const modal = document.getElementById('info-modal');
+        const infoBtn = document.getElementById('info-btn');
+        const closeBtn = document.getElementById('close-modal');
+
+        infoBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+            setTimeout(() => modal.style.opacity = '1', 10);
+            if(window.MathJax) MathJax.typesetPromise([modal]);
+        });
+
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        function closeModal() {
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.display = 'none', 200);
+        }
+        // -------------------
 
         function getBasisLabel(graph, module, index) {
             const mod = module.replace(/_/g, "").replace(/,/g, ""); 
@@ -196,6 +254,13 @@
             renderGraph();
         }
 
+        // Global function attached to legend item clicks
+        window.selectVectorFromLegend = function(key) {
+            if(document.getElementById("apply-A").disabled) return; 
+            document.getElementById("vector-select").value = key;
+            renderGraph();
+        }
+
         function getNodeColor(nodeId, val, coeffs) {
             if (Math.abs(val) < ZERO_TOLERANCE) return "#e9ecef"; 
             
@@ -219,6 +284,13 @@
             document.getElementById("apply-A").disabled = disabled;
             document.getElementById("reset-v").disabled = disabled;
             document.getElementById("anim-toggle").disabled = disabled;
+            
+            // Toggle click events on legend while animating
+            const legendItems = document.querySelectorAll(".legend-item");
+            legendItems.forEach(item => {
+                item.style.pointerEvents = disabled ? "none" : "auto";
+                item.style.opacity = disabled ? "0.6" : "1";
+            });
         }
 
         function renderGraph() {
@@ -255,7 +327,7 @@
                 const color = customColors[index % customColors.length];
                 const labelTex = getBasisLabel(currentGraph, currentModule, index);
                 legendContainer.innerHTML += `
-                    <div class="legend-item" data-index="${index}">
+                    <div class="legend-item" data-index="${index}" onclick="selectVectorFromLegend('${key}')">
                         <span class="legend-color" style="background-color: ${color};"></span>
                         \\(\\mathbf{v}_{${index + 1}} = ${labelTex}\\)
                     </div>`;
@@ -264,6 +336,8 @@
 
             d3.select("#legend-container").selectAll(".legend-item")
                 .on("mouseenter", function(event) {
+                    if(document.getElementById("apply-A").disabled) return; // don't show tooltips during animation
+                    
                     const idx = +d3.select(this).attr("data-index");
                     const vec = basisVectors[idx];
                     
