@@ -63,7 +63,7 @@
         .link { stroke: #bbb; stroke-opacity: 0.6; }
         
         .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 3px rgba(255,255,255,1), -1px -1px 3px rgba(255,255,255,1), 1px -1px 3px rgba(255,255,255,1), -1px 1px 3px rgba(255,255,255,1); transition: fill 0.3s ease; }
-        .id-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: hanging; fill: #000; opacity: 0.7; }
+        .id-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; fill: #000; opacity: 0.7; }
         
         .tooltip { position: absolute; background: white; border: 1px solid #ccc; padding: 12px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); pointer-events: none; opacity: 0; transition: opacity 0.15s ease-in-out; z-index: 1000; font-size: 14px; max-height: 90vh; display: flex; align-items: center; justify-content: center; overflow-x: auto; overflow-y: hidden; white-space: nowrap; max-width: 90vw; }
 
@@ -190,7 +190,8 @@
         let projMatrix; 
         let currentCoeffs = []; 
         
-        const customColors = ["rgb(240,52,38)", "rgb(51,52,102)","rgb(128,188,3)", "rgb(69,169,207)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];
+        // NEW COLOR PALETTE
+        const customColors = ["rgb(240,52,38)", "rgb(128,188,3)", "rgb(51,52,102)", "rgb(40,115,182)", "rgb(69,169,207)", "rgb(54,237,211)", "rgb(32,80,46)", "rgb(31,165,98)", "rgb(194,220,184)", "rgb(108,140,96)", "rgb(23,244,111)", "rgb(69,60,197)", "rgb(219,187,236)"];
         const ZERO_TOLERANCE = 1e-8;
 
         // --- Modal Logic ---
@@ -365,6 +366,7 @@
             return customColors[bestBasis % customColors.length];
         }
 
+        // New split-layer Node Updating Logic
         function updateNodeVisuals(nodeId, coeffs, rBase, isSettlePhase = true) {
             let bgGroup = d3.select(`#node-group-${nodeId}`);
             let textGroup = d3.select(`#text-group-${nodeId}`);
@@ -430,6 +432,7 @@
                     });
                     str += "=" + totalVal;
                     
+                    // Increased font sizes for sums
                     let fSize = rBase * 0.95;
                     if (str.length > 2) fSize = rBase * 0.75;
                     if (str.length > 5) fSize = rBase * 0.65;
@@ -483,6 +486,7 @@
             
             links = globalData[currentGraph].edges.map(d => Object.assign({}, d));
 
+            // --- BFS Subconstituent Calculation ---
             let dists = new Array(nodes.length).fill(-1);
             dists[0] = 0;
             let queue = [0];
@@ -512,6 +516,7 @@
                 subconstituents[d].sort((a,b) => a - b);
             }
 
+            // Populate the right-side Subconstituent Table
             let tableHTML = `
                 <table>
                     <thead>
@@ -536,6 +541,7 @@
             document.getElementById("subconstituent-table").innerHTML = tableHTML;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("subconstituent-table")]);
 
+            // Setup top-left graph info
             const titleMap = {
                 "K4": "\\(K_4\\)",
                 "K3,3": "\\(K_{3,3}\\)"
@@ -545,6 +551,7 @@
             document.getElementById("graph-info-vertices").innerText = `${globalData[currentGraph].vertices} Vertices`;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("graph-info-title")]);
 
+            // Setup bottom-right module info
             const formattedMod = currentModule.replace(/W(\d+)([a-z]+)?/i, function(match, num, letter) {
                 return letter ? `W_{${num},${letter}}` : `W_{${num}}`;
             });
@@ -621,10 +628,12 @@
             if (dy === 0) dy = 1;
 
             const maxDim = Math.max(dx, dy);
-            let rBase = (maxDim / Math.sqrt(nodes.length)) * 0.22; 
-            let padFactor = 0.25;
+            let rBase = (maxDim / Math.sqrt(nodes.length)) * 0.18; 
+            let padFactor = 0.35;
             
-            if (["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph)) {
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
+
+            if (isLargeGraph) {
                 rBase *= 0.65; 
                 padFactor = 0.15; 
             }
@@ -645,11 +654,12 @@
                 .attr("x1", d => nodes[d.source].x).attr("y1", d => nodes[d.source].y)
                 .attr("x2", d => nodes[d.target].x).attr("y2", d => nodes[d.target].y);
 
-            // Split rendering into two distinct layers for perfect z-indexing
+            // Layer 1: Backgrounds
             let bgLayer = svg.append("g").attr("class", "bg-layer");
+            // Layer 2: Text on top
             let textLayer = svg.append("g").attr("class", "text-layer");
 
-            let nodeGroups = bgLayer.selectAll(".node-group")
+            bgLayer.selectAll(".node-group")
                 .data(nodes).join("g")
                 .attr("class", "node-group")
                 .attr("id", d => `node-group-${d.id}`)
@@ -661,7 +671,7 @@
                 .attr("id", d => `text-group-${d.id}`)
                 .attr("transform", d => `translate(${d.x},${d.y})`);
 
-            // Use a transparent circle in the top layer to flawlessly catch mouse hovers
+            // Transparent hit-box for tooltips
             textGroups.append("circle")
                 .attr("r", rBase)
                 .attr("fill", "transparent")
@@ -687,10 +697,10 @@
 
                     let basisHtml = "";
                     if (activeContribs.length === 0) {
-                        basisHtml = `<div style="color: #888; font-style: italic; margin-top: 5px;">No active basis vectors</div>`;
+                        basisHtml = `<div style="color: #888; font-style: italic; margin-top: 5px;">No active contributions</div>`;
                     } else {
                         basisHtml = `<div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px; text-align: left;">
-                            <strong style="font-size: 13px;">As part of basis vector(s):</strong>
+                            <strong style="font-size: 13px;">Contributions from basis vectors:</strong>
                             <table style="margin-top: 5px; border-collapse: separate; border-spacing: 0 4px; font-size: 13px;">`;
                         
                         activeContribs.forEach(c => {
@@ -706,7 +716,7 @@
                     const tooltip = d3.select("#node-tooltip");
                     tooltip.html(`
                         <div style="text-align: center; min-width: 180px;">
-                            <div style="font-size: 16px; margin-bottom: 5px;"><strong>Node ${nodeName}</strong></div>
+                            <div style="font-size: 16px; margin-bottom: 5px;"><strong>Vertex ${nodeName}</strong></div>
                             <div style="font-size: 15px;">Current Value: <strong>${val}</strong></div>
                             ${basisHtml}
                         </div>
@@ -726,15 +736,12 @@
                     d3.select("#node-tooltip").style("opacity", 0);
                 });
 
-            // Check if the current graph is one of the massive ones
-            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
-
             textGroups.append("text")
                 .attr("class", "id-label")
                 .attr("font-size", `${rBase * 0.55}px`)
                 .attr("dominant-baseline", isLargeGraph ? "central" : "hanging")
                 .attr("x", d => {
-                    if (!isLargeGraph) return 0; // Default centered horizontally
+                    if (!isLargeGraph) return 0;
                     
                     const cx = (minX + maxX) / 2;
                     const cy = (minY + maxY) / 2;
@@ -744,7 +751,7 @@
                     return len === 0 ? 0 : (vx / len) * (rBase * 1.45);
                 })
                 .attr("y", d => {
-                    if (!isLargeGraph) return rBase * 1.15; // Default hanging slightly below the node
+                    if (!isLargeGraph) return rBase * 1.15;
                     
                     const cx = (minX + maxX) / 2;
                     const cy = (minY + maxY) / 2;
@@ -754,6 +761,14 @@
                     return len === 0 ? (rBase * 1.45) : (vy / len) * (rBase * 1.45);
                 })
                 .text(d => d.id === 0 ? "x" : d.id);
+                
+            textGroups.append("text")
+                .attr("class", "node-label main-label")
+                .attr("y", 0);
+
+            nodes.forEach(n => {
+                updateNodeVisuals(n.id, currentCoeffs, rBase, true);
+            });
 
             updateMathDisplay(currentCoeffs);
         }
