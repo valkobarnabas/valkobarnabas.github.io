@@ -191,6 +191,7 @@
         let currentCoeffs = []; 
         let applyCount = 0; // Tracks the power of A
         let initialVectorIndex = 0; // Tracks the initial seed vector
+        let globalRBase = 0; // Safely stores the exact node radius
         
         // NEW COLOR PALETTE
         const customColors = ["rgb(240,52,38)", "rgb(51,52,102)","rgb(128,188,3)", "rgb(69,169,207)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        const ZERO_TOLERANCE = 1e-8;
@@ -644,6 +645,8 @@ function renderGraph() {
                 rBase *= 0.65; 
                 padFactor = 0.15; 
             }
+
+            globalRBase = rBase;
             
             const padX = dx * padFactor;
             const padY = dy * padFactor;
@@ -818,12 +821,8 @@ function applyAdjacencyAction() {
                 nodeValues = nextValues; 
                 currentCoeffs = newCoeffs; 
 
-                const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
-                const labelScale = isLargeGraph ? 1.65 : 0.55;
-
-                const firstTextGroup = svg.select(".text-group");
-                const rBaseText = firstTextGroup.select(".id-label").attr("font-size");
-                const rBase = parseFloat(rBaseText) / labelScale;
+                // Delete the DOM scraping and just use the exact radius
+                const rBase = globalRBase; 
 
                 nodes.forEach(n => {
                     d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
@@ -842,9 +841,7 @@ function applyAdjacencyAction() {
             const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
             const labelScale = isLargeGraph ? 1.65 : 0.55;
 
-            const firstTextGroup = svg.select(".text-group");
-            const rBaseText = firstTextGroup.select(".id-label").attr("font-size");
-            const rBase = parseFloat(rBaseText) / labelScale;
+            const rBase = globalRBase;
             
             const particleR = rBase * 0.55; 
             const particleFontSize = rBase * 0.55;
