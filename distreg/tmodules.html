@@ -628,8 +628,8 @@
             if (dy === 0) dy = 1;
 
             const maxDim = Math.max(dx, dy);
-            let rBase = (maxDim / Math.sqrt(nodes.length)) * 0.18; 
-            let padFactor = 0.35;
+            let rBase = (maxDim / Math.sqrt(nodes.length)) * 0.22; 
+            let padFactor = 0.25;
             
             const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
 
