@@ -55,15 +55,14 @@
         /* Module Info (Bottom Right) */
         #module-info { position: absolute; right: 15px; bottom: 15px; z-index: 10; pointer-events: none; background: rgba(255, 255, 255, 0.92); padding: 12px 18px; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); border: 1px solid #ddd; text-align: right; }
         #module-info-title { font-size: 13px; color: #555; margin-bottom: 2px; font-weight: bold; }
-        #module-info-name { font-size: 26px; font-weight: bold; color: #111; }
+        #module-info-name { font-size: 26px; font-weight: bold; color: #c5050c; }
 
         #math-output { flex: 0 0 auto; padding: 15px 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80px; overflow-x: auto; }
         #equation-display { font-size: 1.1em; margin-top: 10px; width: 100%; text-align: center; }
 
-        .node { stroke: #fff; transition: fill 0.4s ease; }
         .link { stroke: #bbb; stroke-opacity: 0.6; }
         
-        .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 3px rgba(255,255,255,1), -1px -1px 3px rgba(255,255,255,1), 1px -1px 3px rgba(255,255,255,1), -1px 1px 3px rgba(255,255,255,1); transition: font-size 0.3s ease, fill 0.3s ease; }
+        .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 3px rgba(255,255,255,1), -1px -1px 3px rgba(255,255,255,1), 1px -1px 3px rgba(255,255,255,1), -1px 1px 3px rgba(255,255,255,1); transition: fill 0.3s ease; }
         .id-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: hanging; fill: #000; opacity: 0.7; }
         
         .tooltip { position: absolute; background: white; border: 1px solid #ccc; padding: 12px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); pointer-events: none; opacity: 0; transition: opacity 0.15s ease-in-out; z-index: 1000; font-size: 14px; max-height: 90vh; display: flex; align-items: center; justify-content: center; overflow-x: auto; overflow-y: hidden; white-space: nowrap; max-width: 90vw; }
@@ -349,7 +348,7 @@
             renderGraph();
         }
 
-        function getNodeColor(nodeId, val, coeffs) {
+        function getDominantColor(nodeId, val, coeffs) {
             if (Math.abs(val) < ZERO_TOLERANCE) return "#e9ecef"; 
             
             let maxContrib = -1;
@@ -363,6 +362,79 @@
                 }
             }
             return customColors[bestBasis % customColors.length];
+        }
+
+        // New function to update a node group (pie chart for multi-vector contributions)
+        function updateNodeVisuals(group, nodeId, coeffs, rBase, isSettlePhase = true) {
+            let activeContribs = [];
+            let totalVal = 0;
+            for (let j = 0; j < basisVectors.length; j++) {
+                let val = Math.round(coeffs[j] * basisVectors[j][nodeId]);
+                if (Math.abs(val) > 0) {
+                    activeContribs.push({
+                        color: customColors[j % customColors.length],
+                        val: val
+                    });
+                    totalVal += val;
+                }
+            }
+
+            group.selectAll(".node-bg").remove();
+
+            if (activeContribs.length === 0) {
+                group.insert("circle", ".id-label")
+                    .attr("class", "node-bg")
+                    .attr("r", rBase)
+                    .attr("fill", "#e9ecef")
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", rBase * 0.08);
+                
+                if (isSettlePhase) {
+                    group.select(".main-label").text("").attr("font-size", `${rBase * 0.85}px`);
+                }
+            } else if (activeContribs.length === 1) {
+                group.insert("circle", ".id-label")
+                    .attr("class", "node-bg")
+                    .attr("r", rBase)
+                    .attr("fill", activeContribs[0].color)
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", rBase * 0.08);
+                
+                if (isSettlePhase) {
+                    group.select(".main-label").text(totalVal).attr("font-size", `${rBase * 0.85}px`);
+                }
+            } else {
+                let pie = d3.pie().value(1).sort(null); // Equal area slices
+                let arc = d3.arc().innerRadius(0).outerRadius(rBase);
+                let arcs = pie(activeContribs);
+                
+                group.insert("g", ".id-label")
+                    .attr("class", "node-bg")
+                    .selectAll("path")
+                    .data(arcs)
+                    .join("path")
+                    .attr("d", arc)
+                    .attr("fill", d => d.data.color)
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", rBase * 0.08);
+                
+                if (isSettlePhase) {
+                    let str = "";
+                    activeContribs.forEach((c, idx) => {
+                        if (idx === 0) str += c.val;
+                        else if (c.val < 0) str += "-" + Math.abs(c.val);
+                        else str += "+" + c.val;
+                    });
+                    str += "=" + totalVal;
+                    
+                    let fSize = rBase * 0.85;
+                    if (str.length > 2) fSize = rBase * 0.55;
+                    if (str.length > 5) fSize = rBase * 0.45;
+                    if (str.length > 8) fSize = rBase * 0.35;
+                    
+                    group.select(".main-label").text(str).attr("font-size", `${fSize}px`);
+                }
+            }
         }
 
         function setControlsState(disabled) {
@@ -470,7 +542,7 @@
             };
             const displayTitle = titleMap[currentGraph] || currentGraph;
             document.getElementById("graph-info-title").innerHTML = displayTitle;
-            document.getElementById("graph-info-vertices").innerText = `${globalData[currentGraph].vertices} Vertices`;
+            document.getElementById("graph-info-vertices").innerText = `Number of vertices: ${globalData[currentGraph].vertices}`;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("graph-info-title")]);
 
             // Setup bottom-right module info
@@ -554,8 +626,8 @@
             let padFactor = 0.25;
             
             if (["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph)) {
-                rBase *= 0.65; 
-                padFactor = 0.10; 
+                rBase *= 0.63; 
+                padFactor = 0.15; 
             }
             
             const padX = dx * padFactor;
@@ -574,30 +646,26 @@
                 .attr("x1", d => nodes[d.source].x).attr("y1", d => nodes[d.source].y)
                 .attr("x2", d => nodes[d.target].x).attr("y2", d => nodes[d.target].y);
 
-            svg.append("g").selectAll("circle")
-                .data(nodes).join("circle")
-                .attr("class", "node")
-                .attr("id", d => `node-${d.id}`)
-                .attr("r", rBase)
-                .attr("stroke-width", rBase * 0.08)
-                .attr("cx", d => d.x).attr("cy", d => d.y)
-                .attr("fill", d => getNodeColor(d.id, nodeValues[d.id], currentCoeffs));
+            // Create Group Elements for Nodes instead of Circles
+            let nodeGroups = svg.append("g").selectAll(".node-group")
+                .data(nodes).join("g")
+                .attr("class", "node-group")
+                .attr("id", d => `node-group-${d.id}`)
+                .attr("transform", d => `translate(${d.x},${d.y})`);
 
-            svg.append("g").selectAll("text.node-label")
-                .data(nodes).join("text")
-                .attr("class", "node-label")
-                .attr("id", d => `label-${d.id}`)
-                .attr("font-size", `${rBase * 0.85}px`)
-                .attr("x", d => d.x).attr("y", d => d.y)
-                .text(d => Math.abs(nodeValues[d.id]) < ZERO_TOLERANCE ? "" : Math.round(nodeValues[d.id]));
-
-            svg.append("g").selectAll("text.id-label")
-                .data(nodes).join("text")
+            nodeGroups.append("text")
                 .attr("class", "id-label")
                 .attr("font-size", `${rBase * 0.55}px`)
-                .attr("x", d => d.x)
-                .attr("y", d => d.y + rBase * 1.15)
+                .attr("y", rBase * 1.15)
                 .text(d => d.id === 0 ? "x" : d.id);
+                
+            nodeGroups.append("text")
+                .attr("class", "node-label main-label")
+                .attr("y", 0);
+
+            nodes.forEach(n => {
+                updateNodeVisuals(d3.select(`#node-group-${n.id}`), n.id, currentCoeffs, rBase, true);
+            });
 
             updateMathDisplay(currentCoeffs);
         }
@@ -633,22 +701,14 @@
                 nodeValues = nextValues; 
                 currentCoeffs = newCoeffs; 
 
-                const firstNode = svg.select(".node");
-                const rBase = firstNode.empty() ? 10 : parseFloat(firstNode.attr("r"));
+                const firstNodeGroups = svg.select(".node-group");
+                const rBaseText = firstNodeGroups.select(".id-label").attr("font-size");
+                const rBase = parseFloat(rBaseText) / 0.55;
 
                 nodes.forEach(n => {
-                    let val = nodeValues[n.id];
-                    d3.select(`#node-${n.id}`).attr("fill", getNodeColor(n.id, val, currentCoeffs));
-                    
-                    let labelSelect = d3.select(`#label-${n.id}`);
-                    
-                    labelSelect.attr("font-size", `${rBase * 0.85}px`).attr("fill", "#111");
-
-                    if (Math.abs(val) < ZERO_TOLERANCE) {
-                        labelSelect.text("");
-                    } else {
-                        labelSelect.text(Math.round(val));
-                    }
+                    let groupSelect = d3.select(`#node-group-${n.id}`);
+                    groupSelect.select(".main-label").attr("fill", "#111");
+                    updateNodeVisuals(groupSelect, n.id, currentCoeffs, rBase, true);
                 });
 
                 if (!skipMathUpdate) updateMathDisplay(newCoeffs);
@@ -660,8 +720,9 @@
                 return;
             }
 
-            const firstNode = svg.select(".node");
-            const rBase = firstNode.empty() ? 10 : parseFloat(firstNode.attr("r"));
+            const firstNodeGroups = svg.select(".node-group");
+            const rBaseText = firstNodeGroups.select(".id-label").attr("font-size");
+            const rBase = parseFloat(rBaseText) / 0.55;
             const particleR = rBase * 0.55; 
             const particleFontSize = rBase * 0.55; 
             
@@ -681,7 +742,7 @@
 
                     pGroup.append("circle")
                         .attr("r", particleR)
-                        .attr("fill", getNodeColor(s.id, valS, currentCoeffs))
+                        .attr("fill", getDominantColor(s.id, valS, currentCoeffs))
                         .attr("stroke", "#fff")
                         .attr("stroke-width", particleR * 0.1);
 
@@ -703,7 +764,7 @@
 
                     pGroup.append("circle")
                         .attr("r", particleR)
-                        .attr("fill", getNodeColor(t.id, valT, currentCoeffs))
+                        .attr("fill", getDominantColor(t.id, valT, currentCoeffs))
                         .attr("stroke", "#fff")
                         .attr("stroke-width", particleR * 0.1);
 
@@ -730,10 +791,11 @@
 
                     nodes.forEach(n => {
                         let incoming = incomingVals[n.id];
-                        let labelSelect = d3.select(`#label-${n.id}`);
-                        let nodeSelect = d3.select(`#node-${n.id}`);
+                        let groupSelect = d3.select(`#node-group-${n.id}`);
+                        let labelSelect = groupSelect.select(".main-label");
                         
-                        nodeSelect.attr("fill", getNodeColor(n.id, nextValues[n.id], newCoeffs));
+                        // Instantly update the pie chart background to the new state
+                        updateNodeVisuals(groupSelect, n.id, newCoeffs, rBase, false);
 
                         if (incoming.length > 0) {
                             let sumStr = "";
@@ -751,8 +813,13 @@
                                 sumStr += " = " + Math.round(sum);
                             }
                             
+                            let fSize = rBase * 0.85;
+                            if (sumStr.length > 2) fSize = rBase * 0.55;
+                            if (sumStr.length > 5) fSize = rBase * 0.45;
+                            if (sumStr.length > 8) fSize = rBase * 0.35;
+                            
                             labelSelect.text(sumStr)
-                                       .attr("font-size", `${rBase * 0.65}px`) 
+                                       .attr("font-size", `${fSize}px`) 
                                        .attr("fill", "#c5050c"); 
                         } else {
                             labelSelect.text("0")
