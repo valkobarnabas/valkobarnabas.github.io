@@ -26,7 +26,8 @@
         .checkbox-container label { font-size: 14px; cursor: pointer; user-select: none; }
         
         .legend-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .legend-item { display: flex; align-items: center; font-size: 14px; background: #f8f9fa; padding: 6px 10px; border-radius: 4px; border: 1px solid #ddd;}
+        .legend-item { display: flex; align-items: center; font-size: 14px; background: #f8f9fa; padding: 6px 10px; border-radius: 4px; border: 1px solid #ddd; cursor: help; transition: background 0.2s;}
+        .legend-item:hover { background: #e9ecef; }
         .legend-color { width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; display: inline-block; flex-shrink: 0; }
 
         .viz-column { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
@@ -40,11 +41,14 @@
         
         .node-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: central; fill: #111; text-shadow: 1px 1px 3px rgba(255,255,255,1), -1px -1px 3px rgba(255,255,255,1), 1px -1px 3px rgba(255,255,255,1), -1px 1px 3px rgba(255,255,255,1); transition: font-size 0.3s ease, fill 0.3s ease; }
         .id-label { font-family: monospace; font-weight: bold; pointer-events: none; text-anchor: middle; dominant-baseline: hanging; fill: #000; opacity: 0.7; }
+        
+        /* Tooltip styling for the vector hover effect */
+        .tooltip { position: absolute; background: white; border: 1px solid #ccc; padding: 12px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); pointer-events: none; opacity: 0; transition: opacity 0.15s ease-in-out; z-index: 1000; font-size: 14px; max-height: 90vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <h1>Irreducible T-modules Visualization</h1>
+    <h1>Visualizing \(T\)-modules of the 13 distance-regular graphs with valency 3.</h1>
     
     <div class="container">
         <div class="controls">
@@ -82,6 +86,8 @@
             </div>
         </div>
     </div>
+    
+    <div id="vector-tooltip" class="tooltip"></div>
 
     <script>
         let globalData = {};
@@ -92,7 +98,7 @@
         
         let basisVectors = []; 
         let projMatrix; 
-        let currentCoeffs = []; // Track active coefficients globally for dynamic coloring
+        let currentCoeffs = []; 
         
         const customColors = ["#007F0E", "#21007F", "#7C6C00", "#FF00DC", "#00C189", "#FF6A00", "#77D1FF", "#d62728", "#9467bd", "#17becf", "#8c564b", "#e377c2", "#bcbd22"];
         const ZERO_TOLERANCE = 1e-8;
@@ -186,13 +192,11 @@
             const select = document.getElementById("vector-select");
             select.innerHTML = "";
             Object.keys(basisDict).forEach((key, index) => {
-                // Simplified dropdown purely to v_i
                 select.appendChild(new Option(`v${index + 1}`, key));
             });
             renderGraph();
         }
 
-        // Dynamic node coloring based on active coefficients
         function getNodeColor(nodeId, val, coeffs) {
             if (Math.abs(val) < ZERO_TOLERANCE) return "#e9ecef"; 
             
@@ -252,12 +256,52 @@
                 const color = customColors[index % customColors.length];
                 const labelTex = getBasisLabel(currentGraph, currentModule, index);
                 legendContainer.innerHTML += `
-                    <div class="legend-item">
+                    <div class="legend-item" data-index="${index}">
                         <span class="legend-color" style="background-color: ${color};"></span>
                         \\(\\mathbf{v}_{${index + 1}} = ${labelTex}\\)
                     </div>`;
             });
             if (window.MathJax) MathJax.typesetPromise([legendContainer]);
+
+            // Add Event Listeners for the Vector Hover Tooltips
+            d3.select("#legend-container").selectAll(".legend-item")
+                .on("mouseenter", function(event) {
+                    const idx = +d3.select(this).attr("data-index");
+                    const vec = basisVectors[idx];
+                    
+                    // Extract the essential part of the vector (from first non-zero to last non-zero)
+                    let first = -1, last = -1;
+                    for(let i=0; i<vec.length; i++) {
+                        if(Math.abs(vec[i]) > ZERO_TOLERANCE) {
+                            if(first === -1) first = i;
+                            last = i;
+                        }
+                    }
+                    if (first === -1) { first = 0; last = 0; }
+                    let essential = vec.slice(first, last + 1).map(v => Math.round(v));
+                    
+                    // Format as a LaTeX column vector
+                    let tex = `\\begin{bmatrix} ${essential.join(" \\\\ ")} \\end{bmatrix}`;
+                    
+                    const tooltip = d3.select("#vector-tooltip");
+                    // Dynamically scale font size if the vector is massive
+                    tooltip.style("font-size", essential.length > 25 ? "11px" : "14px");
+                    
+                    tooltip.html(`\\[ \\mathbf{v}_{${idx + 1}} = ${tex} \\]`)
+                           .style("left", (event.pageX + 15) + "px")
+                           .style("top", (event.pageY + 15) + "px")
+                           .style("opacity", 1);
+                    
+                    if(window.MathJax) MathJax.typesetPromise([tooltip.node()]);
+                })
+                .on("mousemove", function(event) {
+                    d3.select("#vector-tooltip")
+                      .style("left", (event.pageX + 15) + "px")
+                      .style("top", (event.pageY + 15) + "px");
+                })
+                .on("mouseleave", function() {
+                    d3.select("#vector-tooltip").style("opacity", 0);
+                });
 
             d3.select("#viz-container").selectAll("*").remove();
 
@@ -466,7 +510,8 @@
                             }
                             
                             labelSelect.text(sumStr)
-                                       .attr("font-size", `${rBase * 0.45}px`) 
+                                       /* ENLARGED FONT FOR THE MATH SUM (Was 0.45) */
+                                       .attr("font-size", `${rBase * 0.55}px`) 
                                        .attr("fill", "#c5050c"); 
                         } else {
                             labelSelect.text("0")
