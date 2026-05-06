@@ -743,9 +743,13 @@ function renderGraph() {
                     d3.select("#node-tooltip").style("opacity", 0);
                 });
 
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
+            const labelScale = isLargeGraph ? 1.65 : 0.55; // 3x larger for large graphs
+            const radialPush = isLargeGraph ? 2.5 : 1.45;  // Push it further out to prevent overlapping
+
             textGroups.append("text")
                 .attr("class", "id-label")
-                .attr("font-size", `${rBase * 0.55}px`)
+                .attr("font-size", `${rBase * labelScale}px`)
                 .attr("dominant-baseline", isLargeGraph ? "central" : "hanging")
                 .attr("x", d => {
                     if (!isLargeGraph) return 0;
@@ -755,7 +759,7 @@ function renderGraph() {
                     const vx = d.x - cx;
                     const vy = d.y - cy;
                     const len = Math.sqrt(vx * vx + vy * vy);
-                    return len === 0 ? 0 : (vx / len) * (rBase * 1.45);
+                    return len === 0 ? 0 : (vx / len) * (rBase * radialPush);
                 })
                 .attr("y", d => {
                     if (!isLargeGraph) return rBase * 1.15;
@@ -765,7 +769,7 @@ function renderGraph() {
                     const vx = d.x - cx;
                     const vy = d.y - cy;
                     const len = Math.sqrt(vx * vx + vy * vy);
-                    return len === 0 ? (rBase * 1.45) : (vy / len) * (rBase * 1.45);
+                    return len === 0 ? (rBase * radialPush) : (vy / len) * (rBase * radialPush);
                 })
                 .text(d => d.id === 0 ? "x" : d.id);
                 
@@ -815,9 +819,12 @@ function applyAdjacencyAction() {
                 nodeValues = nextValues; 
                 currentCoeffs = newCoeffs; 
 
+                const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
+                const labelScale = isLargeGraph ? 1.65 : 0.55;
+
                 const firstTextGroup = svg.select(".text-group");
                 const rBaseText = firstTextGroup.select(".id-label").attr("font-size");
-                const rBase = parseFloat(rBaseText) / 0.55;
+                const rBase = parseFloat(rBaseText) / labelScale;
 
                 nodes.forEach(n => {
                     d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
@@ -833,11 +840,15 @@ function applyAdjacencyAction() {
                 return;
             }
 
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
+            const labelScale = isLargeGraph ? 1.65 : 0.55;
+
             const firstTextGroup = svg.select(".text-group");
             const rBaseText = firstTextGroup.select(".id-label").attr("font-size");
-            const rBase = parseFloat(rBaseText) / 0.55;
+            const rBase = parseFloat(rBaseText) / labelScale;
+            
             const particleR = rBase * 0.55; 
-            const particleFontSize = rBase * 0.55; 
+            const particleFontSize = rBase * 0.55;
             
             const flowG = svg.append("g").attr("class", "flow-layer");
             let activeFlows = 0;
