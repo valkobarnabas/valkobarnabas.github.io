@@ -260,7 +260,6 @@
             renderGraph();
         }
 
-        // Global function attached to legend item clicks
         window.selectVectorFromLegend = function(key) {
             if(document.getElementById("apply-A").disabled) return; 
             document.getElementById("vector-select").value = key;
@@ -321,11 +320,41 @@
             currentCoeffs[basisKeys.indexOf(startVectorKey)] = 1;
 
             nodes = globalData[currentGraph].nodes.map((n, i) => {
-                // INVERT Y AXIS: Maps the standard Cartesian plane from the R script cleanly into the SVG Top-Left grid.
-                return { id: i, x: n.x, y: -n.y };
+                return { id: i, x: n.x, y: -n.y }; // Inverted Y-axis correctly maps R logic to SVG
             });
             
             links = globalData[currentGraph].edges.map(d => Object.assign({}, d));
+
+            // --- BFS Subconstituent Calculation ---
+            let dists = new Array(nodes.length).fill(-1);
+            dists[0] = 0;
+            let queue = [0];
+            let adj = Array.from({length: nodes.length}, () => []);
+            links.forEach(l => {
+                let s = typeof l.source === 'object' ? l.source.id : l.source;
+                let t = typeof l.target === 'object' ? l.target.id : l.target;
+                adj[s].push(t);
+                adj[t].push(s);
+            });
+            while(queue.length > 0) {
+                let curr = queue.shift();
+                adj[curr].forEach(neighbor => {
+                    if(dists[neighbor] === -1) {
+                        dists[neighbor] = dists[curr] + 1;
+                        queue.push(neighbor);
+                    }
+                });
+            }
+            let subconstituents = {};
+            for(let i=0; i<nodes.length; i++) {
+                let d = dists[i];
+                if(!subconstituents[d]) subconstituents[d] = [];
+                subconstituents[d].push(i);
+            }
+            for(let d in subconstituents) {
+                subconstituents[d].sort((a,b) => a - b);
+            }
+            // --------------------------------------
 
             const legendContainer = document.getElementById("legend-container");
             legendContainer.innerHTML = "";
@@ -347,15 +376,18 @@
                     const idx = +d3.select(this).attr("data-index");
                     const vec = basisVectors[idx];
                     
-                    let first = -1, last = -1;
+                    // Automatically find which subconstituent this vector belongs to
+                    let targetDist = -1;
                     for(let i=0; i<vec.length; i++) {
                         if(Math.abs(vec[i]) > ZERO_TOLERANCE) {
-                            if(first === -1) first = i;
-                            last = i;
+                            targetDist = dists[i];
+                            break;
                         }
                     }
-                    if (first === -1) { first = 0; last = 0; }
-                    let essential = vec.slice(first, last + 1).map(v => Math.round(v));
+                    if (targetDist === -1) targetDist = 0; // Fallback to 0 if zero vector
+
+                    // Extract all entries in that exact subconstituent, capturing true zero values
+                    let essential = subconstituents[targetDist].map(nodeIdx => Math.round(vec[nodeIdx]));
                     
                     let tex = `\\begin{bmatrix} ${essential.join(" & ")} \\end{bmatrix}`;
                     
