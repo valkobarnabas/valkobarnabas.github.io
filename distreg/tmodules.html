@@ -41,6 +41,11 @@
         .visualization-wrapper { flex: 1; position: relative; display: flex; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 0; overflow: hidden; background: white; }
         .visualization { flex: 1; display: flex; justify-content: center; align-items: center; }
         
+        /* New Styles for Graph Info (Top Left) */
+        #graph-info { position: absolute; left: 20px; top: 15px; z-index: 10; pointer-events: none; background: rgba(255, 255, 255, 0.85); padding: 10px 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        #graph-info-title { font-size: 26px; font-weight: bold; color: #111; margin-bottom: 2px; }
+        #graph-info-vertices { font-size: 15px; color: #555; }
+
         #subconstituent-table { position: absolute; right: 15px; top: 15px; background: rgba(255, 255, 255, 0.92); border: 1px solid #ddd; border-radius: 6px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); max-height: calc(100% - 30px); overflow-y: auto; pointer-events: auto; font-size: 13px; z-index: 10; min-width: 140px; }
         #subconstituent-table table { width: 100%; border-collapse: collapse; }
         #subconstituent-table th { border-bottom: 2px solid #bbb; padding: 4px 8px; text-align: left; }
@@ -108,6 +113,11 @@
 
         <div class="viz-column">
             <div class="visualization-wrapper">
+                <div id="graph-info">
+                    <div id="graph-info-title"></div>
+                    <div id="graph-info-vertices"></div>
+                </div>
+                
                 <div class="visualization" id="viz-container"></div>
                 <div id="subconstituent-table"></div>
             </div>
@@ -194,7 +204,6 @@
         }
         // -------------------
 
-        // Helper function to format vertex sequences nicely (e.g. [x, 1:3, 5])
         function formatVertexSequence(arr) {
             if (arr.length === 0) return "[]";
             let v_arr = [...arr].sort((a, b) => a - b);
@@ -417,7 +426,6 @@
             for(let d in subconstituents) {
                 subconstituents[d].sort((a,b) => a - b);
             }
-            // --------------------------------------
 
             // Populate the right-side Subconstituent Table
             let tableHTML = `
@@ -444,6 +452,15 @@
             document.getElementById("subconstituent-table").innerHTML = tableHTML;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("subconstituent-table")]);
 
+            // Setup top-left graph info
+            const titleMap = {
+                "K4": "\\(K_4\\)",
+                "K3,3": "\\(K_{3,3}\\)"
+            };
+            const displayTitle = titleMap[currentGraph] || currentGraph;
+            document.getElementById("graph-info-title").innerHTML = displayTitle;
+            document.getElementById("graph-info-vertices").innerText = `Number of vertices: ${globalData[currentGraph].vertices}`;
+            if (window.MathJax) MathJax.typesetPromise([document.getElementById("graph-info-title")]);
 
             const legendContainer = document.getElementById("legend-container");
             legendContainer.innerHTML = "";
