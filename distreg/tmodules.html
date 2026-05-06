@@ -427,10 +427,10 @@
                     });
                     str += "=" + totalVal;
                     
-                    let fSize = rBase * 0.85;
-                    if (str.length > 2) fSize = rBase * 0.55;
-                    if (str.length > 5) fSize = rBase * 0.45;
-                    if (str.length > 8) fSize = rBase * 0.35;
+                    let fSize = rBase * 0.95;
+                    if (str.length > 2) fSize = rBase * 0.75;
+                    if (str.length > 5) fSize = rBase * 0.65;
+                    if (str.length > 8) fSize = rBase * 0.45;
                     
                     group.select(".main-label").text(str).attr("font-size", `${fSize}px`);
                 }
@@ -813,9 +813,9 @@
                                 sumStr += " = " + Math.round(sum);
                             }
                             
-                            let fSize = rBase * 0.85;
-                            if (sumStr.length > 2) fSize = rBase * 0.65;
-                            if (sumStr.length > 5) fSize = rBase * 0.55;
+                            let fSize = rBase * 0.95;
+                            if (sumStr.length > 2) fSize = rBase * 0.75;
+                            if (sumStr.length > 5) fSize = rBase * 0.65;
                             if (sumStr.length > 8) fSize = rBase * 0.35;
                             
                             labelSelect.text(sumStr)
