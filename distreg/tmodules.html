@@ -714,7 +714,23 @@
             nodeGroups.append("text")
                 .attr("class", "id-label")
                 .attr("font-size", `${rBase * 0.55}px`)
-                .attr("y", rBase * 1.15)
+                .attr("dominant-baseline", "central") // Overrides the CSS 'hanging' baseline for centered radial positioning
+                .attr("x", d => {
+                    const cx = (minX + maxX) / 2;
+                    const cy = (minY + maxY) / 2;
+                    const vx = d.x - cx;
+                    const vy = d.y - cy;
+                    const len = Math.sqrt(vx * vx + vy * vy);
+                    return len === 0 ? 0 : (vx / len) * (rBase * 1.45);
+                })
+                .attr("y", d => {
+                    const cx = (minX + maxX) / 2;
+                    const cy = (minY + maxY) / 2;
+                    const vx = d.x - cx;
+                    const vy = d.y - cy;
+                    const len = Math.sqrt(vx * vx + vy * vy);
+                    return len === 0 ? (rBase * 1.45) : (vy / len) * (rBase * 1.45);
+                })
                 .text(d => d.id === 0 ? "x" : d.id);
                 
             nodeGroups.append("text")
