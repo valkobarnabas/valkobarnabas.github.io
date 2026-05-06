@@ -994,7 +994,7 @@ function applyAdjacencyAction() {
                 return; 
             }
 
-            if (event.key === 'Enter' || event.key.toLowerCase() === 'a') {
+            if (event.key === 'Enter' || event.key === 'Space' || event.key.toLowerCase() === 'a') {
                 const btn = document.getElementById("apply-A");
                 if (!btn.disabled) {
                     btn.click();
