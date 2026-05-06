@@ -62,6 +62,8 @@
 
             <hr style="margin: 25px 0 15px 0; border: 0; border-top: 1px solid #eee;">
 
+            <h3 style="margin-top: 0;">Action</h3>
+            
             <div class="checkbox-container">
                 <input type="checkbox" id="anim-toggle" checked>
                 <label for="anim-toggle">Animate Action</label>
@@ -90,11 +92,11 @@
         
         let basisVectors = []; 
         let projMatrix; 
+        let currentCoeffs = []; // Track active coefficients globally for dynamic coloring
         
         const customColors = ["#007F0E", "#21007F", "#7C6C00", "#FF00DC", "#00C189", "#FF6A00", "#77D1FF", "#d62728", "#9467bd", "#17becf", "#8c564b", "#e377c2", "#bcbd22"];
         const ZERO_TOLERANCE = 1e-8;
 
-        // Exhaustive mapping back to your LaTeX paper
         function getBasisLabel(graph, module, index) {
             const mod = module.replace(/_/g, "").replace(/,/g, ""); 
             if (mod === "W0") return `e_{${index}}^*`;
@@ -144,19 +146,10 @@
                 }
             };
 
-            if (map[graph] && map[graph][mod]) {
-                return map[graph][mod][index];
-            }
-
-            // Standard fallback
+            if (map[graph] && map[graph][mod]) return map[graph][mod][index];
             if (index === 0) return "\\nu";
             if (index === 1) return "A\\nu";
             return `v_{${index + 1}}`;
-        }
-
-        // Utility to clean latex for standard HTML option tags
-        function getPlainText(tex) {
-            return tex.replace(/\\nu/g, 'ν').replace(/\\/g, '').replace(/\^/g, '^').replace(/_/g, '_').replace(/\*/g, '*');
         }
 
         d3.json("t_modules.json").then(data => {
@@ -193,15 +186,27 @@
             const select = document.getElementById("vector-select");
             select.innerHTML = "";
             Object.keys(basisDict).forEach((key, index) => {
-                const labelTex = getBasisLabel(currentGraph, currentModule, index);
-                select.appendChild(new Option(`v${index + 1} (${getPlainText(labelTex)})`, key));
+                // Simplified dropdown purely to v_i
+                select.appendChild(new Option(`v${index + 1}`, key));
             });
             renderGraph();
         }
 
-        function getNodeColor(nodeId, val) {
+        // Dynamic node coloring based on active coefficients
+        function getNodeColor(nodeId, val, coeffs) {
             if (Math.abs(val) < ZERO_TOLERANCE) return "#e9ecef"; 
-            return customColors[nodes[nodeId].homeBasis % customColors.length];
+            
+            let maxContrib = -1;
+            let bestBasis = 0;
+            
+            for (let j = 0; j < basisVectors.length; j++) {
+                let contrib = Math.abs(coeffs[j] * basisVectors[j][nodeId]);
+                if (contrib > maxContrib) {
+                    maxContrib = contrib;
+                    bestBasis = j;
+                }
+            }
+            return customColors[bestBasis % customColors.length];
         }
 
         function setControlsState(disabled) {
@@ -232,19 +237,11 @@
             projMatrix = math.multiply(VtV_inv, Vt);
 
             nodeValues = [...basisDict[startVectorKey]];
-            let currentCoeffs = new Array(basisVectors.length).fill(0);
+            currentCoeffs = new Array(basisVectors.length).fill(0);
             currentCoeffs[basisKeys.indexOf(startVectorKey)] = 1;
 
             nodes = globalData[currentGraph].nodes.map((n, i) => {
-                let maxVal = -1;
-                let bestBasis = 0;
-                for(let j = 0; j < basisVectors.length; j++) {
-                    if (Math.abs(basisVectors[j][i]) > maxVal) {
-                        maxVal = Math.abs(basisVectors[j][i]);
-                        bestBasis = j;
-                    }
-                }
-                return { id: i, x: n.x, y: n.y, homeBasis: bestBasis };
+                return { id: i, x: n.x, y: n.y };
             });
             
             links = globalData[currentGraph].edges.map(d => Object.assign({}, d));
@@ -257,10 +254,9 @@
                 legendContainer.innerHTML += `
                     <div class="legend-item">
                         <span class="legend-color" style="background-color: ${color};"></span>
-                        \\(${labelTex}\\)
+                        \\(\\mathbf{v}_{${index + 1}} = ${labelTex}\\)
                     </div>`;
             });
-            // Update Legend MathJax
             if (window.MathJax) MathJax.typesetPromise([legendContainer]);
 
             d3.select("#viz-container").selectAll("*").remove();
@@ -301,7 +297,7 @@
                 .attr("r", rBase)
                 .attr("stroke-width", rBase * 0.08)
                 .attr("cx", d => d.x).attr("cy", d => d.y)
-                .attr("fill", d => getNodeColor(d.id, nodeValues[d.id]));
+                .attr("fill", d => getNodeColor(d.id, nodeValues[d.id], currentCoeffs));
 
             svg.append("g").selectAll("text.node-label")
                 .data(nodes).join("text")
@@ -351,13 +347,14 @@
 
             function finalizeUpdate() {
                 nodeValues = nextValues; 
+                currentCoeffs = newCoeffs; 
 
                 const firstNode = svg.select(".node");
                 const rBase = firstNode.empty() ? 10 : parseFloat(firstNode.attr("r"));
 
                 nodes.forEach(n => {
                     let val = nodeValues[n.id];
-                    d3.select(`#node-${n.id}`).attr("fill", getNodeColor(n.id, val));
+                    d3.select(`#node-${n.id}`).attr("fill", getNodeColor(n.id, val, currentCoeffs));
                     
                     let labelSelect = d3.select(`#label-${n.id}`);
                     
@@ -400,7 +397,7 @@
 
                     pGroup.append("circle")
                         .attr("r", particleR)
-                        .attr("fill", getNodeColor(s.id, valS))
+                        .attr("fill", getNodeColor(s.id, valS, currentCoeffs))
                         .attr("stroke", "#fff")
                         .attr("stroke-width", particleR * 0.1);
 
@@ -422,7 +419,7 @@
 
                     pGroup.append("circle")
                         .attr("r", particleR)
-                        .attr("fill", getNodeColor(t.id, valT))
+                        .attr("fill", getNodeColor(t.id, valT, currentCoeffs))
                         .attr("stroke", "#fff")
                         .attr("stroke-width", particleR * 0.1);
 
@@ -450,7 +447,7 @@
                         let labelSelect = d3.select(`#label-${n.id}`);
                         let nodeSelect = d3.select(`#node-${n.id}`);
                         
-                        nodeSelect.attr("fill", getNodeColor(n.id, nextValues[n.id]));
+                        nodeSelect.attr("fill", getNodeColor(n.id, nextValues[n.id], newCoeffs));
 
                         if (incoming.length > 0) {
                             let sumStr = "";
@@ -486,30 +483,33 @@
         }
 
         function updateMathDisplay(coeffs) {
-            let terms = [];
+            let eq = "";
+            let first = true;
+            
             for (let j = 0; j < coeffs.length; j++) {
                 let val = Math.round(coeffs[j]);
                 
                 if (Math.abs(val) > 0) {
                     let colorHex = customColors[j % customColors.length];
-                    let label = getBasisLabel(currentGraph, currentModule, j);
+                    let label = `\\mathbf{v}_{${j+1}}`;
                     
-                    // Add parentheses if the basis string itself has multiple terms 
-                    let formattedLabel = label.includes("+") || label.includes("-") ? `\\left(${label}\\right)` : label;
-                    
-                    let termStr = "";
-                    if (val === 1) termStr = formattedLabel;
-                    else if (val === -1) termStr = `-${formattedLabel}`;
-                    else termStr = `${val} ${formattedLabel}`;
+                    let termTex = `\\color{${colorHex}}{${Math.abs(val) === 1 ? label : Math.abs(val) + " " + label}}`;
 
-                    terms.push(`\\color{${colorHex}}{${termStr}}`);
+                    if (first) {
+                        if (val < 0) eq += "- " + termTex;
+                        else eq += termTex;
+                        first = false;
+                    } else {
+                        if (val < 0) eq += " - " + termTex;
+                        else eq += " + " + termTex;
+                    }
                 }
             }
             
-            if (terms.length === 0) terms.push("0");
+            if (first) eq = "0";
             
             const mathEl = document.getElementById("equation-display");
-            mathEl.innerHTML = `\\[ = ${terms.join(" + ").replace(/\+ -/g, "- ")} \\]`;
+            mathEl.innerHTML = `\\[ = ${eq} \\]`;
             
             if (window.MathJax) MathJax.typesetPromise([mathEl]);
         }
