@@ -132,6 +132,9 @@
             <h4>Why only show the action of \(A\)?</h4>
             <p>To rigorously verify a \(T\)-module, we must check closure under \(A\) and all \(E_i^*\). However, the basis vectors \(\mathbf{v}_i\) presented here have been intentionally chosen so that each vector lies entirely within a single subconstituent of \(\Gamma\). Because they are already eigenvectors for the dual idempotents (applying \(E_i^*\) returns the vector or zero), they are trivially closed under \(E_i^*\). Therefore, to prove that the subspace is a \(T\)-module, <strong>we only need to demonstrate closure under \(A\)</strong>.</p>
             
+            <h4>The "Essential Part" of a Vector</h4>
+            <p>Because each basis vector \(\mathbf{v}_i\) lies entirely within a single subconstituent, it contains many trivial zeroes outside of that subconstituent. We often represent the vector by its <strong>essential part</strong>. This is the vector obtained by deleting all entries corresponding to vertices that are not in that specific subconstituent. Hovering over a basis vector in the legend displays this condensed representation.</p>
+
             <div class="modal-footer">
                 This website is designed and maintained by <span class="creator-name">Barnabás Valkó</span> (UW-Madison Math/Stats 2027).
             </div>
@@ -399,13 +402,13 @@
                     
                     const tooltip = d3.select("#vector-tooltip");
                     
-                    let fSize = "14px";
+                    let fSize = "13px";
                     if (essential.length > 50) fSize = "8px";
                     else if (essential.length > 25) fSize = "10px";
-                    else if (essential.length > 15) fSize = "12px";
+                    else if (essential.length > 15) fSize = "11px";
 
                     tooltip.style("font-size", fSize)
-                           .html(`\\[ \\mathbf{v}_{${idx + 1}} = ${tex} \\]`)
+                           .html(`\\[ \\text{Essential part of } \\mathbf{v}_{${idx + 1}} = ${tex} \\]`)
                            .style("left", (event.pageX + 15) + "px")
                            .style("top", (event.pageY + 15) + "px")
                            .style("opacity", 1);
@@ -437,7 +440,6 @@
             let rBase = (maxDim / Math.sqrt(nodes.length)) * 0.22; 
             let padFactor = 0.25;
             
-            // Adjust scaling and padding for massive graphs
             if (["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph)) {
                 rBase *= 0.65; 
                 padFactor = 0.10; 
@@ -514,7 +516,7 @@
             let newCoeffsMat = math.multiply(projMatrix, nextValuesMat);
             let newCoeffs = newCoeffsMat.toArray().map(c => Math.abs(c) < ZERO_TOLERANCE ? 0 : c);
 
-            function finalizeUpdate() {
+            function finalizeUpdate(skipMathUpdate = false) {
                 nodeValues = nextValues; 
                 currentCoeffs = newCoeffs; 
 
@@ -536,12 +538,12 @@
                     }
                 });
 
-                updateMathDisplay(newCoeffs);
+                if (!skipMathUpdate) updateMathDisplay(newCoeffs);
                 setControlsState(false); 
             }
 
             if (!doAnimate) {
-                finalizeUpdate();
+                finalizeUpdate(false);
                 return;
             }
 
@@ -605,11 +607,14 @@
                 }
             });
 
-            if (activeFlows === 0) finalizeUpdate();
+            if (activeFlows === 0) finalizeUpdate(false);
 
             function checkEnd() {
                 if (activeFlows === 0) {
                     flowG.transition().duration(200).style("opacity", 0).remove();
+                    
+                    // Synchronize MathJax display precisely when particles arrive
+                    updateMathDisplay(newCoeffs);
 
                     nodes.forEach(n => {
                         let incoming = incomingVals[n.id];
@@ -644,8 +649,9 @@
                         }
                     });
 
+                    // Skip the Math update in finalize to prevent a visual stutter
                     setTimeout(() => {
-                        finalizeUpdate();
+                        finalizeUpdate(true);
                     }, 2000);
                 }
             }
