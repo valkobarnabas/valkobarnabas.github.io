@@ -104,6 +104,18 @@
         
         .modal-footer { margin-top: 25px; font-size: 13px; color: #666; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
         .creator-name { color: #c5050c; font-weight: bold; }
+
+        /* Custom Dropdown Styles for LaTeX */
+        .custom-select-wrapper { position: relative; user-select: none; margin: 10px 0; width: 100%; font-family: -apple-system, sans-serif; }
+        .custom-select { position: relative; display: flex; flex-direction: column; border: 1px solid #ccc; border-radius: 4px; background: #fff; box-sizing: border-box; }
+        .custom-select__trigger { display: flex; align-items: center; justify-content: space-between; padding: 10px; font-size: 15px; cursor: pointer; min-height: 42px; box-sizing: border-box; }
+        .custom-select__trigger::after { content: '\25BC'; font-size: 10px; color: #555; transition: transform 0.2s; margin-left: 10px; }
+        .custom-select.open .custom-select__trigger::after { transform: rotate(-180deg); }
+        .custom-options { position: absolute; display: block; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ccc; border-top: none; border-radius: 0 0 4px 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 100; max-height: 250px; overflow-y: auto; opacity: 0; visibility: hidden; transition: all 0.2s; box-sizing: border-box; }
+        .custom-select.open .custom-options { opacity: 1; visibility: visible; }
+        .custom-option { position: relative; display: flex; align-items: center; padding: 10px; font-size: 15px; cursor: pointer; border-bottom: 1px solid #eee; min-height: 42px; box-sizing: border-box; }
+        .custom-option:hover { background-color: #f1f3f5; }
+        .custom-option.selected { background-color: #e9ecef; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -210,7 +222,7 @@
             <details class="info-section">
                 <summary style="color: #555;">2. Where do these&nbsp;\(T\)-modules come from?</summary>
                 <div class="details-content">
-                    <p>These modules were derived as part of <em>"Irreducible \(T\)-modules of Distance-Regular Graphs with Valency Three,"</em> a paper and project from the Madison Experimental Mathematics Lab at the University of Wisconsin-Madison, headed by Professor Paul Terwilliger.</p>
+                    <p>These modules were derived as part of <em>"Irreducible \(T\)-modules of Distance-Regular Graphs with Valency Three,"</em> a paper and project from the Madison Experimental Mathematics (MXM) Lab at the University of Wisconsin-Madison, headed by Professor Paul Terwilliger.</p>
                     <p>The goal of the project was to find an orthogonal direct sum decomposition of the standard module \(V = \mathbb{C}^X\) into irreducible \(T\)-modules. The specific \(T\)-modules featured here were found with the assistance of computational software such as R and Wolfram Mathematica.</p>
                 </div>
             </details>
@@ -264,7 +276,92 @@
         let hoveredSubconstituent = -1; // Tracks currently hovered table row
         
         // NEW COLOR PALETTE
-        const customColors = ["rgb(240,52,38)", "rgb(51,52,102)","rgb(128,188,3)", "rgb(69,169,207)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        const ZERO_TOLERANCE = 1e-8;
+        const customColors = ["rgb(240,52,38)", "rgb(51,52,102)","rgb(128,188,3)", "rgb(69,169,207)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        
+        const ZERO_TOLERANCE = 1e-8;
+
+        // Formats strings into LaTeX
+        function formatLatexLabel(type, val) {
+            if (type === 'graph') {
+                if (val === 'K4') return '\\(K_4\\)';
+                if (val === 'K3,3') return '\\(K_{3,3}\\)';
+                return val; // "Foster Graph" stays plain text
+            }
+            if (type === 'module') {
+                return '\\(' + val.replace(/W(\d+)([a-z]+)?/i, function(match, num, letter) {
+                    return letter ? `W_{${num},${letter}}` : `W_{${num}}`;
+                }) + '\\)';
+            }
+            if (type === 'vector') {
+                return '\\(\\mathbf{v}_{' + val.replace('v', '') + '}\\)';
+            }
+            return val;
+        }
+
+        // Hides the native select and builds a LaTeX-compatible div dropdown over it
+        function upgradeToLatexDropdown(selectId, type) {
+            const nativeSelect = document.getElementById(selectId);
+            nativeSelect.style.display = 'none'; // Hide the native ugly select
+
+            let existingWrapper = nativeSelect.nextElementSibling;
+            if (existingWrapper && existingWrapper.classList.contains('custom-select-wrapper')) {
+                existingWrapper.remove();
+            }
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-select-wrapper';
+            const customSelect = document.createElement('div');
+            customSelect.className = 'custom-select';
+            const trigger = document.createElement('div');
+            trigger.className = 'custom-select__trigger';
+            
+            let selectedOpt = nativeSelect.options[nativeSelect.selectedIndex];
+            trigger.innerHTML = selectedOpt ? formatLatexLabel(type, selectedOpt.text) : 'Select...';
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'custom-options';
+
+            Array.from(nativeSelect.options).forEach((opt, index) => {
+                const customOpt = document.createElement('div');
+                customOpt.className = 'custom-option';
+                if (index === nativeSelect.selectedIndex) customOpt.classList.add('selected');
+                customOpt.innerHTML = formatLatexLabel(type, opt.text);
+                customOpt.dataset.value = opt.value;
+
+                customOpt.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    nativeSelect.value = this.dataset.value;
+                    nativeSelect.dispatchEvent(new Event('change')); // Fire your existing logic!
+
+                    trigger.innerHTML = this.innerHTML;
+                    customSelect.classList.remove('open');
+                    optionsDiv.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+                optionsDiv.appendChild(customOpt);
+            });
+
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select').forEach(sel => {
+                    if(sel !== customSelect) sel.classList.remove('open');
+                });
+                customSelect.classList.toggle('open');
+            });
+
+            customSelect.appendChild(trigger);
+            customSelect.appendChild(optionsDiv);
+            wrapper.appendChild(customSelect);
+            nativeSelect.parentNode.insertBefore(wrapper, nativeSelect.nextSibling);
+
+            if (window.MathJax) MathJax.typesetPromise([wrapper]);
+        }
+
+        // Close dropdowns if user clicks anywhere else on the screen
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-select-wrapper')) {
+                document.querySelectorAll('.custom-select').forEach(sel => sel.classList.remove('open'));
+            }
+        });
 
         // --- Modal Logic ---
         const modal = document.getElementById('info-modal');
@@ -379,7 +476,7 @@
 
         d3.json("t_modules.json").then(data => {
             globalData = data;
-            populateDropdown("graph-select", Object.keys(data));
+            populateDropdown("graph-select", Object.keys(data), 'graph');
             document.getElementById("graph-select").addEventListener("change", updateGraphOptions);
             document.getElementById("module-select").addEventListener("change", updateVectorOptions);
             document.getElementById("vector-select").addEventListener("change", renderGraph);
@@ -400,15 +497,16 @@
             updateGraphOptions();
         });
 
-        function populateDropdown(id, options) {
+        function populateDropdown(id, options, type) {
             const select = document.getElementById(id);
             select.innerHTML = "";
             options.forEach(opt => select.appendChild(new Option(opt, opt)));
+            upgradeToLatexDropdown(id, type); // Apply the LaTeX upgrade!
         }
 
         function updateGraphOptions() {
             currentGraph = document.getElementById("graph-select").value;
-            populateDropdown("module-select", Object.keys(globalData[currentGraph].modules));
+            populateDropdown("module-select", Object.keys(globalData[currentGraph].modules), 'module');
             updateVectorOptions();
         }
 
@@ -420,12 +518,30 @@
             Object.keys(basisDict).forEach((key, index) => {
                 select.appendChild(new Option(`v${index + 1}`, key));
             });
+            upgradeToLatexDropdown("vector-select", 'vector'); // Apply the LaTeX upgrade!
             renderGraph();
         }
 
         window.selectVectorFromLegend = function(key) {
             if(document.getElementById("apply-A").disabled) return; 
-            document.getElementById("vector-select").value = key;
+            
+            const nativeSelect = document.getElementById("vector-select");
+            nativeSelect.value = key;
+            
+            // Visually sync the custom LaTeX dropdown to match the click
+            let wrapper = nativeSelect.nextElementSibling;
+            if (wrapper && wrapper.classList.contains('custom-select-wrapper')) {
+                let trigger = wrapper.querySelector('.custom-select__trigger');
+                let options = wrapper.querySelectorAll('.custom-option');
+                options.forEach(opt => {
+                    opt.classList.remove('selected');
+                    if (opt.dataset.value === key) {
+                        opt.classList.add('selected');
+                        trigger.innerHTML = opt.innerHTML;
+                    }
+                });
+            }
+            
             renderGraph();
         }
 
@@ -540,6 +656,17 @@
             legendItems.forEach(item => {
                 item.style.pointerEvents = disabled ? "none" : "auto";
                 item.style.opacity = disabled ? "0.6" : "1";
+            });
+
+            // Disable the custom LaTeX dropdowns
+            document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+                if (disabled) {
+                    wrapper.style.pointerEvents = 'none';
+                    wrapper.style.opacity = '0.6';
+                } else {
+                    wrapper.style.pointerEvents = 'auto';
+                    wrapper.style.opacity = '1';
+                }
             });
         }
 
