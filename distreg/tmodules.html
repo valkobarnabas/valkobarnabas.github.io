@@ -1196,7 +1196,7 @@
             matrixLatex += "\\end{bmatrix}";
             
             const matrixEl = document.getElementById("matrix-info-display");
-            matrixEl.innerHTML = `\\[ M_A = ${matrixLatex} \\]`;
+            matrixEl.innerHTML = `\\[ A: ${matrixLatex} \\]`;
             
             if (window.MathJax) MathJax.typesetPromise([matrixEl]);
         }
