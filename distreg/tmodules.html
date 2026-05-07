@@ -224,6 +224,7 @@
         let initialVectorIndex = 0; // Tracks the initial seed vector
         let globalRBase = 0; // Safely stores the exact node radius
         let actionMatrix = [];
+        let highlightedMatrixColumn = -1;
         let clickedSubconstituents = new Set(); // Tracks clicked table rows
         let hoveredSubconstituent = -1; // Tracks currently hovered table row
         
@@ -516,6 +517,7 @@
             if (initialVectorIndex === -1) initialVectorIndex = 0;
             clickedSubconstituents.clear();
             hoveredSubconstituent = -1;
+            highlightedMatrixColumn = -1; // Reset matrix highlight
             
             const startVectorKey = document.getElementById("vector-select").value;
             const basisDict = globalData[currentGraph].modules[currentModule].basis;
@@ -936,8 +938,20 @@
             updateActionMatrixDisplay();
         }
 
-function applyAdjacencyAction() {
+        function applyAdjacencyAction() {
             if (document.getElementById("apply-A").disabled) return;
+            
+            // Determine if the CURRENT state is exactly a single basis vector with coefficient 1
+            let singleVecIdx = -1;
+            let nonZeroCount = 0;
+            for (let j = 0; j < currentCoeffs.length; j++) {
+                let val = Math.round(currentCoeffs[j]);
+                if (val !== 0) {
+                    nonZeroCount++;
+                    if (val === 1) singleVecIdx = j;
+                }
+            }
+            highlightedMatrixColumn = (nonZeroCount === 1) ? singleVecIdx : -1;
             
             applyCount++; // Increment the power of A
             
@@ -1157,17 +1171,23 @@ function applyAdjacencyAction() {
             if (!actionMatrix || actionMatrix.length === 0) return;
             
             let matrixLatex = "\\begin{bmatrix}";
+            let anyColumnHighlighted = (highlightedMatrixColumn !== -1);
+            
             for (let r = 0; r < basisVectors.length; r++) {
                 let rowStr = [];
                 for (let c = 0; c < basisVectors.length; c++) {
                     let val = actionMatrix[c][r];
-                    let isHighlightedCol = (applyCount === 1 && c === initialVectorIndex);
+                    let isHighlightedCol = (c === highlightedMatrixColumn);
                     
                     if (isHighlightedCol) {
                         // Match the row value to the basis vector color!
                         let colorHex = customColors[r % customColors.length];
                         rowStr.push(`\\color{${colorHex}}{${val}}`);
+                    } else if (anyColumnHighlighted) {
+                        // Make inactive columns a light but visible grey
+                        rowStr.push(`\\color{#bbbbbb}{${val}}`);
                     } else {
+                        // Default to black if no column is highlighted
                         rowStr.push(`${val}`);
                     }
                 }
@@ -1176,7 +1196,7 @@ function applyAdjacencyAction() {
             matrixLatex += "\\end{bmatrix}";
             
             const matrixEl = document.getElementById("matrix-info-display");
-            matrixEl.innerHTML = `\\[ A: ${matrixLatex} \\]`;
+            matrixEl.innerHTML = `\\[ M_A = ${matrixLatex} \\]`;
             
             if (window.MathJax) MathJax.typesetPromise([matrixEl]);
         }
