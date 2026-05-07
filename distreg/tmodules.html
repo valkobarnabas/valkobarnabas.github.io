@@ -1018,10 +1018,10 @@
 
                     let basisHtml = "";
                     if (activeContribs.length === 0) {
-                        basisHtml = `<div style="color: #888; font-style: italic; margin-top: 5px;">No non-zero contributions</div>`;
+                        basisHtml = `<div style="color: #888; font-size: 13px; font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px;">No active non-zero basis components</div>`;
                     } else {
                         basisHtml = `<div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px; text-align: left;">
-                            <strong style="font-size: 13px;">Contributions from Basis Vectors</strong>
+                            <strong style="font-size: 13px;">Basis Vector Breakdown</strong>
                             <table style="margin-top: 5px; border-collapse: separate; border-spacing: 0 4px; font-size: 13px;">`;
                         
                         activeContribs.forEach(c => {
