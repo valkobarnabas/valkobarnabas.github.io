@@ -52,10 +52,15 @@
         #subconstituent-table td { border-bottom: 1px solid #eee; padding: 4px 8px; font-family: monospace; }
         #subconstituent-table tr:last-child td { border-bottom: none; }
 
-        /* Module Info (Bottom Right) */
-        #module-info { position: absolute; right: 15px; bottom: 15px; z-index: 10; pointer-events: none; background: rgba(255, 255, 255, 0.92); padding: 12px 18px; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); border: 1px solid #ddd; text-align: right; }
+        /* Module Info (Moved to Bottom Left) */
+        #module-info { position: absolute; left: 20px; bottom: 15px; z-index: 10; pointer-events: none; background: rgba(255, 255, 255, 0.85); padding: 10px 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee; text-align: left; }
         #module-info-title { font-size: 13px; color: #555; margin-bottom: 2px; font-weight: bold; }
         #module-info-name { font-size: 26px; font-weight: bold; color: #111; }
+
+        /* Matrix Info (Bottom Right) */
+        #matrix-info { position: absolute; right: 15px; bottom: 15px; z-index: 10; pointer-events: auto; background: rgba(255, 255, 255, 0.92); padding: 12px 18px; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); border: 1px solid #ddd; text-align: center; max-height: 40%; overflow-y: auto; overflow-x: auto; }
+        #matrix-info-title { font-size: 13px; color: #555; margin-bottom: 0px; font-weight: bold; }
+        #matrix-info-display { font-size: 14px; margin-top: 0px; }
 
         #math-output { flex: 0 0 auto; padding: 15px 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80px; overflow-x: auto; }
         #equation-display { font-size: 1.1em; margin-top: 10px; width: 100%; text-align: center; }
@@ -151,6 +156,11 @@
                     <div id="module-info-title">Visualizing \(T\)-module:</div>
                     <div id="module-info-name"></div>
                 </div>
+                
+                <div id="matrix-info">
+                    <div id="matrix-info-title">Action of \(A\):</div>
+                    <div id="matrix-info-display"></div>
+                </div>
             </div>
             
             <div id="math-output">
@@ -213,6 +223,7 @@
         let applyCount = 0; // Tracks the power of A
         let initialVectorIndex = 0; // Tracks the initial seed vector
         let globalRBase = 0; // Safely stores the exact node radius
+        let actionMatrix = [];
         let clickedSubconstituents = new Set(); // Tracks clicked table rows
         let hoveredSubconstituent = -1; // Tracks currently hovered table row
         
@@ -531,6 +542,21 @@
             });
             
             links = globalData[currentGraph].edges.map(d => Object.assign({}, d));
+
+            actionMatrix = [];
+            for (let c = 0; c < basisVectors.length; c++) {
+                let v_c = basisVectors[c];
+                let nextV = new Array(nodes.length).fill(0);
+                links.forEach(l => {
+                    let sId = typeof l.source === 'object' ? l.source.id : l.source;
+                    let tId = typeof l.target === 'object' ? l.target.id : l.target;
+                    nextV[sId] += v_c[tId];
+                    nextV[tId] += v_c[sId];
+                });
+                let nextVMat = math.matrix(nextV);
+                let colCoeffs = math.multiply(projMatrix, nextVMat).toArray().map(val => Math.abs(val) < ZERO_TOLERANCE ? 0 : Math.round(val));
+                actionMatrix.push(colCoeffs);
+            }
 
             // --- BFS Subconstituent Calculation ---
             let dists = new Array(nodes.length).fill(-1);
@@ -907,6 +933,7 @@
             });
 
             updateMathDisplay(currentCoeffs);
+            updateActionMatrixDisplay();
         }
 
 function applyAdjacencyAction() {
@@ -952,7 +979,10 @@ function applyAdjacencyAction() {
                     updateNodeVisuals(n.id, currentCoeffs, rBase, true);
                 });
 
-                if (!skipMathUpdate) updateMathDisplay(newCoeffs);
+                if (!skipMathUpdate) {
+                    updateMathDisplay(newCoeffs);
+                    updateActionMatrixDisplay();
+                }
                 setControlsState(false); 
                 
                 // Restore any active outlines after the nodes completely redraw
@@ -1035,6 +1065,7 @@ function applyAdjacencyAction() {
                     flowG.transition().duration(200).style("opacity", 0).remove();
                     
                     updateMathDisplay(newCoeffs);
+                    updateActionMatrixDisplay();
 
                     nodes.forEach(n => {
                         let incoming = incomingVals[n.id];
@@ -1106,7 +1137,7 @@ function applyAdjacencyAction() {
                 }
             }
             
-    if (first) eq = "0";
+            if (first) eq = "0";
                 
                 // Build the Left Hand Side to show A^k v_i
                 let lhs = `\\mathbf{v}_{${initialVectorIndex + 1}}`;
@@ -1121,6 +1152,34 @@ function applyAdjacencyAction() {
                 
                 if (window.MathJax) MathJax.typesetPromise([mathEl]);
             }
+
+        function updateActionMatrixDisplay() {
+            if (!actionMatrix || actionMatrix.length === 0) return;
+            
+            let matrixLatex = "\\begin{bmatrix}";
+            for (let r = 0; r < basisVectors.length; r++) {
+                let rowStr = [];
+                for (let c = 0; c < basisVectors.length; c++) {
+                    let val = actionMatrix[c][r];
+                    let isHighlightedCol = (applyCount === 1 && c === initialVectorIndex);
+                    
+                    if (isHighlightedCol) {
+                        // Match the row value to the basis vector color!
+                        let colorHex = customColors[r % customColors.length];
+                        rowStr.push(`\\color{${colorHex}}{${val}}`);
+                    } else {
+                        rowStr.push(`${val}`);
+                    }
+                }
+                matrixLatex += rowStr.join(" & ") + " \\\\ ";
+            }
+            matrixLatex += "\\end{bmatrix}";
+            
+            const matrixEl = document.getElementById("matrix-info-display");
+            matrixEl.innerHTML = `\\[ M_A = ${matrixLatex} \\]`;
+            
+            if (window.MathJax) MathJax.typesetPromise([matrixEl]);
+        }
 
         // --- Keyboard Shortcuts ---
         document.addEventListener('keydown', function(event) {
