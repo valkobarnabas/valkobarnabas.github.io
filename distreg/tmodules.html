@@ -474,6 +474,27 @@
             if (index === 1) return "A\\nu";
             return `v_{${index + 1}}`;
         }
+        
+        // --- Smart Tooltip Positioning Helper ---
+        function positionTooltip(tooltip, event) {
+            const rect = tooltip.node().getBoundingClientRect();
+            let x = event.pageX + 15;
+            let y = event.pageY + 15;
+            
+            // Flip to the left if it goes off the right edge
+            if (x + rect.width > window.innerWidth + window.scrollX - 20) {
+                x = event.pageX - rect.width - 15;
+            }
+            
+            // Flip above the cursor if it goes off the bottom edge
+            if (y + rect.height > window.innerHeight + window.scrollY - 20) {
+                y = event.pageY - rect.height - 15;
+            }
+            
+            // Ensure it never goes off the top/left entirely
+            tooltip.style("left", Math.max(10, x) + "px")
+                   .style("top", Math.max(10, y) + "px");
+        }
 
         d3.json("t_modules.json").then(data => {
             globalData = data;
@@ -917,16 +938,18 @@
 
                     tooltip.style("font-size", fSize)
                            .html(`\\[ \\text{Essential part of } \\mathbf{v}_{${idx + 1}} = \\overset{(${targetDist})}{${tex}} \\]`)
-                           .style("left", (event.pageX + 15) + "px")
-                           .style("top", (event.pageY + 15) + "px")
                            .style("opacity", 1);
                     
-                    if(window.MathJax) MathJax.typesetPromise([tooltip.node()]);
+                    positionTooltip(tooltip, event); // Position immediately
+                    
+                    if (window.MathJax) {
+                        MathJax.typesetPromise([tooltip.node()]).then(() => {
+                            positionTooltip(tooltip, event); // Reposition after MathJax changes the height!
+                        });
+                    }
                 })
                 .on("mousemove", function(event) {
-                    d3.select("#vector-tooltip")
-                      .style("left", (event.pageX + 15) + "px")
-                      .style("top", (event.pageY + 15) + "px");
+                    positionTooltip(d3.select("#vector-tooltip"), event);
                 })
                 .on("mouseleave", function() {
                     d3.select("#vector-tooltip").style("opacity", 0);
@@ -1087,16 +1110,18 @@
                             ${basisHtml}
                         </div>
                     `)
-                    .style("left", (event.pageX + 15) + "px")
-                    .style("top", (event.pageY + 15) + "px")
                     .style("opacity", 1);
 
-                    if(window.MathJax) MathJax.typesetPromise([tooltip.node()]);
+                    positionTooltip(tooltip, event); // Position immediately
+
+                    if (window.MathJax) {
+                        MathJax.typesetPromise([tooltip.node()]).then(() => {
+                            positionTooltip(tooltip, event); // Reposition after MathJax changes the height!
+                        });
+                    }
                 })
                 .on("mousemove", function(event) {
-                    d3.select("#node-tooltip")
-                      .style("left", (event.pageX + 15) + "px")
-                      .style("top", (event.pageY + 15) + "px");
+                    positionTooltip(d3.select("#node-tooltip"), event);
                 })
                 .on("mouseleave", function() {
                     d3.select("#node-tooltip").style("opacity", 0);
