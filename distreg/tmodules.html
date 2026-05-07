@@ -111,6 +111,23 @@
                 <label for="anim-toggle">Animate Action</label>
             </div>
             
+            <div id="anim-settings" style="margin-bottom: 15px; padding-left: 25px; border-left: 2px solid #eee; transition: opacity 0.2s;">
+                <label for="speed-select" style="font-size: 13px;">Animation Speed:</label>
+                <select id="speed-select" style="padding: 6px; margin: 5px 0 10px 0; font-size: 13px;">
+                    <option value="750">Fast (0.75s)</option>
+                    <option value="1500" selected>Normal (1.5s)</option>
+                    <option value="3000">Slow (3.0s)</option>
+                </select>
+
+                <label for="pause-select" style="font-size: 13px;">Sum Display Duration:</label>
+                <select id="pause-select" style="padding: 6px; margin: 5px 0 0 0; font-size: 13px;">
+                    <option value="1000">Short (1.0s)</option>
+                    <option value="2000" selected>Normal (2.0s)</option>
+                    <option value="4000">Long (4.0s)</option>
+                    <option value="8000">Extra Long (8.0s)</option>
+                </select>
+            </div>
+            
             <button id="apply-A">Apply Adjacency Matrix A</button>
             <button id="reset-v" style="background-color: #6c757d;">Reset to Initial State</button>
         </div>
@@ -316,6 +333,13 @@
             document.getElementById("apply-A").addEventListener("click", applyAdjacencyAction);
             document.getElementById("reset-v").addEventListener("click", renderGraph);
             
+            // Add listener to toggle the animation settings UI
+            document.getElementById("anim-toggle").addEventListener("change", function() {
+                document.getElementById("anim-settings").style.opacity = this.checked ? "1" : "0.5";
+                document.getElementById("speed-select").disabled = !this.checked;
+                document.getElementById("pause-select").disabled = !this.checked;
+            });
+            
             window.addEventListener("resize", () => {
                 if(nodes.length > 0) renderGraph();
             });
@@ -451,7 +475,13 @@
             document.getElementById("vector-select").disabled = disabled;
             document.getElementById("apply-A").disabled = disabled;
             document.getElementById("reset-v").disabled = disabled;
-            document.getElementById("anim-toggle").disabled = disabled;
+            
+            const animToggle = document.getElementById("anim-toggle");
+            animToggle.disabled = disabled;
+            
+            // Also disable speed/pause dropdowns when animating, or when the toggle is off
+            document.getElementById("speed-select").disabled = disabled || !animToggle.checked;
+            document.getElementById("pause-select").disabled = disabled || !animToggle.checked;
             
             const legendItems = document.querySelectorAll(".legend-item");
             legendItems.forEach(item => {
@@ -460,7 +490,7 @@
             });
         }
 
-function renderGraph() {
+        function renderGraph() {
             setControlsState(false);
             
             // Reset A tracking on new graph, module, or vector selection
@@ -607,7 +637,7 @@ function renderGraph() {
                     else if (essential.length > 15) fSize = "11px";
 
                     tooltip.style("font-size", fSize)
-                           .html(`\\[ \\text{Essential part of } \\mathbf{v}_{${idx + 1}} = ${tex} \\]`)
+                           .html(`\\[ \\text{Essential part of } \\mathbf{v}_{${idx + 1}} = \\overset{(${targetDist})}{${tex}} \\]`)
                            .style("left", (event.pageX + 15) + "px")
                            .style("top", (event.pageY + 15) + "px")
                            .style("opacity", 1);
@@ -694,8 +724,8 @@ function renderGraph() {
 
                     let activeContribs = [];
                     for (let j = 0; j < basisVectors.length; j++) {
-                        let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
-                        if (Math.abs(contribVal) > 0) {
+                        if (Math.abs(currentCoeffs[j]) > ZERO_TOLERANCE) {
+                            let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
                             activeContribs.push({
                                 idx: j,
                                 val: contribVal,
@@ -848,7 +878,8 @@ function applyAdjacencyAction() {
             
             const flowG = svg.append("g").attr("class", "flow-layer");
             let activeFlows = 0;
-            const flowDuration = 1500;
+            const flowDuration = parseInt(document.getElementById("speed-select").value) || 1500;
+            const pauseDuration = parseInt(document.getElementById("pause-select").value) || 2000;
 
             links.forEach(l => {
                 let s = nodes[l.source];
@@ -948,7 +979,7 @@ function applyAdjacencyAction() {
 
                     setTimeout(() => {
                         finalizeUpdate(true);
-                    }, 2000);
+                    }, pauseDuration);
                 }
             }
         }
