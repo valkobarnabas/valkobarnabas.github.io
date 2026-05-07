@@ -596,30 +596,21 @@
                 let hasHighlight = clickedSubconstituents.size > 0 || hoveredSubconstituent !== -1;
                 
                 if (svg) {
-                    // Fade out non-highlighted nodes
-                    svg.selectAll(".node-group, .text-group").each(function(d) {
-                        let isHighlighted = false;
-                        let nodeDist = dists[d.id];
-                        if (hasHighlight) {
-                            isHighlighted = clickedSubconstituents.has(nodeDist) || hoveredSubconstituent === nodeDist;
-                        } else {
-                            isHighlighted = true;
-                        }
-                        d3.select(this).style("opacity", isHighlighted ? 1 : 0.15);
-                    });
+                    // 1. Ensure all elements remain fully visible (no dimming)
+                    svg.selectAll(".node-group, .text-group").style("opacity", 1);
+                    svg.selectAll(".link").style("opacity", 1);
 
-                    // Fade out non-highlighted links
-                    svg.selectAll(".link").each(function(d) {
-                        if (!hasHighlight) {
-                            d3.select(this).style("opacity", 1);
-                            return;
+                    // 2. Trace the edges of the highlighted nodes in black, leave others alone
+                    svg.selectAll(".node-group").each(function(d) {
+                        let isHighlighted = false;
+                        if (hasHighlight) {
+                            let nodeDist = dists[d.id];
+                            isHighlighted = clickedSubconstituents.has(nodeDist) || hoveredSubconstituent === nodeDist;
                         }
-                        let s = typeof d.source === 'object' ? d.source.id : d.source;
-                        let t = typeof d.target === 'object' ? d.target.id : d.target;
-                        let sourceHighlight = clickedSubconstituents.has(dists[s]) || hoveredSubconstituent === dists[s];
-                        let targetHighlight = clickedSubconstituents.has(dists[t]) || hoveredSubconstituent === dists[t];
                         
-                        d3.select(this).style("opacity", (sourceHighlight || targetHighlight) ? 1 : 0.1);
+                        d3.select(this).selectAll(".node-bg")
+                            .attr("stroke", isHighlighted ? "#000" : "#fff")
+                            .attr("stroke-width", isHighlighted ? globalRBase * 0.15 : globalRBase * 0.08);
                     });
                 }
                 
@@ -644,6 +635,9 @@
                     resetBtn.style.display = clickedSubconstituents.size > 0 ? "block" : "none";
                 }
             }
+            
+            // Expose globally so animations can trigger it to restore highlights
+            window.applyHighlights = applyHighlights;
 
             // Attach interactions to the rows
             d3.selectAll(".subconst-row")
@@ -960,6 +954,9 @@ function applyAdjacencyAction() {
 
                 if (!skipMathUpdate) updateMathDisplay(newCoeffs);
                 setControlsState(false); 
+                
+                // Restore any active outlines after the nodes completely redraw
+                if (typeof window.applyHighlights === "function") window.applyHighlights();
             }
 
             if (!doAnimate) {
@@ -1075,6 +1072,8 @@ function applyAdjacencyAction() {
                                        .attr("fill", "#999");
                         }
                     });
+
+                    if (typeof window.applyHighlights === "function") window.applyHighlights();
 
                     setTimeout(() => {
                         finalizeUpdate(true);
