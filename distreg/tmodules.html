@@ -213,6 +213,8 @@
         let applyCount = 0; // Tracks the power of A
         let initialVectorIndex = 0; // Tracks the initial seed vector
         let globalRBase = 0; // Safely stores the exact node radius
+        let clickedSubconstituents = new Set(); // Tracks clicked table rows
+        let hoveredSubconstituent = -1; // Tracks currently hovered table row
         
         // NEW COLOR PALETTE
         const customColors = ["rgb(240,52,38)", "rgb(51,52,102)","rgb(128,188,3)", "rgb(69,169,207)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        const ZERO_TOLERANCE = 1e-8;
@@ -501,6 +503,8 @@
             applyCount = 0;
             initialVectorIndex = document.getElementById("vector-select").selectedIndex;
             if (initialVectorIndex === -1) initialVectorIndex = 0;
+            clickedSubconstituents.clear();
+            hoveredSubconstituent = -1;
             
             const startVectorKey = document.getElementById("vector-select").value;
             const basisDict = globalData[currentGraph].modules[currentModule].basis;
@@ -573,15 +577,100 @@
             for (let d = 0; d <= maxD; d++) {
                 if (subconstituents[d]) {
                     let seqStr = formatVertexSequence(subconstituents[d]);
-                    tableHTML += `<tr>
+                    tableHTML += `<tr class="subconst-row" data-d="${d}" style="cursor: pointer; transition: background-color 0.2s;">
                         <td style="font-weight: bold;">\\(\\Gamma_{${d}}\\)</td>
                         <td>${seqStr}</td>
                     </tr>`;
                 }
             }
             tableHTML += `</tbody></table>`;
+            
+            // Append the Reset Button
+            tableHTML += `<button id="reset-highlights-btn" style="margin-top: 10px; width: 100%; padding: 6px; font-size: 13px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display: none; transition: background 0.2s;">Reset Highlights</button>`;
+            
             document.getElementById("subconstituent-table").innerHTML = tableHTML;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("subconstituent-table")]);
+
+            // Define the highlight execution function
+            function applyHighlights() {
+                let hasHighlight = clickedSubconstituents.size > 0 || hoveredSubconstituent !== -1;
+                
+                if (svg) {
+                    // Fade out non-highlighted nodes
+                    svg.selectAll(".node-group, .text-group").each(function(d) {
+                        let isHighlighted = false;
+                        let nodeDist = dists[d.id];
+                        if (hasHighlight) {
+                            isHighlighted = clickedSubconstituents.has(nodeDist) || hoveredSubconstituent === nodeDist;
+                        } else {
+                            isHighlighted = true;
+                        }
+                        d3.select(this).style("opacity", isHighlighted ? 1 : 0.15);
+                    });
+
+                    // Fade out non-highlighted links
+                    svg.selectAll(".link").each(function(d) {
+                        if (!hasHighlight) {
+                            d3.select(this).style("opacity", 1);
+                            return;
+                        }
+                        let s = typeof d.source === 'object' ? d.source.id : d.source;
+                        let t = typeof d.target === 'object' ? d.target.id : d.target;
+                        let sourceHighlight = clickedSubconstituents.has(dists[s]) || hoveredSubconstituent === dists[s];
+                        let targetHighlight = clickedSubconstituents.has(dists[t]) || hoveredSubconstituent === dists[t];
+                        
+                        d3.select(this).style("opacity", (sourceHighlight || targetHighlight) ? 1 : 0.1);
+                    });
+                }
+                
+                // Color the table rows
+                d3.selectAll(".subconst-row").each(function() {
+                    let dNum = parseInt(d3.select(this).attr("data-d"));
+                    let isClicked = clickedSubconstituents.has(dNum);
+                    let isHovered = hoveredSubconstituent === dNum;
+                    
+                    if (isClicked) {
+                        d3.select(this).style("background-color", "#ffeeba"); // Yellow active
+                    } else if (isHovered) {
+                        d3.select(this).style("background-color", "#f1f3f5"); // Gray hover
+                    } else {
+                        d3.select(this).style("background-color", "transparent");
+                    }
+                });
+
+                // Toggle Reset Button visibility
+                let resetBtn = document.getElementById("reset-highlights-btn");
+                if (resetBtn) {
+                    resetBtn.style.display = clickedSubconstituents.size > 0 ? "block" : "none";
+                }
+            }
+
+            // Attach interactions to the rows
+            d3.selectAll(".subconst-row")
+                .on("mouseenter", function() {
+                    hoveredSubconstituent = parseInt(d3.select(this).attr("data-d"));
+                    applyHighlights();
+                })
+                .on("mouseleave", function() {
+                    hoveredSubconstituent = -1;
+                    applyHighlights();
+                })
+                .on("click", function() {
+                    let dNum = parseInt(d3.select(this).attr("data-d"));
+                    if (clickedSubconstituents.has(dNum)) {
+                        clickedSubconstituents.delete(dNum);
+                    } else {
+                        clickedSubconstituents.add(dNum);
+                    }
+                    applyHighlights();
+                });
+                
+            d3.select("#reset-highlights-btn").on("click", function() {
+                clickedSubconstituents.clear();
+                applyHighlights();
+            })
+            .on("mouseenter", function() { d3.select(this).style("background", "#5a6268"); })
+            .on("mouseleave", function() { d3.select(this).style("background", "#6c757d"); });
 
             // Setup top-left graph info
             const titleMap = {
@@ -766,7 +855,7 @@
                     const tooltip = d3.select("#node-tooltip");
                     tooltip.html(`
                         <div style="text-align: center; min-width: 180px;">
-                            <div style="font-size: 16px; margin-bottom: 5px;"><strong>Vertex ${nodeName}</strong></div>
+                            <div style="font-size: 16px; margin-bottom: 5px;"><strong>Vertex ${nodeName} \\(\\in \\Gamma_{${dists[d.id]}}\\)</strong></div>
                             <div style="font-size: 15px;">Current Value: <strong>${val}</strong></div>
                             ${basisHtml}
                         </div>
