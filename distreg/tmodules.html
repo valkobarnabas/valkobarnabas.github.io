@@ -272,6 +272,7 @@
         let globalRBase = 0; // Safely stores the exact node radius
         let actionMatrix = [];
         let highlightedMatrixColumn = -1;
+        let pastNeighborContributions = [];
         let clickedSubconstituents = new Set(); // Tracks clicked table rows
         let hoveredSubconstituent = -1; // Tracks currently hovered table row
         
@@ -680,6 +681,7 @@
             clickedSubconstituents.clear();
             hoveredSubconstituent = -1;
             highlightedMatrixColumn = -1; // Reset matrix highlight
+            pastNeighborContributions = []; // Reset past contributions
             
             const startVectorKey = document.getElementById("vector-select").value;
             const basisDict = globalData[currentGraph].modules[currentModule].basis;
@@ -1036,11 +1038,32 @@
                         basisHtml += `</table></div>`;
                     }
 
+                    // Build Past Neighbor Contributions HTML
+                    let pastHtml = "";
+                    let pastContribs = pastNeighborContributions[d.id];
+                    if (!pastContribs || pastContribs.length === 0 || applyCount === 0) {
+                        pastHtml = `<div style="color: #888; font-size: 13px; font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px;">No past neighbor contributions</div>`;
+                    } else {
+                        // Create a grammatically correct list string
+                        let parts = pastContribs.map(c => `<strong>${Math.round(c.val)}</strong> from vertex ${c.from === 0 ? "x" : c.from}`);
+                        let text = "";
+                        if (parts.length === 1) text = parts[0];
+                        else if (parts.length === 2) text = parts.join(" and ");
+                        else text = parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1];
+                        
+                        let total = pastContribs.reduce((sum, c) => sum + Math.round(c.val), 0);
+                        pastHtml = `<div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px; text-align: left;">
+                            <strong style="font-size: 13px;">Past Neighbor Contributions:</strong>
+                            <div style="font-size: 13px; margin-top: 4px; line-height: 1.4;">${text} makes <strong>${total}</strong>.</div>
+                        </div>`;
+                    }
+
                     const tooltip = d3.select("#node-tooltip");
                     tooltip.html(`
                         <div style="text-align: center; min-width: 180px;">
                             <div style="font-size: 16px; margin-bottom: 5px;"><strong>Vertex ${nodeName} \\(\\in \\Gamma_{${dists[d.id]}}\\)</strong></div>
                             <div style="font-size: 15px;">Current Value: <strong>${val}</strong></div>
+                            ${pastHtml}
                             ${basisHtml}
                         </div>
                     `)
@@ -1125,20 +1148,26 @@
 
             let nextValues = new Array(nodes.length).fill(0);
             let incomingVals = Array.from({length: nodes.length}, () => []);
+            let newPastContributions = Array.from({length: nodes.length}, () => []);
             
             links.forEach(l => {
-                let sId = l.source;
-                let tId = l.target;
+                let sId = typeof l.source === 'object' ? l.source.id : l.source;
+                let tId = typeof l.target === 'object' ? l.target.id : l.target;
                 let valS = nodeValues[sId];
                 let valT = nodeValues[tId];
 
                 nextValues[sId] += valT;
                 nextValues[tId] += valS;
 
-                if (Math.abs(valT) >= ZERO_TOLERANCE) incomingVals[sId].push(valT);
-                if (Math.abs(valS) >= ZERO_TOLERANCE) incomingVals[tId].push(valS);
+                if (Math.abs(valT) >= ZERO_TOLERANCE) {
+                    incomingVals[sId].push(valT);
+                    newPastContributions[sId].push({from: tId, val: valT});
+                }
+                if (Math.abs(valS) >= ZERO_TOLERANCE) {
+                    incomingVals[tId].push(valS);
+                    newPastContributions[tId].push({from: sId, val: valS});
+                }
             });
-
             let nextValuesMat = math.matrix(nextValues);
             let newCoeffsMat = math.multiply(projMatrix, nextValuesMat);
             let newCoeffs = newCoeffsMat.toArray().map(c => Math.abs(c) < ZERO_TOLERANCE ? 0 : c);
@@ -1146,6 +1175,7 @@
             function finalizeUpdate(skipMathUpdate = false) {
                 nodeValues = nextValues; 
                 currentCoeffs = newCoeffs; 
+                pastNeighborContributions = newPastContributions;
 
                 // Delete the DOM scraping and just use the exact radius
                 const rBase = globalRBase; 
