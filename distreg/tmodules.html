@@ -1059,7 +1059,7 @@
                     d3.select("#node-tooltip").style("opacity", 0);
                 });
 
-            const labelScale = isLargeGraph ? 1.65 : 0.55; // 3x larger for large graphs
+            const labelScale = isLargeGraph ? 1.5 : 0.55; // 3x larger for large graphs
             const radialPush = isLargeGraph ? 2.5 : 1.45;  // Push it further out to prevent overlapping
 
             textGroups.append("text")
@@ -1171,7 +1171,7 @@
             }
 
             const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
-            const labelScale = isLargeGraph ? 1.65 : 0.55;
+            const labelScale = isLargeGraph ? 1.5 : 0.55;
 
             const rBase = globalRBase;
             
