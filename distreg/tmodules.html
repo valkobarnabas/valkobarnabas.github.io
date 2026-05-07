@@ -1044,17 +1044,37 @@
                     if (!pastContribs || pastContribs.length === 0 || applyCount === 0) {
                         pastHtml = `<div style="color: #888; font-size: 13px; font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px;">No past neighbor contributions</div>`;
                     } else {
-                        // Create a grammatically correct list string
-                        let parts = pastContribs.map(c => `<strong>${Math.round(c.val)}</strong> from vertex ${c.from === 0 ? "x" : c.from}`);
-                        let text = "";
-                        if (parts.length === 1) text = parts[0];
-                        else if (parts.length === 2) text = parts.join(" and ");
-                        else text = parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1];
+                        let total = 0;
+                        let rowsHtml = "";
+                        pastContribs.forEach(c => {
+                            let val = Math.round(c.val);
+                            total += val;
+                            let vName = c.from === 0 ? "x" : c.from;
+                            rowsHtml += `<tr>
+                                <td style="padding: 2px 15px; text-align: center;">${vName}</td>
+                                <td style="padding: 2px 15px; text-align: center;">${val}</td>
+                            </tr>`;
+                        });
                         
-                        let total = pastContribs.reduce((sum, c) => sum + Math.round(c.val), 0);
                         pastHtml = `<div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px; text-align: left;">
                             <strong style="font-size: 13px;">Past Neighbor Contributions:</strong>
-                            <div style="font-size: 13px; margin-top: 4px; line-height: 1.4;">${text} makes <strong>${total}</strong>.</div>
+                            <div style="display: flex; justify-content: center;">
+                                <table style="margin-top: 5px; border-collapse: collapse; font-size: 13px; width: 90%;">
+                                    <thead>
+                                        <tr style="border-bottom: 1px solid #bbb;">
+                                            <th style="padding: 4px 15px; text-align: center; font-weight: 600;">Vertex</th>
+                                            <th style="padding: 4px 15px; text-align: center; font-weight: 600;">Contribution</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${rowsHtml}
+                                        <tr style="border-top: 1px solid #bbb;">
+                                            <td style="padding: 4px 15px; text-align: center;"><strong>Total</strong></td>
+                                            <td style="padding: 4px 15px; text-align: center;"><strong>${total}</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>`;
                     }
 
