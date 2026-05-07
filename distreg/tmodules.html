@@ -106,31 +106,34 @@
 
             <h3 style="margin-top: 0;">Action</h3>
             
-            <div class="checkbox-container">
-                <input type="checkbox" id="anim-toggle" checked>
-                <label for="anim-toggle">Animate Action</label>
-            </div>
-            
-            <div id="anim-settings" style="margin-bottom: 15px; padding-left: 25px; border-left: 2px solid #eee; transition: opacity 0.2s;">
-                <label for="speed-select" style="font-size: 13px;">Animation Speed:</label>
-                <select id="speed-select" style="padding: 6px; margin: 5px 0 10px 0; font-size: 13px;">
-                    <option value="750">Fast (0.75s)</option>
-                    <option value="1500" selected>Normal (1.5s)</option>
-                    <option value="3000">Slow (3.0s)</option>
-                </select>
-
-                <label for="pause-select" style="font-size: 13px;">Sum Display Duration:</label>
-                <select id="pause-select" style="padding: 6px; margin: 5px 0 0 0; font-size: 13px;">
-                    <option value="1000">Short (1.0s)</option>
-                    <option value="2000" selected>Normal (2.0s)</option>
-                    <option value="4000">Long (4.0s)</option>
-                    <option value="8000">Extra Long (8.0s)</option>
-                </select>
-            </div>
-            
             <button id="apply-A">Apply Adjacency Matrix A</button>
             <button id="reset-v" style="background-color: #6c757d;">Reset to Initial State</button>
-        </div>
+
+            <details style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                <summary style="cursor: pointer; font-size: 14px; font-weight: bold; color: #555; user-select: none;">Advanced Settings</summary>
+                
+                <div class="checkbox-container" style="margin-top: 10px; margin-bottom: 10px;">
+                    <input type="checkbox" id="anim-toggle" checked>
+                    <label for="anim-toggle">Animate Action</label>
+                </div>
+                
+                <div id="anim-settings" style="margin-bottom: 5px; padding-left: 15px; border-left: 2px solid #eee; transition: opacity 0.2s;">
+                    <label for="speed-select" style="font-size: 13px;">Animation Speed:</label>
+                    <select id="speed-select" style="padding: 6px; margin: 5px 0 10px 0; font-size: 13px;">
+                        <option value="750">Fast (0.75s)</option>
+                        <option value="1500" selected>Normal (1.5s)</option>
+                        <option value="3000">Slow (3.0s)</option>
+                    </select>
+
+                    <label for="pause-select" style="font-size: 13px;">Sum Display Duration:</label>
+                    <select id="pause-select" style="padding: 6px; margin: 5px 0 0 0; font-size: 13px;">
+                        <option value="1000">Short (1.0s)</option>
+                        <option value="2000" selected>Normal (2.0s)</option>
+                        <option value="4000">Long (4.0s)</option>
+                        <option value="8000">Extra Long (8.0s)</option>
+                    </select>
+                </div>
+            </details>
 
         <div class="viz-column">
             <div class="visualization-wrapper">
