@@ -728,9 +728,9 @@
 
                     let activeContribs = [];
                     for (let j = 0; j < basisVectors.length; j++) {
-                        // Check if the vector is active globally to include 0 contributions safely
-                        if (Math.abs(currentCoeffs[j]) > ZERO_TOLERANCE) {
-                            let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
+                        let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
+                        // Only care about NON-ZERO contributions to this specific node
+                        if (Math.abs(contribVal) > 0) {
                             activeContribs.push({
                                 idx: j,
                                 val: contribVal,
