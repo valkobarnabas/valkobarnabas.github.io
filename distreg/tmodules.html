@@ -1199,8 +1199,14 @@
             const matrixContainer = document.getElementById("matrix-info");
             
             const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
+            const dim = basisVectors.length;
             
-            if (isLargeGraph) {
+            if (dim >= 11) {
+                // Ultra-compact for size 11 and 13 modules
+                matrixEl.style.fontSize = "8.5px"; 
+                matrixContainer.style.overflow = "hidden";
+                matrixContainer.style.padding = "5px 8px";
+            } else if (isLargeGraph) {
                 // Make the matrix 25% smaller and strictly lock scrolling
                 matrixEl.style.fontSize = "10.5px"; 
                 matrixContainer.style.overflow = "hidden";
