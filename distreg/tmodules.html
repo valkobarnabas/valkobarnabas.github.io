@@ -83,8 +83,17 @@
         .modal-close:focus { outline: none; }
         /* Modal Accordion Styles */
         details.info-section { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; }
-        details.info-section summary { font-size: 16px; font-weight: bold; color: #c5050c; cursor: pointer; padding: 12px 15px; list-style: none; outline: none; user-select: none; border-radius: 6px; transition: background 0.2s; }
+        
+        /* Added Flexbox to perfectly align the triangle with the text */
+        details.info-section summary { display: flex; align-items: center; font-size: 16px; font-weight: bold; color: #c5050c; cursor: pointer; padding: 12px 15px; list-style: none; outline: none; user-select: none; border-radius: 6px; transition: background 0.2s; }
         details.info-section summary::-webkit-details-marker { display: none; }
+        
+        /* The Triangle Icon */
+        details.info-section summary::before { content: '\25B6'; display: inline-block; margin-right: 12px; font-size: 12px; transition: transform 0.2s ease; }
+        
+        /* Rotate downwards when open */
+        details.info-section[open] summary::before { transform: rotate(90deg); }
+        
         details.info-section summary:hover { background: #ebebeb; }
         details.info-section[open] summary { border-bottom: 1px solid #ddd; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
         .details-content { padding: 15px; font-size: 14.5px; background: #fff; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; line-height: 1.6; }
