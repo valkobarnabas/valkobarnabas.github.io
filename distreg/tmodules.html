@@ -728,30 +728,36 @@
 
                     let activeContribs = [];
                     for (let j = 0; j < basisVectors.length; j++) {
-                        let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
-                        if (Math.abs(contribVal) > 0) {
+                        // Check if the vector is active globally to include 0 contributions safely
+                        if (Math.abs(currentCoeffs[j]) > ZERO_TOLERANCE) {
+                            let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
                             activeContribs.push({
                                 idx: j,
                                 val: contribVal,
                                 color: customColors[j % customColors.length],
-                                tex: getBasisLabel(currentGraph, currentModule, j)
+                                tex: getBasisLabel(currentGraph, currentModule, j),
+                                coeff: Math.round(currentCoeffs[j])
                             });
                         }
                     }
 
                     let basisHtml = "";
                     if (activeContribs.length === 0) {
-                        basisHtml = `<div style="color: #888; font-style: italic; margin-top: 5px;">No non-zero contributions</div>`;
+                        basisHtml = `<div style="color: #888; font-style: italic; margin-top: 5px;">No active contributions</div>`;
                     } else {
                         basisHtml = `<div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px; text-align: left;">
                             <strong style="font-size: 13px;">Contributions from basis vectors:</strong>
                             <table style="margin-top: 5px; border-collapse: separate; border-spacing: 0 4px; font-size: 13px;">`;
                         
                         activeContribs.forEach(c => {
+                            // Format the coefficient logic for LaTeX
+                            let alphaStr = c.coeff === 1 ? "" : (c.coeff === -1 ? "-" : c.coeff);
+                            let rightSide = c.coeff === 1 ? c.tex : `${alphaStr}(${c.tex})`;
+                            
                             basisHtml += `<tr>
                                 <td style="padding-right: 8px;"><span style="display:inline-block; width:12px; height:12px; background:${c.color}; border-radius:50%; vertical-align: middle;"></span></td>
                                 <td style="padding-right: 12px;"><strong>${c.val}</strong></td>
-                                <td>\\( (\\text{from } \\mathbf{v}_{${c.idx + 1}} = ${c.tex}) \\)</td>
+                                <td>\\( (\\text{from } ${alphaStr}\\mathbf{v}_{${c.idx + 1}} = ${rightSide}) \\)</td>
                             </tr>`;
                         });
                         basisHtml += `</table></div>`;
