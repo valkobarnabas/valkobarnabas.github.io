@@ -724,8 +724,8 @@
 
                     let activeContribs = [];
                     for (let j = 0; j < basisVectors.length; j++) {
-                        if (Math.abs(currentCoeffs[j]) > ZERO_TOLERANCE) {
-                            let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
+                        let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
+                        if (Math.abs(contribVal) > 0) {
                             activeContribs.push({
                                 idx: j,
                                 val: contribVal,
