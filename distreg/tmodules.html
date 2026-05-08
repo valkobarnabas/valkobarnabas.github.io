@@ -554,9 +554,10 @@
                 document.getElementById("pause-select").disabled = !this.checked;
             });
             
-            // redraw graph responsively on window resize
+            // svgs use a relative viewbox, so it scales natively!
+            // removing the renderGraph() call here prevents the math state from wiping on fullscreen/resize.
             window.addEventListener("resize", () => {
-                if(nodes.length > 0) renderGraph();
+                // intentionally left empty
             });
             
             updateGraphOptions();
@@ -1566,12 +1567,18 @@
                 return; 
             }
 
+            // check if the system is currently locked by an animation
+            const isAnimating = document.getElementById("apply-A").disabled;
+
             if (event.key === 'Enter' || event.key === 'Space' || event.key.toLowerCase() === 'a') {
-                const btn = document.getElementById("apply-A");
-                if (!btn.disabled) {
-                    btn.click();
+                if (!isAnimating) {
+                    document.getElementById("apply-A").click();
                 }
             } else if (event.key.toLowerCase() === 'f') {
+                
+                // prevent entering or exiting fullscreen while math is being calculated
+                if (isAnimating) return; 
+
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen().catch(err => {
                         console.log(`error attempting to enable full-screen mode: ${err.message}`);
