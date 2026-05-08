@@ -1377,10 +1377,13 @@
                 let val = Math.round(coeffs[j]);
                 
                 if (Math.abs(val) > 0) {
-                    let colorHex = customColors[j % customColors.length];
+                    let colorStr = customColors[j % customColors.length];
+                    // Extract exactly "240,52,38" from the CSS "rgb(240,52,38)"
+                    let rgbVals = colorStr.match(/\d+/g).join(","); 
                     let label = `\\mathbf{v}_{${j+1}}`;
                     
-                    let termTex = `\\color{${colorHex}}{${Math.abs(val) === 1 ? label : Math.abs(val) + " " + label}}`;
+                    // Use native LaTeX [RGB] syntax: \color[RGB]{240,52,38}{v_1}
+                    let termTex = `\\color[RGB]{${rgbVals}}{${Math.abs(val) === 1 ? label : Math.abs(val) + " " + label}}`;
 
                     if (first) {
                         if (val < 0) eq += "- " + termTex;
@@ -1395,36 +1398,25 @@
             
             if (first) eq = "0";
                 
-                // Build the Left Hand Side to show A^k v_i
-                let lhs = `\\mathbf{v}_{${initialVectorIndex + 1}}`;
-                if (applyCount === 1) {
-                    lhs = `A ${lhs}`;
-                } else if (applyCount > 1) {
-                    lhs = `A^{${applyCount}} ${lhs}`;
-                }
-                
-                const mathEl = document.getElementById("equation-display");
-                mathEl.innerHTML = `\\[ ${lhs} = ${eq} \\]`;
-                
-                if (window.MathJax) MathJax.typesetPromise([mathEl]);
+            // Build the Left Hand Side to show A^k v_i
+            let lhs = `\\mathbf{v}_{${initialVectorIndex + 1}}`;
+            if (applyCount === 1) {
+                lhs = `A ${lhs}`;
+            } else if (applyCount > 1) {
+                lhs = `A^{${applyCount}} ${lhs}`;
             }
+            
+            const mathEl = document.getElementById("equation-display");
+            mathEl.innerHTML = `\\[ ${lhs} = ${eq} \\]`;
+            
+            if (window.MathJax) MathJax.typesetPromise([mathEl]);
+        }
 
         function updateActionMatrixDisplay() {
             if (!actionMatrix || actionMatrix.length === 0) return;
             
-            // 1. Safely define colors using the RGB model to avoid both the '#' symbol and 'HTML' missing package errors
-            let matrixLatex = "";
-            for (let i = 0; i < customColors.length; i++) {
-                let hex = customColors[i].replace('#', '');
-                let r = parseInt(hex.substring(0, 2), 16);
-                let g = parseInt(hex.substring(2, 4), 16);
-                let b = parseInt(hex.substring(4, 6), 16);
-                matrixLatex += `\\definecolor{c${i}}{RGB}{${r},${g},${b}} `;
-            }
-            matrixLatex += "\\definecolor{cgrey}{RGB}{187,187,187} "; // #bbbbbb converted to RGB
-            
-            // 2. Build the matrix
-            matrixLatex += "\\begin{bmatrix}";
+            // Build the matrix directly using native [RGB] colors
+            let matrixLatex = "\\begin{bmatrix}";
             let anyColumnHighlighted = (highlightedMatrixColumn !== -1);
             
             for (let r = 0; r < basisVectors.length; r++) {
@@ -1434,12 +1426,12 @@
                     let isHighlightedCol = (c === highlightedMatrixColumn);
                     
                     if (isHighlightedCol) {
-                        // Use our safe predefined color variable (e.g., c0, c1)
-                        let cIndex = r % customColors.length;
-                        rowStr.push(`\\color{c${cIndex}}{${val}}`);
+                        let colorStr = customColors[r % customColors.length];
+                        let rgbVals = colorStr.match(/\d+/g).join(",");
+                        rowStr.push(`\\color[RGB]{${rgbVals}}{${val}}`);
                     } else if (anyColumnHighlighted) {
-                        // Use our safe predefined grey
-                        rowStr.push(`\\color{cgrey}{${val}}`);
+                        // Light grey in RGB
+                        rowStr.push(`\\color[RGB]{187,187,187}{${val}}`);
                     } else {
                         // Default to black
                         rowStr.push(`${val}`);
