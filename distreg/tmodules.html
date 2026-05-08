@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="mxm.png">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 15px; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background-color: #f8f9fa; overflow: hidden; }
@@ -178,6 +179,10 @@
                 <div id="graph-info">
                     <div id="graph-info-title"></div>
                     <div id="graph-info-vertices"></div>
+                    <div style="margin-top: 12px; display: flex; gap: 8px;">
+                        <button id="download-A-btn" style="margin: 0; padding: 6px 10px; font-size: 11px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">A Matrix (.txt)</button>
+                        <button id="download-E-btn" style="margin: 0; padding: 6px 10px; font-size: 11px; font-weight: bold; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">E<sub>i</sub><sup>*</sup> Matrices (.zip)</button>
+                    </div>
                 </div>
                 
                 <div class="visualization" id="viz-container"></div>
@@ -275,6 +280,8 @@
         let pastNeighborContributions = [];
         let clickedSubconstituents = new Set(); // Tracks clicked table rows
         let hoveredSubconstituent = -1; // Tracks currently hovered table row
+        let globalDists = []; // Stores distances for downloads
+        let globalSubconstituents = {}; // Stores subconstituents for downloads
         
         // NEW COLOR PALETTE
         const customColors = ["rgb(240,52,38)", "rgb(51,52,102)","rgb(128,188,3)", "rgb(69,169,207)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        
@@ -765,6 +772,9 @@
             for(let d in subconstituents) {
                 subconstituents[d].sort((a,b) => a - b);
             }
+
+            globalDists = dists;
+            globalSubconstituents = subconstituents;
 
             // Populate the right-side Subconstituent Table
             let tableHTML = `
@@ -1484,6 +1494,58 @@
                     document.exitFullscreen();
                 }
             }
+        });
+
+        // --- Download Logic ---
+        document.getElementById("download-A-btn").addEventListener("click", function() {
+            if (!currentGraph || nodes.length === 0) return;
+            const N = nodes.length;
+            let A = Array.from({length: N}, () => new Array(N).fill(0));
+            links.forEach(l => {
+                let sId = typeof l.source === 'object' ? l.source.id : l.source;
+                let tId = typeof l.target === 'object' ? l.target.id : l.target;
+                A[sId][tId] = 1;
+                A[tId][sId] = 1;
+            });
+            let txt = A.map(row => row.join(" ")).join("\n");
+            let blob = new Blob([txt], {type: "text/plain"});
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement("a");
+            a.href = url;
+            a.download = `${currentGraph.replace(/\s+/g, "_")}_A_Matrix.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById("download-E-btn").addEventListener("click", function() {
+            if (!currentGraph || nodes.length === 0 || !window.JSZip) return;
+            const N = nodes.length;
+            let zip = new JSZip();
+            
+            let maxD = Math.max(...Object.keys(globalSubconstituents).map(Number));
+            for (let d = 0; d <= maxD; d++) {
+                let E = Array.from({length: N}, () => new Array(N).fill(0));
+                if (globalSubconstituents[d]) {
+                    globalSubconstituents[d].forEach(v => {
+                        E[v][v] = 1; // Project onto the specific subconstituent
+                    });
+                }
+                let txt = E.map(row => row.join(" ")).join("\n");
+                zip.file(`E_${d}_star.txt`, txt);
+            }
+            
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                let url = URL.createObjectURL(content);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = `${currentGraph.replace(/\s+/g, "_")}_E_star_matrices.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
         });
     </script>
 </body>
