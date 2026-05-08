@@ -295,7 +295,7 @@
         let globalDists = []; // caches calculated distances
         let globalSubconstituents = {}; // caches calculated subconstituents
         
-        // distinct color palette for basis vector identification
+        // distinct color palette for basis vector identification; uses metro transit colors :)
         const customColors = ["rgb(240,52,38)", "rgb(51,52,102)","rgb(128,188,3)", "rgb(69,169,207)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        
         // floating point math tolerance to prevent visualization artifacts
         const ZERO_TOLERANCE = 1e-8;
@@ -825,22 +825,56 @@
             function applyHighlights() {
                 let hasHighlight = clickedSubconstituents.size > 0 || hoveredSubconstituent !== -1;
                 
+                // helper to convert distances into roman numerals
+                const toRoman = (num) => {
+                    if (num === 0) return "0";
+                    const map = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+                    return map[num] || num.toString();
+                };
+                
                 if (svg) {
                     // reset transparencies to baseline
                     svg.selectAll(".node-group, .text-group").style("opacity", 1);
                     svg.selectAll(".link").style("opacity", 1);
 
-                    // boldly stroke matching target nodes
+                    // boldly stroke matching target nodes and add roman numeral indicators
                     svg.selectAll(".node-group").each(function(d) {
                         let isHighlighted = false;
+                        let nodeDist = dists[d.id];
+                        
                         if (hasHighlight) {
-                            let nodeDist = dists[d.id];
                             isHighlighted = clickedSubconstituents.has(nodeDist) || hoveredSubconstituent === nodeDist;
                         }
                         
+                        // update the black outline stroke
                         d3.select(this).selectAll(".node-bg")
                             .attr("stroke", isHighlighted ? "#000" : "#fff")
                             .attr("stroke-width", isHighlighted ? globalRBase * 0.15 : globalRBase * 0.08);
+                            
+                        // manage the roman numeral indicator
+                        let textGroup = d3.select(`#text-group-${d.id}`);
+                        let indicator = textGroup.selectAll(".highlight-indicator").data(isHighlighted ? [nodeDist] : []);
+                        
+                        indicator.enter()
+                            .append("text")
+                            .attr("class", "highlight-indicator")
+                            .attr("font-family", "serif")
+                            .attr("font-weight", "900")
+                            .attr("font-size", `${globalRBase * 0.6}px`)
+                            .attr("fill", "#000")
+                            .attr("stroke", "rgba(255,255,255,0.85)") // soft white halo
+                            .attr("stroke-width", globalRBase * 0.15)
+                            .style("paint-order", "stroke") // paints the stroke outward so text remains crisp
+                            .attr("text-anchor", "middle")
+                            .attr("dominant-baseline", "central")
+                            .attr("pointer-events", "none")
+                            .merge(indicator)
+                            // dynamically rotate the placement around the circle based on distance tier
+                            .attr("x", d => Math.cos(-Math.PI/2 + (d * Math.PI/4)) * (globalRBase * 0.75))
+                            .attr("y", d => Math.sin(-Math.PI/2 + (d * Math.PI/4)) * (globalRBase * 0.75))
+                            .text(d => toRoman(d));
+                            
+                        indicator.exit().remove();
                     });
                 }
                 
