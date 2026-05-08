@@ -574,6 +574,7 @@
         // cascading logic to fetch the available modules for a new graph
         function updateGraphOptions() {
             currentGraph = document.getElementById("graph-select").value;
+            clickedSubconstituents.clear();
             populateDropdown("module-select", Object.keys(globalData[currentGraph].modules), 'module');
             updateVectorOptions();
         }
@@ -717,7 +718,6 @@
             
             // cleanse internal memory states for the next run
             applyCount = 0;
-            clickedSubconstituents.clear();
             hoveredSubconstituent = -1;
             highlightedMatrixColumn = -1; // un-highlight matrix views
             pastNeighborContributions = []; // purge recorded history
@@ -1243,6 +1243,8 @@
 
             updateMathDisplay(currentCoeffs);
             updateActionMatrixDisplay();
+
+            if (typeof window.applyHighlights === "function") window.applyHighlights();
         }
 
         // executes logic mapping vector multiplications through the network topology
