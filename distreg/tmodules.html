@@ -315,12 +315,14 @@
             return val;
         }
 
-        function typesetWhenReady(elements) {
+        function typesetWhenReady(elements, then) {
             if (window.mathJaxReady) {
-                MathJax.typesetPromise(elements);
+                const p = MathJax.typesetPromise(elements);
+                if (then) p.then(then);
             } else {
                 document.addEventListener('mathjax-ready', () => {
-                    MathJax.typesetPromise(elements);
+                    const p = MathJax.typesetPromise(elements);
+                    if (then) p.then(then);
                 }, { once: true });
             }
         }
@@ -381,7 +383,7 @@
             wrapper.appendChild(customSelect);
             nativeSelect.parentNode.insertBefore(wrapper, nativeSelect.nextSibling);
 
-            if (window.MathJax) MathJax.typesetPromise([wrapper]);
+            typesetWhenReady([wrapper]);
         }
 
         // Close dropdowns if user clicks anywhere else on the screen
@@ -399,7 +401,7 @@
         infoBtn.addEventListener('click', () => {
             modal.style.display = 'flex';
             setTimeout(() => modal.style.opacity = '1', 10);
-            if(window.MathJax) MathJax.typesetPromise([modal]);
+            typesetWhenReady([modal]);
         });
 
         closeBtn.addEventListener('click', closeModal);
@@ -820,7 +822,7 @@
             tableHTML += `<button id="reset-highlights-btn" style="margin-top: 10px; width: 100%; padding: 6px; font-size: 13px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display: none; transition: background 0.2s;">Reset Highlights</button>`;
             
             document.getElementById("subconstituent-table").innerHTML = tableHTML;
-            if (window.MathJax) MathJax.typesetPromise([document.getElementById("subconstituent-table")]);
+            typesetWhenReady([document.getElementById("subconstituent-table")]);
 
             // Define the highlight execution function
             function applyHighlights() {
@@ -905,14 +907,14 @@
             const displayTitle = titleMap[currentGraph] || currentGraph;
             document.getElementById("graph-info-title").innerHTML = displayTitle;
             document.getElementById("graph-info-vertices").innerText = `${globalData[currentGraph].vertices} Vertices`;
-            if (window.MathJax) MathJax.typesetPromise([document.getElementById("graph-info-title")]);
+            typesetWhenReady([document.getElementById("graph-info-title")]);
 
             // Setup bottom-right module info
             const formattedMod = currentModule.replace(/W(\d+)([a-z]+)?/i, function(match, num, letter) {
                 return letter ? `W_{${num},${letter}}` : `W_{${num}}`;
             });
             document.getElementById("module-info-name").innerHTML = `\\(${formattedMod}\\)`;
-            if (window.MathJax) MathJax.typesetPromise([document.getElementById("module-info")]);
+            typesetWhenReady([document.getElementById("module-info")]);
 
             const legendContainer = document.getElementById("legend-container");
             legendContainer.innerHTML = "";
@@ -925,7 +927,7 @@
                         \\(\\mathbf{v}_{${index + 1}} = ${labelTex}\\)
                     </div>`;
             });
-            if (window.MathJax) MathJax.typesetPromise([legendContainer]);
+            typesetWhenReady([legendContainer]);
 
             d3.select("#legend-container").selectAll(".legend-item")
                 .on("mouseenter", function(event) {
@@ -960,11 +962,9 @@
                     
                     positionTooltip(tooltip, event); // Position immediately
                     
-                    if (window.MathJax) {
-                        MathJax.typesetPromise([tooltip.node()]).then(() => {
+                    typesetWhenReady([tooltip.node()], () => {
                             positionTooltip(tooltip, event); // Reposition after MathJax changes the height!
                         });
-                    }
                 })
                 .on("mousemove", function(event) {
                     positionTooltip(d3.select("#vector-tooltip"), event);
@@ -1132,11 +1132,9 @@
 
                     positionTooltip(tooltip, event); // Position immediately
 
-                    if (window.MathJax) {
-                        MathJax.typesetPromise([tooltip.node()]).then(() => {
+                    typesetWhenReady([tooltip.node()], () => {
                             positionTooltip(tooltip, event); // Reposition after MathJax changes the height!
                         });
-                    }
                 })
                 .on("mousemove", function(event) {
                     positionTooltip(d3.select("#node-tooltip"), event);
