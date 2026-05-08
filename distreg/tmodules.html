@@ -1040,10 +1040,14 @@
             let padFactor = 0.2;
             
             const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
+            const isSmallGraph = ["K4", "K3,3"].includes(currentGraph);
 
             if (isLargeGraph) {
-                rBase *= 0.65; 
+                rBase *= 0.7; 
                 padFactor = 0.15; 
+            } else if (isSmallGraph) {
+                rBase *= 0.75; // Shrink the nodes and text by 25%
+                padFactor = 0.45; // Expand the viewport padding to zoom the graph out
             }
 
             globalRBase = rBase;
