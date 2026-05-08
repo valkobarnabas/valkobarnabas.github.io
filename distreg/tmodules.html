@@ -1412,13 +1412,16 @@
         function updateActionMatrixDisplay() {
             if (!actionMatrix || actionMatrix.length === 0) return;
             
-            // 1. Safely define colors using the HTML model to completely avoid the '#' symbol
+            // 1. Safely define colors using the RGB model to avoid both the '#' symbol and 'HTML' missing package errors
             let matrixLatex = "";
             for (let i = 0; i < customColors.length; i++) {
-                let cleanHex = customColors[i].replace('#', '');
-                matrixLatex += `\\definecolor{c${i}}{HTML}{${cleanHex}} `;
+                let hex = customColors[i].replace('#', '');
+                let r = parseInt(hex.substring(0, 2), 16);
+                let g = parseInt(hex.substring(2, 4), 16);
+                let b = parseInt(hex.substring(4, 6), 16);
+                matrixLatex += `\\definecolor{c${i}}{RGB}{${r},${g},${b}} `;
             }
-            matrixLatex += "\\definecolor{cgrey}{HTML}{bbbbbb} ";
+            matrixLatex += "\\definecolor{cgrey}{RGB}{187,187,187} "; // #bbbbbb converted to RGB
             
             // 2. Build the matrix
             matrixLatex += "\\begin{bmatrix}";
