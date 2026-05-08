@@ -15,8 +15,8 @@
             displayMath: [['\\[', '\\]']]
         },
         startup: {
-            ready() {
-                MathJax.startup.defaultReady();
+            async ready() {
+                await MathJax.startup.defaultReady();
                 // Signal that MathJax is fully initialized
                 window.mathJaxReady = true;
                 document.dispatchEvent(new Event('mathjax-ready'));
