@@ -1166,6 +1166,9 @@
         function applyAdjacencyAction() {
             if (document.getElementById("apply-A").disabled) return;
             
+            // Remove highlight from the legend since we are no longer purely on the starting vector
+            document.querySelectorAll(".legend-item").forEach(item => item.classList.remove("selected"));
+            
             // Determine if the CURRENT state is exactly a single basis vector with coefficient 1
             let singleVecIdx = -1;
             let nonZeroCount = 0;
