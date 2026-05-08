@@ -31,9 +31,10 @@
         .checkbox-container input { width: auto; margin: 0 8px 0 0; cursor: pointer; transform: scale(1.2); }
         .checkbox-container label { font-size: 14px; cursor: pointer; user-select: none; }
         
-        .legend-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .legend-item { display: flex; align-items: center; font-size: 14px; background: #f8f9fa; padding: 6px 10px; border-radius: 4px; border: 1px solid #ddd; cursor: pointer; transition: background 0.2s, border-color 0.2s; user-select: none; }
+        .legend-container { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .legend-item { display: flex; align-items: center; font-size: 14px; background: #f8f9fa; padding: 6px 10px; border-radius: 4px; border: 1px solid #ddd; cursor: pointer; transition: all 0.2s; user-select: none; }
         .legend-item:hover { background: #e9ecef; border-color: #adb5bd; }
+        .legend-item.selected { background: #e2e6ea; border-color: #adb5bd; box-shadow: 0 0 0 2px #c5050c; }
         .legend-color { width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; display: inline-block; flex-shrink: 0; }
 
         .viz-column { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
@@ -135,9 +136,7 @@
             <label for="module-select">Select T-module:</label>
             <select id="module-select"></select>
 
-            <label for="vector-select">Select Basis Vector:</label>
-            <select id="vector-select"></select>
-
+            <label style="display: block; margin-top: 10px;">Select Basis Vector:</label>
             <div class="legend-container" id="legend-container"></div>
 
             <hr style="margin: 25px 0 15px 0; border: 0; border-top: 1px solid #eee;">
@@ -276,7 +275,7 @@
 
     <script>
         let globalData = {};
-        let currentGraph, currentModule, svg;
+        let currentGraph, currentModule, currentVectorKey, svg;
         let nodeValues = [];
         let nodes = [];
         let links = [];
@@ -520,7 +519,6 @@
             populateDropdown("graph-select", Object.keys(data), 'graph');
             document.getElementById("graph-select").addEventListener("change", updateGraphOptions);
             document.getElementById("module-select").addEventListener("change", updateVectorOptions);
-            document.getElementById("vector-select").addEventListener("change", renderGraph);
             document.getElementById("apply-A").addEventListener("click", applyAdjacencyAction);
             document.getElementById("reset-v").addEventListener("click", renderGraph);
             
@@ -554,35 +552,13 @@
         function updateVectorOptions() {
             currentModule = document.getElementById("module-select").value;
             const basisDict = globalData[currentGraph].modules[currentModule].basis;
-            const select = document.getElementById("vector-select");
-            select.innerHTML = "";
-            Object.keys(basisDict).forEach((key, index) => {
-                select.appendChild(new Option(`v${index + 1}`, key));
-            });
-            upgradeToLatexDropdown("vector-select", 'vector'); // Apply the LaTeX upgrade!
+            currentVectorKey = Object.keys(basisDict)[0]; // Automatically select the first vector
             renderGraph();
         }
 
         window.selectVectorFromLegend = function(key) {
             if(document.getElementById("apply-A").disabled) return; 
-            
-            const nativeSelect = document.getElementById("vector-select");
-            nativeSelect.value = key;
-            
-            // Visually sync the custom LaTeX dropdown to match the click
-            let wrapper = nativeSelect.nextElementSibling;
-            if (wrapper && wrapper.classList.contains('custom-select-wrapper')) {
-                let trigger = wrapper.querySelector('.custom-select__trigger');
-                let options = wrapper.querySelectorAll('.custom-option');
-                options.forEach(opt => {
-                    opt.classList.remove('selected');
-                    if (opt.dataset.value === key) {
-                        opt.classList.add('selected');
-                        trigger.innerHTML = opt.innerHTML;
-                    }
-                });
-            }
-            
+            currentVectorKey = key; // Update our global state to the clicked legend key
             renderGraph();
         }
 
@@ -673,7 +649,6 @@
         function setControlsState(disabled) {
             document.getElementById("graph-select").disabled = disabled;
             document.getElementById("module-select").disabled = disabled;
-            document.getElementById("vector-select").disabled = disabled;
             document.getElementById("apply-A").disabled = disabled;
             document.getElementById("reset-v").disabled = disabled;
             
@@ -707,17 +682,22 @@
             
             // Reset A tracking on new graph, module, or vector selection
             applyCount = 0;
-            initialVectorIndex = document.getElementById("vector-select").selectedIndex;
-            if (initialVectorIndex === -1) initialVectorIndex = 0;
             clickedSubconstituents.clear();
             hoveredSubconstituent = -1;
             highlightedMatrixColumn = -1; // Reset matrix highlight
             pastNeighborContributions = []; // Reset past contributions
             
-            const startVectorKey = document.getElementById("vector-select").value;
             const basisDict = globalData[currentGraph].modules[currentModule].basis;
             const basisKeys = Object.keys(basisDict);
             basisVectors = Object.values(basisDict);
+
+            // Set default vector if the current one is invalid for the new module
+            if (!currentVectorKey || !basisDict[currentVectorKey]) {
+                currentVectorKey = basisKeys[0];
+            }
+            const startVectorKey = currentVectorKey;
+            initialVectorIndex = basisKeys.indexOf(startVectorKey);
+            if (initialVectorIndex === -1) initialVectorIndex = 0;
             
             const V_arr = [];
             for (let i = 0; i < globalData[currentGraph].vertices; i++) {
@@ -914,8 +894,10 @@
             basisKeys.forEach((key, index) => {
                 const color = customColors[index % customColors.length];
                 const labelTex = getBasisLabel(currentGraph, currentModule, index);
+                const isSelected = (key === startVectorKey) ? " selected" : "";
+                
                 legendContainer.innerHTML += `
-                    <div class="legend-item" data-index="${index}" onclick="selectVectorFromLegend('${key}')">
+                    <div class="legend-item${isSelected}" data-index="${index}" onclick="selectVectorFromLegend('${key}')">
                         <span class="legend-color" style="background-color: ${color};"></span>
                         \\(\\mathbf{v}_{${index + 1}} = ${labelTex}\\)
                     </div>`;
