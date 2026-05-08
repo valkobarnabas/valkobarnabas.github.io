@@ -1395,7 +1395,7 @@
             const mathEl = document.getElementById("equation-display");
             
             // Injecting pure HTML wrapped in a math-like serif font!
-            mathEl.innerHTML = `<div style="font-family: 'Times New Roman', Times, serif; font-size: 1.25em; font-style: italic;">${lhs} = ${eq}</div>`;
+            mathEl.innerHTML = `<div style="font-family: 'Times New Roman', Times, serif; font-size: 1.25em;">${lhs} = ${eq}</div>`;
         }
 
         function updateActionMatrixDisplay() {
@@ -1452,7 +1452,7 @@
             // Injecting the HTML Matrix UI
             matrixEl.innerHTML = `
                 <div style="display: inline-flex; align-items: center; font-family: 'Times New Roman', Times, serif; font-size: ${fontSize};">
-                    <div style="margin-right: 8px; font-style: italic;">A:</div>
+                    <div style="margin-right: 8px;">A:</div>
                     <div style="border-left: 1.5px solid #111; border-right: 1.5px solid #111; border-radius: 2px; padding: 0 4px;">
                         <table style="border-collapse: collapse; text-align: center; margin: 0; font-style: normal;">
                             ${tableRows}
