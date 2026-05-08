@@ -1365,64 +1365,65 @@
                 
                 if (Math.abs(val) > 0) {
                     let colorHex = customColors[j % customColors.length];
-                    let label = `\\mathbf{v}_{${j+1}}`;
+                    // Using HTML sub tags instead of MathJax
+                    let label = `<b style="font-style: normal;">v</b><sub>${j+1}</sub>`;
                     
-                    let termTex = `\\color{${colorHex}}{${Math.abs(val) === 1 ? label : Math.abs(val) + " " + label}}`;
+                    // Wrapping the term in a CSS colored span
+                    let termHtml = `<span style="color: ${colorHex}; white-space: nowrap;">${Math.abs(val) === 1 ? label : Math.abs(val) + "&nbsp;" + label}</span>`;
 
                     if (first) {
-                        if (val < 0) eq += "- " + termTex;
-                        else eq += termTex;
+                        if (val < 0) eq += "&minus; " + termHtml;
+                        else eq += termHtml;
                         first = false;
                     } else {
-                        if (val < 0) eq += " - " + termTex;
-                        else eq += " + " + termTex;
+                        if (val < 0) eq += " &minus; " + termHtml;
+                        else eq += " + " + termHtml;
                     }
                 }
             }
             
             if (first) eq = "0";
                 
-                // Build the Left Hand Side to show A^k v_i
-                let lhs = `\\mathbf{v}_{${initialVectorIndex + 1}}`;
-                if (applyCount === 1) {
-                    lhs = `A ${lhs}`;
-                } else if (applyCount > 1) {
-                    lhs = `A^{${applyCount}} ${lhs}`;
-                }
-                
-                const mathEl = document.getElementById("equation-display");
-                mathEl.innerHTML = `\\[ ${lhs} = ${eq} \\]`;
-                
-                if (window.MathJax) MathJax.typesetPromise([mathEl]);
+            // Build the Left Hand Side
+            let lhs = `<b style="font-style: normal;">v</b><sub>${initialVectorIndex + 1}</sub>`;
+            if (applyCount === 1) {
+                lhs = `A${lhs}`;
+            } else if (applyCount > 1) {
+                lhs = `A<sup>${applyCount}</sup>${lhs}`;
             }
+            
+            const mathEl = document.getElementById("equation-display");
+            
+            // Injecting pure HTML wrapped in a math-like serif font!
+            mathEl.innerHTML = `<div style="font-family: 'Times New Roman', Times, serif; font-size: 1.25em; font-style: italic;">${lhs} = ${eq}</div>`;
+        }
 
         function updateActionMatrixDisplay() {
             if (!actionMatrix || actionMatrix.length === 0) return;
             
-            let matrixLatex = "\\begin{bmatrix}";
             let anyColumnHighlighted = (highlightedMatrixColumn !== -1);
             
+            // Build an HTML Table instead of a LaTeX Matrix
+            let tableRows = "";
             for (let r = 0; r < basisVectors.length; r++) {
-                let rowStr = [];
+                tableRows += "<tr>";
                 for (let c = 0; c < basisVectors.length; c++) {
                     let val = actionMatrix[c][r];
                     let isHighlightedCol = (c === highlightedMatrixColumn);
+                    let cellColor = "#000"; // Default black
+                    let fontWeight = "normal";
                     
                     if (isHighlightedCol) {
-                        // Match the row value to the basis vector color!
-                        let colorHex = customColors[r % customColors.length];
-                        rowStr.push(`\\color{${colorHex}}{${val}}`);
+                        cellColor = customColors[r % customColors.length];
+                        fontWeight = "bold";
                     } else if (anyColumnHighlighted) {
-                        // Make inactive columns a light but visible grey
-                        rowStr.push(`\\color{#bbbbbb}{${val}}`);
-                    } else {
-                        // Default to black if no column is highlighted
-                        rowStr.push(`${val}`);
+                        cellColor = "#bbbbbb"; // Light grey
                     }
+                    
+                    tableRows += `<td style="padding: 2px 6px; color: ${cellColor}; font-weight: ${fontWeight};">${val}</td>`;
                 }
-                matrixLatex += rowStr.join(" & ") + " \\\\ ";
+                tableRows += "</tr>";
             }
-            matrixLatex += "\\end{bmatrix}";
             
             const matrixEl = document.getElementById("matrix-info-display");
             const matrixContainer = document.getElementById("matrix-info");
@@ -1430,26 +1431,35 @@
             const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
             const dim = basisVectors.length;
             
+            let fontSize = "14px";
+            let padding = "12px 18px";
+            let overflow = "auto";
+            
+            // Scale sizing using standard CSS instead of MathJax
             if (dim >= 11) {
-                // Ultra-compact for size 11 and 13 modules
-                matrixEl.style.fontSize = "8.5px"; 
-                matrixContainer.style.overflow = "hidden";
-                matrixContainer.style.padding = "5px 8px";
+                fontSize = "10px";
+                padding = "5px 8px";
+                overflow = "hidden";
             } else if (isLargeGraph) {
-                // Make the matrix 25% smaller and strictly lock scrolling
-                matrixEl.style.fontSize = "10.5px"; 
-                matrixContainer.style.overflow = "hidden";
-                matrixContainer.style.padding = "8px 12px"; 
-            } else {
-                // Default sizes for smaller graphs
-                matrixEl.style.fontSize = "14px";
-                matrixContainer.style.overflow = "auto";
-                matrixContainer.style.padding = "12px 18px";
+                fontSize = "11.5px";
+                padding = "8px 12px";
+                overflow = "hidden";
             }
             
-            matrixEl.innerHTML = `\\[ A: ${matrixLatex} \\]`;
+            matrixContainer.style.overflow = overflow;
+            matrixContainer.style.padding = padding;
             
-            if (window.MathJax) MathJax.typesetPromise([matrixEl]);
+            // Injecting the HTML Matrix UI
+            matrixEl.innerHTML = `
+                <div style="display: inline-flex; align-items: center; font-family: 'Times New Roman', Times, serif; font-size: ${fontSize};">
+                    <div style="margin-right: 8px; font-style: italic;">A:</div>
+                    <div style="border-left: 1.5px solid #111; border-right: 1.5px solid #111; border-radius: 2px; padding: 0 4px;">
+                        <table style="border-collapse: collapse; text-align: center; margin: 0; font-style: normal;">
+                            ${tableRows}
+                        </table>
+                    </div>
+                </div>
+            `;
         }
         
         // --- Keyboard Shortcuts ---
