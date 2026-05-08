@@ -603,6 +603,10 @@
 
             bgGroup.selectAll(".node-bg").remove();
 
+            // Increase the font size multiplier exclusively for large graphs
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage"].includes(currentGraph);
+            const fSize = isLargeGraph ? rBase * 1.2 : rBase * 0.85;
+
             if (activeContribs.length === 0) {
                 bgGroup.append("circle")
                     .attr("class", "node-bg")
@@ -612,7 +616,7 @@
                     .attr("stroke-width", rBase * 0.08);
                 
                 if (isSettlePhase) {
-                    textGroup.select(".main-label").text("").attr("font-size", `${rBase * 0.85}px`);
+                    textGroup.select(".main-label").text("").attr("font-size", `${fSize}px`);
                 }
             } else if (activeContribs.length === 1) {
                 bgGroup.append("circle")
@@ -623,7 +627,7 @@
                     .attr("stroke-width", rBase * 0.08);
                 
                 if (isSettlePhase) {
-                    textGroup.select(".main-label").text(totalVal).attr("font-size", `${rBase * 0.85}px`);
+                    textGroup.select(".main-label").text(totalVal).attr("font-size", `${fSize}px`);
                 }
             } else {
                 let pie = d3.pie().value(1).sort(null); 
@@ -641,21 +645,8 @@
                     .attr("stroke-width", rBase * 0.08);
                 
                 if (isSettlePhase) {
-                    let str = "";
-                    activeContribs.forEach((c, idx) => {
-                        if (idx === 0) str += c.val;
-                        else if (c.val < 0) str += "-" + Math.abs(c.val);
-                        else str += "+" + c.val;
-                    });
-                    str += "=" + totalVal;
-                    
-                    // Increased font sizes for sums
-                    let fSize = rBase * 0.95;
-                    if (str.length > 2) fSize = rBase * 0.75;
-                    if (str.length > 5) fSize = rBase * 0.65;
-                    if (str.length > 8) fSize = rBase * 0.45;
-                    
-                    textGroup.select(".main-label").text(str).attr("font-size", `${fSize}px`);
+                    // Simply drop in the total value, relying on the pie chart slices + tooltip for breakdown
+                    textGroup.select(".main-label").text(totalVal).attr("font-size", `${fSize}px`);
                 }
             }
         }
@@ -1251,7 +1242,7 @@
             const rBase = globalRBase;
             
             const particleR = rBase * 0.55; 
-            const particleFontSize = rBase * 0.55;
+            const particleFontSize = isLargeGraph ? rBase * 0.75 : rBase * 0.55;
             
             const flowG = svg.append("g").attr("class", "flow-layer");
             let activeFlows = 0;
@@ -1340,20 +1331,20 @@
                                 sumStr += " = " + Math.round(sum);
                             }
                             
-                            let fSize = rBase * 0.95;
-                            if (sumStr.length > 2) fSize = rBase * 0.75;
-                            if (sumStr.length > 5) fSize = rBase * 0.65;
-                            if (sumStr.length > 8) fSize = rBase * 0.45;
+                            // Apply the scale boosts during the animated calculation text phase
+                            let fSize = isLargeGraph ? rBase * 1.3 : rBase * 0.95;
+                            if (sumStr.length > 2) fSize = isLargeGraph ? rBase * 1.0 : rBase * 0.75;
+                            if (sumStr.length > 5) fSize = isLargeGraph ? rBase * 0.85 : rBase * 0.65;
+                            if (sumStr.length > 8) fSize = isLargeGraph ? rBase * 0.6 : rBase * 0.45;
                             
                             labelSelect.text(sumStr)
                                        .attr("font-size", `${fSize}px`) 
                                        .attr("fill", "#c5050c"); 
                         } else {
                             labelSelect.text("0")
-                                       .attr("font-size", `${rBase * 0.85}px`)
+                                       .attr("font-size", `${isLargeGraph ? rBase * 1.2 : rBase * 0.85}px`)
                                        .attr("fill", "#999");
                         }
-                    });
 
                     if (typeof window.applyHighlights === "function") window.applyHighlights();
 
