@@ -277,12 +277,7 @@
         let hoveredSubconstituent = -1; // Tracks currently hovered table row
         
         // NEW COLOR PALETTE
-        const customColors = [
-            "#ee3325", "#333366", "#80bc00", "#46aad1", 
-            "#f90da0", "#f7d153", "#da53fc", "#2272b5", 
-            "#285d28", "#f6adff", "#8fc789", "#8a238b", 
-            "#51f310"
-        ];        
+        const customColors = ["rgb(240,52,38)", "rgb(51,52,102)","rgb(128,188,3)", "rgb(69,169,207)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        
         const ZERO_TOLERANCE = 1e-8;
 
         // Formats strings into LaTeX
@@ -1377,13 +1372,10 @@
                 let val = Math.round(coeffs[j]);
                 
                 if (Math.abs(val) > 0) {
-                    let colorStr = customColors[j % customColors.length];
-                    // Extract exactly "240,52,38" from the CSS "rgb(240,52,38)"
-                    let rgbVals = colorStr.match(/\d+/g).join(","); 
+                    let colorHex = customColors[j % customColors.length];
                     let label = `\\mathbf{v}_{${j+1}}`;
                     
-                    // Use native LaTeX [RGB] syntax: \color[RGB]{240,52,38}{v_1}
-                    let termTex = `\\color[RGB]{${rgbVals}}{${Math.abs(val) === 1 ? label : Math.abs(val) + " " + label}}`;
+                    let termTex = `\\color{${colorHex}}{${Math.abs(val) === 1 ? label : Math.abs(val) + " " + label}}`;
 
                     if (first) {
                         if (val < 0) eq += "- " + termTex;
@@ -1398,24 +1390,23 @@
             
             if (first) eq = "0";
                 
-            // Build the Left Hand Side to show A^k v_i
-            let lhs = `\\mathbf{v}_{${initialVectorIndex + 1}}`;
-            if (applyCount === 1) {
-                lhs = `A ${lhs}`;
-            } else if (applyCount > 1) {
-                lhs = `A^{${applyCount}} ${lhs}`;
+                // Build the Left Hand Side to show A^k v_i
+                let lhs = `\\mathbf{v}_{${initialVectorIndex + 1}}`;
+                if (applyCount === 1) {
+                    lhs = `A ${lhs}`;
+                } else if (applyCount > 1) {
+                    lhs = `A^{${applyCount}} ${lhs}`;
+                }
+                
+                const mathEl = document.getElementById("equation-display");
+                mathEl.innerHTML = `\\[ ${lhs} = ${eq} \\]`;
+                
+                if (window.MathJax) MathJax.typesetPromise([mathEl]);
             }
-            
-            const mathEl = document.getElementById("equation-display");
-            mathEl.innerHTML = `\\[ ${lhs} = ${eq} \\]`;
-            
-            if (window.MathJax) MathJax.typesetPromise([mathEl]);
-        }
 
         function updateActionMatrixDisplay() {
             if (!actionMatrix || actionMatrix.length === 0) return;
             
-            // Build the matrix directly using native [RGB] colors
             let matrixLatex = "\\begin{bmatrix}";
             let anyColumnHighlighted = (highlightedMatrixColumn !== -1);
             
@@ -1426,14 +1417,14 @@
                     let isHighlightedCol = (c === highlightedMatrixColumn);
                     
                     if (isHighlightedCol) {
-                        let colorStr = customColors[r % customColors.length];
-                        let rgbVals = colorStr.match(/\d+/g).join(",");
-                        rowStr.push(`\\color[RGB]{${rgbVals}}{${val}}`);
+                        // Match the row value to the basis vector color!
+                        let colorHex = customColors[r % customColors.length];
+                        rowStr.push(`\\color{${colorHex}}{${val}}`);
                     } else if (anyColumnHighlighted) {
-                        // Light grey in RGB
-                        rowStr.push(`\\color[RGB]{187,187,187}{${val}}`);
+                        // Make inactive columns a light but visible grey
+                        rowStr.push(`\\color{#bbbbbb}{${val}}`);
                     } else {
-                        // Default to black
+                        // Default to black if no column is highlighted
                         rowStr.push(`${val}`);
                     }
                 }
