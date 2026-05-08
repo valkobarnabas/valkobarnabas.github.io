@@ -1407,7 +1407,16 @@
         function updateActionMatrixDisplay() {
             if (!actionMatrix || actionMatrix.length === 0) return;
             
-            let matrixLatex = "\\begin{bmatrix}";
+            // 1. Safely define colors using the HTML model to completely avoid the '#' symbol
+            let matrixLatex = "";
+            for (let i = 0; i < customColors.length; i++) {
+                let cleanHex = customColors[i].replace('#', '');
+                matrixLatex += `\\definecolor{c${i}}{HTML}{${cleanHex}} `;
+            }
+            matrixLatex += "\\definecolor{cgrey}{HTML}{bbbbbb} ";
+            
+            // 2. Build the matrix
+            matrixLatex += "\\begin{bmatrix}";
             let anyColumnHighlighted = (highlightedMatrixColumn !== -1);
             
             for (let r = 0; r < basisVectors.length; r++) {
@@ -1417,14 +1426,14 @@
                     let isHighlightedCol = (c === highlightedMatrixColumn);
                     
                     if (isHighlightedCol) {
-                        // Match the row value to the basis vector color!
-                        let colorHex = customColors[r % customColors.length];
-                        rowStr.push(`\\color{${colorHex}}{${val}}`);
+                        // Use our safe predefined color variable (e.g., c0, c1)
+                        let cIndex = r % customColors.length;
+                        rowStr.push(`\\color{c${cIndex}}{${val}}`);
                     } else if (anyColumnHighlighted) {
-                        // Make inactive columns a light but visible grey
-                        rowStr.push(`\\color{#bbbbbb}{${val}}`);
+                        // Use our safe predefined grey
+                        rowStr.push(`\\color{cgrey}{${val}}`);
                     } else {
-                        // Default to black if no column is highlighted
+                        // Default to black
                         rowStr.push(`${val}`);
                     }
                 }
