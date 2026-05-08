@@ -7,24 +7,7 @@
     <link rel="icon" type="image/png" href="mxm.png">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-    <script>
-    window.MathJax = {
-        tex: {
-            packages: {'[+]': ['color']},  // ensure \color is loaded
-            inlineMath: [['\\(', '\\)']],
-            displayMath: [['\\[', '\\]']]
-        },
-        startup: {
-            async ready() {
-                await MathJax.startup.defaultReady();
-                // Signal that MathJax is fully initialized
-                window.mathJaxReady = true;
-                document.dispatchEvent(new Event('mathjax-ready'));
-            }
-        }
-    };
-</script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 15px; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; background-color: #f8f9fa; overflow: hidden; }
         
@@ -315,18 +298,6 @@
             return val;
         }
 
-        function typesetWhenReady(elements, then) {
-            if (window.mathJaxReady) {
-                const p = MathJax.typesetPromise(elements);
-                if (then) p.then(then);
-            } else {
-                document.addEventListener('mathjax-ready', () => {
-                    const p = MathJax.typesetPromise(elements);
-                    if (then) p.then(then);
-                }, { once: true });
-            }
-        }
-
         // Hides the native select and builds a LaTeX-compatible div dropdown over it
         function upgradeToLatexDropdown(selectId, type) {
             const nativeSelect = document.getElementById(selectId);
@@ -383,7 +354,7 @@
             wrapper.appendChild(customSelect);
             nativeSelect.parentNode.insertBefore(wrapper, nativeSelect.nextSibling);
 
-            typesetWhenReady([wrapper]);
+            if (window.MathJax) MathJax.typesetPromise([wrapper]);
         }
 
         // Close dropdowns if user clicks anywhere else on the screen
@@ -401,7 +372,7 @@
         infoBtn.addEventListener('click', () => {
             modal.style.display = 'flex';
             setTimeout(() => modal.style.opacity = '1', 10);
-            typesetWhenReady([modal]);
+            if(window.MathJax) MathJax.typesetPromise([modal]);
         });
 
         closeBtn.addEventListener('click', closeModal);
@@ -822,7 +793,7 @@
             tableHTML += `<button id="reset-highlights-btn" style="margin-top: 10px; width: 100%; padding: 6px; font-size: 13px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display: none; transition: background 0.2s;">Reset Highlights</button>`;
             
             document.getElementById("subconstituent-table").innerHTML = tableHTML;
-            typesetWhenReady([document.getElementById("subconstituent-table")]);
+            if (window.MathJax) MathJax.typesetPromise([document.getElementById("subconstituent-table")]);
 
             // Define the highlight execution function
             function applyHighlights() {
@@ -907,14 +878,14 @@
             const displayTitle = titleMap[currentGraph] || currentGraph;
             document.getElementById("graph-info-title").innerHTML = displayTitle;
             document.getElementById("graph-info-vertices").innerText = `${globalData[currentGraph].vertices} Vertices`;
-            typesetWhenReady([document.getElementById("graph-info-title")]);
+            if (window.MathJax) MathJax.typesetPromise([document.getElementById("graph-info-title")]);
 
             // Setup bottom-right module info
             const formattedMod = currentModule.replace(/W(\d+)([a-z]+)?/i, function(match, num, letter) {
                 return letter ? `W_{${num},${letter}}` : `W_{${num}}`;
             });
             document.getElementById("module-info-name").innerHTML = `\\(${formattedMod}\\)`;
-            typesetWhenReady([document.getElementById("module-info")]);
+            if (window.MathJax) MathJax.typesetPromise([document.getElementById("module-info")]);
 
             const legendContainer = document.getElementById("legend-container");
             legendContainer.innerHTML = "";
@@ -927,7 +898,7 @@
                         \\(\\mathbf{v}_{${index + 1}} = ${labelTex}\\)
                     </div>`;
             });
-            typesetWhenReady([legendContainer]);
+            if (window.MathJax) MathJax.typesetPromise([legendContainer]);
 
             d3.select("#legend-container").selectAll(".legend-item")
                 .on("mouseenter", function(event) {
@@ -962,9 +933,11 @@
                     
                     positionTooltip(tooltip, event); // Position immediately
                     
-                    typesetWhenReady([tooltip.node()], () => {
+                    if (window.MathJax) {
+                        MathJax.typesetPromise([tooltip.node()]).then(() => {
                             positionTooltip(tooltip, event); // Reposition after MathJax changes the height!
                         });
+                    }
                 })
                 .on("mousemove", function(event) {
                     positionTooltip(d3.select("#vector-tooltip"), event);
@@ -1132,9 +1105,11 @@
 
                     positionTooltip(tooltip, event); // Position immediately
 
-                    typesetWhenReady([tooltip.node()], () => {
+                    if (window.MathJax) {
+                        MathJax.typesetPromise([tooltip.node()]).then(() => {
                             positionTooltip(tooltip, event); // Reposition after MathJax changes the height!
                         });
+                    }
                 })
                 .on("mousemove", function(event) {
                     positionTooltip(d3.select("#node-tooltip"), event);
@@ -1418,7 +1393,7 @@
                 const mathEl = document.getElementById("equation-display");
                 mathEl.innerHTML = `\\[ ${lhs} = ${eq} \\]`;
                 
-                typesetWhenReady([mathEl]);
+                if (window.MathJax) MathJax.typesetPromise([mathEl]);
             }
 
         function updateActionMatrixDisplay() {
@@ -1474,7 +1449,7 @@
             
             matrixEl.innerHTML = `\\[ A: ${matrixLatex} \\]`;
             
-            typesetWhenReady([matrixEl]);
+            if (window.MathJax) MathJax.typesetPromise([matrixEl]);
         }
 
         // --- Keyboard Shortcuts ---
