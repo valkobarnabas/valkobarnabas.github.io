@@ -807,33 +807,38 @@
             globalSubconstituents = subconstituents;
 
             // dynamic html templating for the subset groupings table
-            let tableHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>\\(\\Gamma_i\\)</th>
-                            <th>Vertices</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            let maxD = Math.max(...Object.keys(subconstituents).map(Number));
-            for (let d = 0; d <= maxD; d++) {
-                if (subconstituents[d]) {
-                    let seqStr = formatVertexSequence(subconstituents[d]);
-                    tableHTML += `<tr class="subconst-row" data-d="${d}" style="cursor: pointer; transition: background-color 0.2s;">
-                        <td style="font-weight: bold;">\\(\\Gamma_{${d}}\\)</td>
-                        <td>${seqStr}</td>
-                    </tr>`;
+            // FIX: Only rebuild the table DOM if the graph has changed to stop the flicker
+            if (window.lastTableGraph !== currentGraph) {
+                let tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>\\(\\Gamma_i\\)</th>
+                                <th>Vertices</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                let maxD = Math.max(...Object.keys(subconstituents).map(Number));
+                for (let d = 0; d <= maxD; d++) {
+                    if (subconstituents[d]) {
+                        let seqStr = formatVertexSequence(subconstituents[d]);
+                        tableHTML += `<tr class="subconst-row" data-d="${d}" style="cursor: pointer; transition: background-color 0.2s;">
+                            <td style="font-weight: bold;">\\(\\Gamma_{${d}}\\)</td>
+                            <td>${seqStr}</td>
+                        </tr>`;
+                    }
                 }
+                tableHTML += `</tbody></table>`;
+                
+                // clear highlights button attached below table
+                tableHTML += `<button id="reset-highlights-btn" style="margin-top: 10px; width: 100%; padding: 6px; font-size: 13px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display: none; transition: background 0.2s;">Reset Highlights</button>`;
+                
+                document.getElementById("subconstituent-table").innerHTML = tableHTML;
+                if (window.MathJax) MathJax.typesetPromise([document.getElementById("subconstituent-table")]);
+                
+                window.lastTableGraph = currentGraph;
             }
-            tableHTML += `</tbody></table>`;
-            
-            // clear highlights button attached below table
-            tableHTML += `<button id="reset-highlights-btn" style="margin-top: 10px; width: 100%; padding: 6px; font-size: 13px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display: none; transition: background 0.2s;">Reset Highlights</button>`;
-            
-            document.getElementById("subconstituent-table").innerHTML = tableHTML;
-            if (window.MathJax) MathJax.typesetPromise([document.getElementById("subconstituent-table")]);
 
             // function mapping visual filters onto the active elements based on ui state
             function applyHighlights() {
@@ -880,19 +885,19 @@
                                     .attr("fill", "#000")
                                     .attr("stroke", "#fff")
                                     .merge(pips)
-                                    .attr("r", globalRBase * 0.2) // scale the pip relative to the node
+                                    .attr("r", globalRBase * 0.2) 
                                     .attr("stroke-width", globalRBase * 0.06)
-                                    // Distribute them evenly around the circle like a clock face
+                                    // Distribute them evenly around the circle
                                     // Shift even numbers by half a step so they form an 'X' instead of a '+' to dodge the bottom label
                                     .attr("cx", k => {
                                         let offset = (dist % 2 === 0) ? (Math.PI / dist) : 0;
                                         let angle = -Math.PI/2 + offset + (k * 2 * Math.PI / dist);
-                                        return Math.cos(angle) * (globalRBase * 1.28);
+                                        return Math.cos(angle) * (globalRBase * 1.32); 
                                     })
                                     .attr("cy", k => {
                                         let offset = (dist % 2 === 0) ? (Math.PI / dist) : 0;
                                         let angle = -Math.PI/2 + offset + (k * 2 * Math.PI / dist);
-                                        return Math.sin(angle) * (globalRBase * 1.28);
+                                        return Math.sin(angle) * (globalRBase * 1.32);
                                     });
                                     
                                 pips.exit().remove();
@@ -928,14 +933,15 @@
             window.applyHighlights = applyHighlights;
 
             // attach interaction handlers on rendered dom lines
+            // FIX: Using window.applyHighlights() ensures the table always uses the newest calculation state
             d3.selectAll(".subconst-row")
                 .on("mouseenter", function() {
                     hoveredSubconstituent = parseInt(d3.select(this).attr("data-d"));
-                    applyHighlights();
+                    window.applyHighlights();
                 })
                 .on("mouseleave", function() {
                     hoveredSubconstituent = -1;
-                    applyHighlights();
+                    window.applyHighlights();
                 })
                 .on("click", function() {
                     let dNum = parseInt(d3.select(this).attr("data-d"));
@@ -944,12 +950,12 @@
                     } else {
                         clickedSubconstituents.add(dNum);
                     }
-                    applyHighlights();
+                    window.applyHighlights();
                 });
                 
             d3.select("#reset-highlights-btn").on("click", function() {
                 clickedSubconstituents.clear();
-                applyHighlights();
+                window.applyHighlights();
             })
             .on("mouseenter", function() { d3.select(this).style("background", "#5a6268"); })
             .on("mouseleave", function() { d3.select(this).style("background", "#6c757d"); });
