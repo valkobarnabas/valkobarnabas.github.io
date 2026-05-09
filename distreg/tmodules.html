@@ -839,19 +839,12 @@
             function applyHighlights() {
                 let hasHighlight = clickedSubconstituents.size > 0 || hoveredSubconstituent !== -1;
                 
-                // helper to convert distances into roman numerals
-                const toRoman = (num) => {
-                    if (num === 0) return "0";
-                    const map = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
-                    return map[num] || num.toString();
-                };
-                
                 if (svg) {
                     // reset transparencies to baseline
                     svg.selectAll(".node-group, .text-group").style("opacity", 1);
                     svg.selectAll(".link").style("opacity", 1);
 
-                    // boldly stroke matching target nodes and add roman numeral indicators
+                    // boldly stroke matching target nodes and add distance pips
                     svg.selectAll(".node-group").each(function(d) {
                         let isHighlighted = false;
                         let nodeDist = dists[d.id];
@@ -865,29 +858,44 @@
                             .attr("stroke", isHighlighted ? "#000" : "#fff")
                             .attr("stroke-width", isHighlighted ? globalRBase * 0.15 : globalRBase * 0.08);
                             
-                        // manage the roman numeral indicator
+                        // Use small orbiting dots (pips) to indicate distance (i) instead of text
                         let textGroup = d3.select(`#text-group-${d.id}`);
-                        let indicator = textGroup.selectAll(".highlight-indicator").data(isHighlighted ? [nodeDist] : []);
                         
-                        indicator.enter()
-                            .append("text")
-                            .attr("class", "highlight-indicator")
-                            .attr("font-family", "serif")
-                            .attr("font-weight", "900")
-                            .attr("font-size", `${globalRBase * 0.6}px`)
-                            .attr("fill", "rgba(0, 0, 0, 0.35)") // dimmed from solid black
-                            .attr("stroke", "rgba(255, 255, 255, 0.5)") // softened white halo
-                            .attr("stroke-width", globalRBase * 0.15)
-                            .style("paint-order", "stroke") 
-                            .attr("text-anchor", "middle")
-                            .attr("dominant-baseline", "central")
+                        // Only generate pip groups if highlighted AND distance > 0
+                        let pipGroup = textGroup.selectAll(".pip-group")
+                            .data(isHighlighted && nodeDist > 0 ? [nodeDist] : []);
+                        
+                        pipGroup.enter()
+                            .append("g")
+                            .attr("class", "pip-group")
                             .attr("pointer-events", "none")
-                            .merge(indicator)
-                            .attr("x", d => Math.cos(-Math.PI/2 + (d * Math.PI/4)) * (globalRBase * 0.75))
-                            .attr("y", d => Math.sin(-Math.PI/2 + (d * Math.PI/4)) * (globalRBase * 0.75))
-                            .text(d => toRoman(d));
+                            .merge(pipGroup)
+                            .each(function(dist) {
+                                // Generate an array of length equal to the distance i
+                                let pips = d3.select(this).selectAll(".pip").data(d3.range(dist));
+                                
+                                pips.enter()
+                                    .append("circle")
+                                    .attr("class", "pip")
+                                    .attr("fill", "#000")
+                                    .attr("stroke", "#fff")
+                                    .merge(pips)
+                                    .attr("r", globalRBase * 0.2) // scale the pip relative to the node
+                                    .attr("stroke-width", globalRBase * 0.06)
+                                    // Distribute them evenly around the circle like a clock face
+                                    .attr("cx", k => {
+                                        let angle = -Math.PI/2 + (k * 2 * Math.PI / dist);
+                                        return Math.cos(angle) * (globalRBase * 1.28); 
+                                    })
+                                    .attr("cy", k => {
+                                        let angle = -Math.PI/2 + (k * 2 * Math.PI / dist);
+                                        return Math.sin(angle) * (globalRBase * 1.28);
+                                    });
+                                    
+                                pips.exit().remove();
+                            });
                             
-                        indicator.exit().remove();
+                        pipGroup.exit().remove();
                     });
                 }
                 
