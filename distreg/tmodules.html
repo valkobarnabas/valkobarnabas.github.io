@@ -883,12 +883,15 @@
                                     .attr("r", globalRBase * 0.2) // scale the pip relative to the node
                                     .attr("stroke-width", globalRBase * 0.06)
                                     // Distribute them evenly around the circle like a clock face
+                                    // Shift even numbers by half a step so they form an 'X' instead of a '+' to dodge the bottom label
                                     .attr("cx", k => {
-                                        let angle = -Math.PI/2 + (k * 2 * Math.PI / dist);
-                                        return Math.cos(angle) * (globalRBase * 1.28); 
+                                        let offset = (dist % 2 === 0) ? (Math.PI / dist) : 0;
+                                        let angle = -Math.PI/2 + offset + (k * 2 * Math.PI / dist);
+                                        return Math.cos(angle) * (globalRBase * 1.28);
                                     })
                                     .attr("cy", k => {
-                                        let angle = -Math.PI/2 + (k * 2 * Math.PI / dist);
+                                        let offset = (dist % 2 === 0) ? (Math.PI / dist) : 0;
+                                        let angle = -Math.PI/2 + offset + (k * 2 * Math.PI / dist);
                                         return Math.sin(angle) * (globalRBase * 1.28);
                                     });
                                     
@@ -1053,7 +1056,7 @@
             const isSmallGraph = ["K4", "K3,3"].includes(currentGraph);
 
             if (isLargeGraph) {
-                rBase *= 0.6; 
+                rBase *= 0.55; 
                 padFactor = 0.15; 
             } else if (isSmallGraph) {
                 rBase *= 0.92; // Shrink the nodes and text by 25%
