@@ -1565,14 +1565,17 @@
         document.addEventListener('keydown', function(event) {
             // lock shortcuts while custom dropdown is actively selected to prevent misfires
             if (document.activeElement.tagName === 'SELECT') {
-                if (event.key === 'Enter') event.preventDefault();
+                if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
                 return; 
             }
 
             // check if the system is currently locked by an animation
             const isAnimating = document.getElementById("apply-A").disabled;
 
-            if (event.key === 'Enter' || event.key === 'Space' || event.key.toLowerCase() === 'a') {
+            // Use " " for the space bar, and prevent it from scrolling the page
+            if (event.key === 'Enter' || event.key === ' ' || event.key.toLowerCase() === 'a') {
+                if (event.key === ' ') event.preventDefault(); 
+                
                 if (!isAnimating) {
                     document.getElementById("apply-A").click();
                 }
