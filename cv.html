@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barnabás Valkó | CV</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* CSS Variables for Theme */
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --surface-hover: #2a2a2a;
+            --uw-red: #c5050c;
+            --uw-red-hover: #9e040a;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            line-height: 1.6;
+        }
+
+        a {
+            color: var(--uw-red);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--uw-red-hover);
+        }
+
+        /* Navigation */
+        nav {
+            background-color: var(--surface-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid var(--uw-red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--uw-red);
+        }
+
+        /* CV Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .cv-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid var(--uw-red);
+            padding-bottom: 2rem;
+        }
+
+        .cv-header h1 {
+            font-size: 2.5rem;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .cv-contact {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .cv-contact a {
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .cv-contact a:hover {
+            color: var(--uw-red);
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background-color: var(--uw-red);
+            color: white;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .btn-download:hover {
+            background-color: var(--uw-red-hover);
+            color: white;
+        }
+
+        /* CV Sections */
+        .cv-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .cv-section-title {
+            font-size: 1.5rem;
+            color: var(--uw-red);
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cv-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .cv-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.2rem;
+            flex-wrap: wrap;
+        }
+
+        .cv-title {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .cv-date {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .cv-subtitle {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .cv-list {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .cv-list li {
+            margin-bottom: 0.4rem;
+        }
+
+        .cv-skills-group {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .cv-skills-group strong {
+            color: var(--text-primary);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background-color: var(--surface-color);
+            margin-top: 4rem;
+            border-top: 1px solid #333;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 600px) {
+            .cv-item-header, .cv-subtitle {
+                flex-direction: column;
+            }
+            .cv-date {
+                margin-top: 0.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">BV</div>
+        <div class="nav-links">
+            <a href="index.html">Main</a>
+            <a href="about.html">About</a>
+            <a href="cv.html" class="active">CV</a>
+            <a href="portfolio.html">Portfolio</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="cv-header">
+            <h1>BARNABÁS VALKÓ</h1>
+            <div class="cv-contact">
+                <span>Madison, Wisconsin</span>
+                <span>&middot;</span>
+                <a href="mailto:bvalko@wisc.edu"><i class="fas fa-envelope"></i> bvalko@wisc.edu</a>
+                <span>&middot;</span>
+                <a href="https://linkedin.com/in/barnabas-valko" target="_blank" rel="noopener"><i class="fab fa-linkedin"></i> barnabas-valko</a>
+                <span>&middot;</span>
+                <a href="https://github.com/valkobarnabas" target="_blank" rel="noopener"><i class="fab fa-github"></i> valkobarnabas</a>
+            </div>
+            <a href="resume.pdf" target="_blank" class="btn-download"><i class="fas fa-file-pdf"></i> Download PDF</a>
+        </header>
+
+        <section class="cv-section">
+            <h2 class="cv-section-title">Education</h2>
+            <div class="cv-item">
+                <div class="cv-item-header">
+                    <span class="cv-title">University of Wisconsin–Madison</span>
+                    <span class="cv-date">Sep 2023 – May 2027 (expected)</span>
+                </div>
+                <div class="cv-subtitle">
+                    <span>Bachelors of Science in Mathematics & Statistics — GPA: 3.897 / 4.000</span>
+                    <span>Madison, WI</span>
+                </div>
+                <ul class="cv-list">
+                    <li>Additional Certificates in Physics and Educational Policy Studies</li>
+                    <li>Relevant Coursework: Sports Analytics, Financial Statistics, Stochastic Processes, Regression Analysis, Experimental Design, Machine Learning, Probability Theory, Combinatorics, Brownian Motion</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="cv-section">
+            <h2 class="cv-section-title">Research & Projects</h2>
+            
+            <div class="cv-item">
+                <div class="cv-item-header">
+                    <span class="cv-title">NFL Big Data Bowl 2026 — <em>Honorable Mention (Top 5 / ~300 Submissions)</em></span>
+                    <span class="cv-date">Oct 2025 – Dec 2025</span>
+                </div>
+                <ul class="cv-list">
+                    <li>Developed <em>Primary Defender Break Score</em> (PDBS), leveraging a GAM-based predictive EPA model to quantify how many points a primary pass defender saves whilst a pass is in the air using NFL Next Gen Stats tracking data.</li>
+                    <li>Achieved honorable mention in the University track, placing in the top 5 of approximately 300 submissions.</li>
+                    <li><strong>Skills:</strong> R, Quarto, Sports Analytics, Statistical Modeling, Player Tracking Data</li>
+                </ul>
+            </div>
+
+            <div class="cv-item">
+                <div class="cv-item-header">
+                    <span class="cv-title">ASA Virtual Sports Analytics Conference 2026 — <em>Invited Speaker</em></span>
+                    <span class="cv-date">April 24, 2026</span>
+                </div>
+                <ul class="cv-list">
+                    <li>Delivered a 20-minute invited talk, <em>"Primary Defender Break Score: Quantifying Post-Throw Defensive Reaction in the NFL,"</em> at the American Statistical Association Virtual Sports Analytics Conference following a successful abstract submission.</li>
+                </ul>
+            </div>
+
+            <div class="cv-item">
+                <div class="cv-item-header">
+                    <span class="cv-title">Big Ten Academic Alliance Data Visualization Competition</span>
+                    <span class="cv-date">Jan 2026 – Feb 2026</span>
+                </div>
+                <ul class="cv-list">
+                    <li>Won <em>Bucky's Data Viz Challenge</em>, a campus-wide competition, with an interactive D3.js dashboard visualizing the geometry and structure of college fight songs.</li>
+                    <li>Selected to represent UW–Madison at the 2026 BTAA Data Visualization Competition.</li>
+                    <li><strong>Skills:</strong> D3.js, Data Visualization, JavaScript, HTML</li>
+                </ul>
+            </div>
+
+            <div class="cv-item">
+                <div class="cv-item-header">
+                    <span class="cv-title">Madison Experimental Mathematics (MXM) Lab</span>
+                    <span class="cv-date">Sep 2025 – Present</span>
+                </div>
+                <ul class="cv-list">
+                    <li>Collaborating with three undergraduates, a graduate mentor, and Prof. Paul Terwilliger on a research project titled <em>"Irreducible T-modules of Distance-Regular Graphs with Valency Three,"</em> targeting journal publication in Summer 2026.</li>
+                    <li><strong>Skills:</strong> Algebraic Combinatorics, Graph Theory, Mathematical Writing, LaTeX</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="cv-section">
+            <h2 class="cv-section-title">Experience</h2>
+
+            <div class="cv-item">
+                <div class="cv-item-header">
+                    <span class="cv-title">Grader & Undergraduate Assistant</span>
+                    <span class="cv-date">Sep 2025 – Present</span>
+                </div>
+                <div class="cv-subtitle">
+                    <span>University of Wisconsin–Madison, Department of Mathematics</span>
+                    <span>Madison, WI</span>
+                </div>
+                <ul class="cv-list">
+                    <li>Lead grader for <em>Math 475: Introduction to Combinatorics</em> (Fall 2025, Spring 2026), grading weekly homework for 50+ students and providing detailed written feedback with expertise in the subject, in a timely manner.</li>
+                    <li>Assistant grader for <em>Math 222: Calculus II</em> midterms (Fall 2025).</li>
+                    <li>Proctored exams for eight other courses including <em>Math 535: Mathematical Methods in Data Science</em>, <em>Math 444: Graphs and Networks in Data Science</em>, as well as Linear Algebra, Differential Equations, and Calculus.</li>
+                </ul>
+            </div>
+
+            <div class="cv-item">
+                <div class="cv-item-header">
+                    <span class="cv-title">Summer Camp Site Director</span>
+                    <span class="cv-date">May 2019 – Aug 2025</span>
+                </div>
+                <div class="cv-subtitle">
+                    <span>Madison Metropolitan School District</span>
+                    <span>Madison, WI</span>
+                </div>
+                <ul class="cv-list">
+                    <li>Directed and managed 10+ staff members at sports camps serving 40+ youth participants per week across six summers.</li>
+                    <li><strong>Roles:</strong> Mad City Sports Camp Assistant Site Director (2025), Soccer Camp Site Director (2024), Sports Camp Program Leader (2019–2023).</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="cv-section">
+            <h2 class="cv-section-title">Honors & Awards</h2>
+            <ul class="cv-list" style="list-style-type: none; margin-left: 0;">
+                <li style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <strong>National Merit University of Wisconsin–Madison Scholarship</strong>
+                    <span class="cv-date"><em>May 2023</em></span>
+                </li>
+                <li style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <strong>Wisconsin Merit Scholarship</strong>
+                    <span class="cv-date"><em>Sep 2023</em></span>
+                </li>
+                <li style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <strong>Kemper K. Knapp Merit Scholarship</strong>
+                    <span class="cv-date"><em>Sep 2023</em></span>
+                </li>
+            </ul>
+        </section>
+
+        <section class="cv-section">
+            <h2 class="cv-section-title">Technical Skills</h2>
+            <div class="cv-skills-group">
+                <strong>Languages & Tools:</strong> R, Python, D3.js, JavaScript, HTML, LaTeX, SQL
+            </div>
+            <div class="cv-skills-group">
+                <strong>Analytics:</strong> Player Tracking Data, Statistical Modeling, Data Visualization, Sports Metrics Design
+            </div>
+            <div class="cv-skills-group">
+                <strong>Mathematics:</strong> Probability & Statistical Inference, Linear Algebra, Stochastic Processes, Algebraic Combinatorics, Graph Theory
+            </div>
+            <div class="cv-skills-group">
+                <strong>Languages:</strong> English (Native), Hungarian (Native)
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Barnabás Valkó. Hosted on GitHub Pages.</p>
+    </footer>
+
+</body>
+</html>
