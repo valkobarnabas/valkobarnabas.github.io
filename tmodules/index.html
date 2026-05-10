@@ -18,8 +18,58 @@
         /* header and info button styling */
         .header-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; flex: 0 0 auto; width: 100%; }
         h1 { margin: 0; font-size: 24px; text-align: center; }
-        .info-btn { width: 26px; height: 26px; background-color: #236edd; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 16px; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); user-select: none; flex-shrink: 0; }
+        .info-btn { 
+            position: relative; /* <-- add this to the existing class */
+            width: 26px; height: 26px; background-color: #236edd; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 16px; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); user-select: none; flex-shrink: 0; 
+        }
         .info-btn:hover { background-color: #0056b3; }
+
+        /* custom css tooltips */
+        .info-btn::after {
+            content: attr(data-title);
+            position: absolute;
+            top: 130%; 
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #222;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: normal;
+            font-family: -apple-system, sans-serif;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        /* tooltip triangle pointer */
+        .info-btn::before {
+            content: '';
+            position: absolute;
+            top: 130%;
+            left: 50%;
+            transform: translate(-50%, -100%);
+            border: 6px solid transparent;
+            border-bottom-color: #222;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* hover animation trigger */
+        .info-btn:hover::after,
+        .info-btn:hover::before {
+            opacity: 1;
+            visibility: visible;
+            top: 145%; /* slides the tooltip down slightly upon hovering */
+        }
 
         /* main layout containers */
         .container { display: flex; gap: 20px; width: 100%; max-width: 1400px; flex: 1; min-height: 0; }
@@ -137,8 +187,8 @@
         <h1>Visualizing Irreducible \(T\)-modules of the 13 Distance-Regular Graphs with Valency Three</h1>
         
         <div style="display: flex; gap: 10px;">
-            <div class="info-btn" id="info-btn" title="About this Page">?</div>
-            <div class="info-btn" id="download-all-btn" title="Download All A & E_i^* Matrices for All Graphs (.zip, ~645KB)" style="background-color: #28a745; font-size: 18px;">&darr;</div>
+            <div class="info-btn" id="info-btn" data-title="About this Page">?</div>
+            <div class="info-btn" id="download-all-btn" data-title="Download All A & E_i^* Matrices for All Graphs (.zip, ~645KB)" style="background-color: #28a745; font-size: 18px;">&darr;</div>
         </div>
     </div>
     
