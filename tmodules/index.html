@@ -470,6 +470,9 @@
             if(window.MathJax) MathJax.typesetPromise([modal]);
         });
 
+        // Automatically trigger the modal shortly after load
+        setTimeout(() => infoBtn.click(), 126);
+
         closeBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
