@@ -135,7 +135,11 @@
 
     <div class="header-container">
         <h1>Visualizing Irreducible \(T\)-modules of the 13 Distance-Regular Graphs with Valency Three</h1>
-        <div class="info-btn" id="info-btn" title="About this Page">?</div>
+        
+        <div style="display: flex; gap: 10px;">
+            <div class="info-btn" id="download-all-btn" title="Download All Matrices for All Graphs (.zip)" style="background-color: #28a745; font-size: 18px;">&darr;</div>
+            <div class="info-btn" id="info-btn" title="About this Page">?</div>
+        </div>
     </div>
     
     <div class="container">
@@ -1662,6 +1666,95 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+            });
+        });
+
+        // --- Download ALL 13 Graphs Matrices Logic ---
+        document.getElementById("download-all-btn").addEventListener("click", function() {
+            if (!globalData || Object.keys(globalData).length === 0 || !window.JSZip) return;
+            
+            // Show a temporary loading state to prevent spam clicks while generating
+            let btn = d3.select(this);
+            let originalHtml = btn.html();
+            btn.html("&#8987;").style("pointer-events", "none").style("opacity", "0.7"); 
+            
+            let zip = new JSZip();
+            
+            Object.keys(globalData).forEach(graphName => {
+                let graphData = globalData[graphName];
+                const N = graphData.vertices;
+                const edges = graphData.edges;
+
+                // 1. Build A matrix and Adjacency List for this graph
+                let A = Array.from({length: N}, () => new Array(N).fill(0));
+                let adj = Array.from({length: N}, () => []);
+                
+                edges.forEach(l => {
+                    let sId = typeof l.source === 'object' ? l.source.id : l.source;
+                    let tId = typeof l.target === 'object' ? l.target.id : l.target;
+                    A[sId][tId] = 1;
+                    A[tId][sId] = 1;
+                    adj[sId].push(tId);
+                    adj[tId].push(sId);
+                });
+                let txtA = A.map(row => row.join(" ")).join("\n");
+
+                // 2. Run BFS from vertex 0 to map the subconstituents
+                let dists = new Array(N).fill(-1);
+                dists[0] = 0;
+                let queue = [0];
+                while(queue.length > 0) {
+                    let curr = queue.shift();
+                    adj[curr].forEach(neighbor => {
+                        if(dists[neighbor] === -1) {
+                            dists[neighbor] = dists[curr] + 1;
+                            queue.push(neighbor);
+                        }
+                    });
+                }
+                
+                let subconstituents = {};
+                for(let i=0; i<N; i++) {
+                    let d = dists[i];
+                    if(!subconstituents[d]) subconstituents[d] = [];
+                    subconstituents[d].push(i);
+                }
+
+                // 3. Create the parent folder for this specific graph
+                let safeName = graphName.replace(/\s+/g, "_");
+                let graphFolder = zip.folder(safeName);
+                
+                // Add the standalone A matrix
+                graphFolder.file(`${safeName}_A.txt`, txtA);
+                
+                // 4. Create the E_i^* subfolder and generate its matrices
+                let eFolder = graphFolder.folder("E_i_star");
+                let maxD = Math.max(...Object.keys(subconstituents).map(Number));
+                for (let d = 0; d <= maxD; d++) {
+                    let E = Array.from({length: N}, () => new Array(N).fill(0));
+                    if (subconstituents[d]) {
+                        subconstituents[d].forEach(v => {
+                            E[v][v] = 1; 
+                        });
+                    }
+                    let txtE = E.map(row => row.join(" ")).join("\n");
+                    eFolder.file(`E_${d}_star.txt`, txtE);
+                }
+            });
+            
+            // 5. Generate and trigger the master download
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                let url = URL.createObjectURL(content);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = `All_13_Graphs_Matrices.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Restore button styling
+                btn.html(originalHtml).style("pointer-events", "auto").style("opacity", "1");
             });
         });
     </script>
