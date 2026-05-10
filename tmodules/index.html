@@ -166,7 +166,18 @@
         .details-content ul { margin-top: 5px; margin-bottom: 0; padding-left: 20px; }
         .details-content li { margin-bottom: 8px; }
         .modal-footer { margin-top: 25px; font-size: 13px; color: #666; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
-        .creator-name { color: #c5050c; font-weight: bold; }
+          .creator-name a {
+            color: #c5050c;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease; /* Makes the change smooth */
+          }
+        
+          .creator-name a:hover {
+            color: #570508; /* Change this to the color you want on hover */
+            font-weight: bold;
+            text-decoration: underline;
+          }
 
         /* custom dropdowns built to allow latex rendering inside options */
         .custom-select-wrapper { position: relative; user-select: none; margin: 10px 0; width: 100%; font-family: -apple-system, sans-serif; }
@@ -325,7 +336,7 @@
             </details>
 
             <div class="modal-footer">
-                This website is designed and maintained by <span class="creator-name"><a href="https://github.com/valkobarnabas">Barnabás Valkó</a></span> (UW-Madison Mathematics and Statistics, B.S. 2027).
+                This website is designed and maintained by <span class="creator-name"><a href="https://github.com/valkobarnabas" style="color: #c5050c;">Barnabás Valkó</a></span> (UW-Madison Mathematics and Statistics, B.S. 2027).
             </div>
         </div>
     </div>
