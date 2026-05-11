@@ -1090,12 +1090,27 @@
                             positionTooltip(tooltip, event); // reposition after mathjax reflow scaling
                         });
                     }
+
+                    // --- NEW: Temporarily overlay this vector on the graph ---
+                    let tempCoeffs = new Array(basisVectors.length).fill(0);
+                    tempCoeffs[idx] = 1;
+                    nodes.forEach(n => {
+                        d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
+                        updateNodeVisuals(n.id, tempCoeffs, globalRBase, true);
+                    });
                 })
                 .on("mousemove", function(event) {
                     positionTooltip(d3.select("#vector-tooltip"), event);
                 })
                 .on("mouseleave", function() {
                     d3.select("#vector-tooltip").style("opacity", 0);
+
+                    // --- NEW: Restore the graph back to the current active state ---
+                    if (document.getElementById("apply-A").disabled) return; 
+                    nodes.forEach(n => {
+                        d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
+                        updateNodeVisuals(n.id, currentCoeffs, globalRBase, true);
+                    });
                 });
 
             // flush dom graphics container context
