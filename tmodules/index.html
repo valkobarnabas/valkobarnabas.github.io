@@ -1093,27 +1093,40 @@
                            .html(`\\[ \\text{Essential part of } \\mathbf{v}_{${idx + 1}} = \\overset{(${targetDist})}{${tex}} \\]`)
                            .style("opacity", 1);
                     
-                    positionTooltip(tooltip, event); // position immediately
+                    positionTooltip(tooltip, event); 
                     
                     if (window.MathJax) {
                         MathJax.typesetPromise([tooltip.node()]).then(() => {
-                            positionTooltip(tooltip, event); // reposition after mathjax reflow scaling
+                            positionTooltip(tooltip, event); 
                         });
                     }
 
-                    // Temporarily overlay this vector on the graph
+                    // --- NEW: Contextual blending overlay ---
                     let tempCoeffs = new Array(basisVectors.length).fill(0);
                     tempCoeffs[idx] = 1;
+                    
                     nodes.forEach(n => {
                         d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
-                        updateNodeVisuals(n.id, tempCoeffs, globalRBase, true);
+                        
+                        let hoverVal = Math.round(basisVectors[idx][n.id]);
+                        if (Math.abs(hoverVal) > 0) {
+                            // Node belongs to hovered vector -> Override and show at full brightness
+                            updateNodeVisuals(n.id, tempCoeffs, globalRBase, true);
+                            d3.select(`#node-group-${n.id}`).style("opacity", 1);
+                            d3.select(`#text-group-${n.id}`).style("opacity", 1);
+                        } else {
+                            // Node does NOT belong to hovered vector -> Show current state, dim by 75%
+                            updateNodeVisuals(n.id, currentCoeffs, globalRBase, true);
+                            d3.select(`#node-group-${n.id}`).style("opacity", 0.25);
+                            d3.select(`#text-group-${n.id}`).style("opacity", 0.25);
+                        }
                     });
 
-                    // --- NEW: Update the overlay status box ---
+                    // Update the overlay status box
                     const colorHex = customColors[idx % customColors.length];
                     document.getElementById("overlay-status-box").innerHTML = `
                         <strong>Overlay:</strong> 
-                        <span style="display:inline-block; width:10px; height:10px; background:${colorHex}; border-radius:50%; margin-left:4px; margin-right:2px; vertical-align: middle;"></span> <br>
+                        <span style="display:inline-block; width:10px; height:10px; background:${colorHex}; border-radius:50%; margin-left:4px; margin-right:2px; vertical-align: middle;"></span>
                         <span style="font-weight: bold; color: #111;">\\(\\mathbf{v}_{${idx + 1}}\\)</span>
                     `;
                     if (window.MathJax) MathJax.typesetPromise([document.getElementById("overlay-status-box")]);
@@ -1124,11 +1137,14 @@
                 .on("mouseleave", function() {
                     d3.select("#vector-tooltip").style("opacity", 0);
 
-                    // Restore the graph back to the current active state
+                    // --- NEW: Restore the graph back to full brightness ---
                     if (document.getElementById("apply-A").disabled) return; 
+                    
                     nodes.forEach(n => {
                         d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
                         updateNodeVisuals(n.id, currentCoeffs, globalRBase, true);
+                        d3.select(`#node-group-${n.id}`).style("opacity", 1);
+                        d3.select(`#text-group-${n.id}`).style("opacity", 1);
                     });
 
                     // --- NEW: Reset the overlay status box ---
