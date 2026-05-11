@@ -261,8 +261,11 @@
                             Download \(A\) (.txt)
                         </button>
                         <button id="download-E-btn" style="margin: 0; padding: 2px 6px; font-size: 7.5px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 4px;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
-                            Download \(\{E_i^*\}_{i=0}^D\) (.zip)
+                            Download \(\{E_i^*\}_0^D\) (.zip)
                         </button>
+                    </div>
+                    <div id="overlay-status-box" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 12px; color: #555;">
+                        <strong>Overlay:</strong> <span style="color: #777; font-style: italic;">None (Hover over a vector in the legend to compare)</span>
                     </div>
                 </div>
                 
@@ -772,6 +775,7 @@
         }
 
         // master loop to construct and paint the requested configuration
+        // master loop to construct and paint the requested configuration
         function renderGraph() {
             setControlsState(false);
             
@@ -780,6 +784,12 @@
             hoveredSubconstituent = -1;
             highlightedMatrixColumn = -1; // un-highlight matrix views
             pastNeighborContributions = []; // purge recorded history
+            
+            // ensure the overlay box resets cleanly on load
+            const overlayBox = document.getElementById("overlay-status-box");
+            if (overlayBox) {
+                overlayBox.innerHTML = `<strong>Overlay:</strong> <span style="color: #777; font-style: italic;">None (Hover over a vector in the legend to compare)</span>`;
+            }
             
             const basisDict = globalData[currentGraph].modules[currentModule].basis;
             const basisKeys = Object.keys(basisDict);
@@ -1091,13 +1101,22 @@
                         });
                     }
 
-                    // --- NEW: Temporarily overlay this vector on the graph ---
+                    // Temporarily overlay this vector on the graph
                     let tempCoeffs = new Array(basisVectors.length).fill(0);
                     tempCoeffs[idx] = 1;
                     nodes.forEach(n => {
                         d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
                         updateNodeVisuals(n.id, tempCoeffs, globalRBase, true);
                     });
+
+                    // --- NEW: Update the overlay status box ---
+                    const colorHex = customColors[idx % customColors.length];
+                    document.getElementById("overlay-status-box").innerHTML = `
+                        <strong>Overlay:</strong> 
+                        <span style="display:inline-block; width:10px; height:10px; background:${colorHex}; border-radius:50%; margin-left:4px; margin-right:2px; vertical-align: middle;"></span>
+                        <span style="font-weight: bold; color: #111;">\\(\\mathbf{v}_{${idx + 1}}\\)</span>
+                    `;
+                    if (window.MathJax) MathJax.typesetPromise([document.getElementById("overlay-status-box")]);
                 })
                 .on("mousemove", function(event) {
                     positionTooltip(d3.select("#vector-tooltip"), event);
@@ -1105,12 +1124,15 @@
                 .on("mouseleave", function() {
                     d3.select("#vector-tooltip").style("opacity", 0);
 
-                    // --- NEW: Restore the graph back to the current active state ---
+                    // Restore the graph back to the current active state
                     if (document.getElementById("apply-A").disabled) return; 
                     nodes.forEach(n => {
                         d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
                         updateNodeVisuals(n.id, currentCoeffs, globalRBase, true);
                     });
+
+                    // --- NEW: Reset the overlay status box ---
+                    document.getElementById("overlay-status-box").innerHTML = `<strong>Overlay:</strong> <span style="color: #777; font-style: italic;">None (Hover over a vector in the legend to compare)</span>`;
                 });
 
             // flush dom graphics container context
