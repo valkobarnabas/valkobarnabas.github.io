@@ -1101,9 +1101,12 @@
                         });
                     }
 
-                    // --- NEW: Contextual blending overlay ---
+                    // Contextual blending overlay
                     let tempCoeffs = new Array(basisVectors.length).fill(0);
                     tempCoeffs[idx] = 1;
+                    
+                    // Dim all links to lower visual noise
+                    svg.selectAll(".link").style("opacity", 0.25);
                     
                     nodes.forEach(n => {
                         d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
@@ -1122,10 +1125,13 @@
                         }
                     });
 
+                    // --- NEW: Instantly re-apply the active subconstituent highlights ---
+                    if (typeof window.applyHighlights === "function") window.applyHighlights();
+
                     // Update the overlay status box
                     const colorHex = customColors[idx % customColors.length];
                     document.getElementById("overlay-status-box").innerHTML = `
-                        <strong>Overlay:</strong> <br>
+                        <strong>Overlay:</strong> 
                         <span style="display:inline-block; width:10px; height:10px; background:${colorHex}; border-radius:50%; margin-left:4px; margin-right:2px; vertical-align: middle;"></span>
                         <span style="font-weight: bold; color: #111;">\\(\\mathbf{v}_{${idx + 1}}\\)</span>
                     `;
@@ -1137,8 +1143,11 @@
                 .on("mouseleave", function() {
                     d3.select("#vector-tooltip").style("opacity", 0);
 
-                    // --- NEW: Restore the graph back to full brightness ---
+                    // Restore the graph back to full brightness
                     if (document.getElementById("apply-A").disabled) return; 
+                    
+                    // Restore links
+                    svg.selectAll(".link").style("opacity", 1);
                     
                     nodes.forEach(n => {
                         d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
@@ -1147,7 +1156,8 @@
                         d3.select(`#text-group-${n.id}`).style("opacity", 1);
                     });
 
-                    // --- NEW: Reset the overlay status box ---
+                    if (typeof window.applyHighlights === "function") window.applyHighlights();
+                    
                     document.getElementById("overlay-status-box").innerHTML = `<strong>Overlay:</strong> <br> <span style="color: #777; font-style: italic; font-size: 8px;">None (Hover over a vector in Configuration to compare)</span>`;
                 });
 
