@@ -265,7 +265,7 @@
                         </button>
                     </div>
                     <div id="overlay-status-box" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 12px; color: #555;">
-                        <strong>Overlay:</strong> <br> <span style="color: #777; font-style: italic; font-size: 8px;">None (Hover over a vector in Configuration to compare)</span>
+                        <strong>Overlay:</strong> <br> <span style="color: #777; font-style: italic; font-size: 8px;">None (Hover over a vector in Configuration)</span>
                     </div>
                 </div>
                 
@@ -788,7 +788,7 @@
             // ensure the overlay box resets cleanly on load
             const overlayBox = document.getElementById("overlay-status-box");
             if (overlayBox) {
-                overlayBox.innerHTML = `<strong>Overlay:</strong> <br> <span style="color: #777; font-style: italic; font-size: 8px;">None (Hover over a vector in Configuration to compare)</span>`;
+                overlayBox.innerHTML = `<strong>Overlay:</strong> <br> <span style="color: #777; font-style: italic; font-size: 8px;">None (Hover over a vector in Configuration)</span>`;
             }
             
             const basisDict = globalData[currentGraph].modules[currentModule].basis;
@@ -1104,29 +1104,27 @@
                     // Contextual blending overlay
                     let tempCoeffs = new Array(basisVectors.length).fill(0);
                     tempCoeffs[idx] = 1;
-                    
-                    // Dim all links to lower visual noise
-                    svg.selectAll(".link").style("opacity", 0.25);
+
                     
                     nodes.forEach(n => {
                         d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
-                        
                         let hoverVal = Math.round(basisVectors[idx][n.id]);
                         if (Math.abs(hoverVal) > 0) {
-                            // Node belongs to hovered vector -> Override and show at full brightness
                             updateNodeVisuals(n.id, tempCoeffs, globalRBase, true);
-                            d3.select(`#node-group-${n.id}`).style("opacity", 1);
-                            d3.select(`#text-group-${n.id}`).style("opacity", 1);
                         } else {
-                            // Node does NOT belong to hovered vector -> Show current state, dim by 75%
                             updateNodeVisuals(n.id, currentCoeffs, globalRBase, true);
+                        }
+                    });
+                    
+                    if (typeof window.applyHighlights === "function") window.applyHighlights();
+
+                    nodes.forEach(n => {
+                        let hoverVal = Math.round(basisVectors[idx][n.id]);
+                        if (Math.abs(hoverVal) === 0) { // Only dim nodes NOT in the hovered vector
                             d3.select(`#node-group-${n.id}`).style("opacity", 0.25);
                             d3.select(`#text-group-${n.id}`).style("opacity", 0.25);
                         }
                     });
-
-                    // --- NEW: Instantly re-apply the active subconstituent highlights ---
-                    if (typeof window.applyHighlights === "function") window.applyHighlights();
 
                     // Update the overlay status box
                     const colorHex = customColors[idx % customColors.length];
@@ -1143,22 +1141,18 @@
                 .on("mouseleave", function() {
                     d3.select("#vector-tooltip").style("opacity", 0);
 
-                    // Restore the graph back to full brightness
                     if (document.getElementById("apply-A").disabled) return; 
                     
-                    // Restore links
-                    svg.selectAll(".link").style("opacity", 1);
-                    
+                    // 1. Restore nodes to original math state
                     nodes.forEach(n => {
                         d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
                         updateNodeVisuals(n.id, currentCoeffs, globalRBase, true);
-                        d3.select(`#node-group-${n.id}`).style("opacity", 1);
-                        d3.select(`#text-group-${n.id}`).style("opacity", 1);
                     });
 
+                    // 2. applyHighlights automatically restores all opacities back to 1 for nodes and links!
                     if (typeof window.applyHighlights === "function") window.applyHighlights();
                     
-                    document.getElementById("overlay-status-box").innerHTML = `<strong>Overlay:</strong> <br> <span style="color: #777; font-style: italic; font-size: 8px;">None (Hover over a vector in Configuration to compare)</span>`;
+                    document.getElementById("overlay-status-box").innerHTML = `<strong>Overlay:</strong> <br> <span style="color: #777; font-style: italic; font-size: 8px;">None (Hover over a vector in Configuration)</span>`;
                 });
 
             // flush dom graphics container context
