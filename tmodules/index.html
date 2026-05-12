@@ -63,11 +63,26 @@
         }
 
         /* hover animation trigger */
+        .has-tooltip:hover {
+            z-index: 100; /* Elevates the stacking context to prevent lower buttons from hiding the tooltip */
+        }
         .has-tooltip:hover::after,
         .has-tooltip:hover::before {
             opacity: 1;
             visibility: visible;
             top: calc(100% + 12px); /* slides the tooltip down slightly upon hovering */
+        }
+
+        /* Modifier for tooltips near the right edge to prevent horizontal scrollbars */
+        .has-tooltip.tooltip-right::after {
+            left: auto;
+            right: -5px; /* Snaps the tooltip to the right edge instead of centering */
+            transform: none;
+        }
+        .has-tooltip.tooltip-right::before {
+            left: auto;
+            right: 35px; /* Adjusts the triangle so it still points directly at the button */
+            transform: translate(0, -100%);
         }
 
         /* main layout containers */
@@ -223,7 +238,7 @@
                 <button id="info-btn" class="has-tooltip" data-title="Learn about this visualization" style="background-color: #007bff; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
                     &#8505; About this Page
                 </button>
-                <button id="download-all-btn" class="has-tooltip" data-title="Download A & E_i^* matrices for all graphs (.zip, ~645KB)" style="background-color: #28a745; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
+                <button id="download-all-btn" class="has-tooltip tooltip-right" data-title="Download A & E_i^* matrices for all graphs (.zip, ~645KB)" style="background-color: #28a745; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
                     &darr; Download All
                 </button>
             </div>
