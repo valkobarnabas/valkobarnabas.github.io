@@ -18,40 +18,39 @@
         /* header and info button styling */
         .header-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; flex: 0 0 auto; width: 100%; }
         h1 { margin: 0; font-size: 24px; text-align: center; }
-        .info-btn { 
-            position: relative;
-            width: 26px; height: 26px; background-color: #236edd; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 16px; transition: background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); user-select: none; flex-shrink: 0; 
-        }
-        .info-btn:hover { background-color: #0056b3; }
-
         /* custom css tooltips */
-        .info-btn::after {
+        .has-tooltip { position: relative; }
+        .has-tooltip::after {
             content: attr(data-title);
             position: absolute;
-            top: 130%; 
+            top: 120%; 
             left: 50%;
             transform: translateX(-50%);
             background-color: #222;
             color: #fff;
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 6px;
             font-size: 13px;
             font-weight: normal;
             font-family: -apple-system, sans-serif;
-            white-space: nowrap;
+            white-space: normal;
+            width: max-content;
+            max-width: 220px;
+            text-align: center;
             opacity: 0;
             visibility: hidden;
             transition: all 0.2s ease;
             pointer-events: none;
-            z-index: 1000;
+            z-index: 10000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            line-height: 1.4;
         }
 
         /* tooltip triangle pointer */
-        .info-btn::before {
+        .has-tooltip::before {
             content: '';
             position: absolute;
-            top: 130%;
+            top: 120%;
             left: 50%;
             transform: translate(-50%, -100%);
             border: 6px solid transparent;
@@ -60,15 +59,15 @@
             visibility: hidden;
             transition: all 0.2s ease;
             pointer-events: none;
-            z-index: 1000;
+            z-index: 10000;
         }
 
         /* hover animation trigger */
-        .info-btn:hover::after,
-        .info-btn:hover::before {
+        .has-tooltip:hover::after,
+        .has-tooltip:hover::before {
             opacity: 1;
             visibility: visible;
-            top: 145%; /* slides the tooltip down slightly upon hovering */
+            top: calc(100% + 12px); /* slides the tooltip down slightly upon hovering */
         }
 
         /* main layout containers */
@@ -77,8 +76,11 @@
         /* left sidebar controls */
         .controls { flex: 0 0 340px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow-y: auto; }
         select, button { padding: 10px; margin: 10px 0; width: 100%; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; box-sizing: border-box; }
-        button { background-color: #c5050c; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s; margin-top: 15px; }
-        button:hover:not(:disabled) { background-color: #9a0409; }
+        button { background-color: #c5050c; color: white; border: none; cursor: pointer; font-weight: bold; transition: filter 0.2s, background 0.2s; margin-top: 15px; }
+        
+        /* unified hover filter applies cleanly to all button colors */
+        button:hover:not(:disabled) { filter: brightness(0.85); }
+        button:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; filter: none; }
         button:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; }
         select:disabled { background-color: #f5f5f5; cursor: not-allowed; }
         
@@ -196,11 +198,6 @@
 
     <div class="header-container">
         <h1>Visualizing Irreducible \(T\)-modules for the 13 Distance-Regular Graphs with Valency Three</h1>
-        
-        <div style="display: flex; gap: 10px;">
-            <div class="info-btn" id="info-btn" data-title="About this Page">?</div>
-            <div class="info-btn" id="download-all-btn" data-title="Download all A & E_i^* matrices for all graphs (.zip, ~645KB)" style="background-color: #28a745; font-size: 18px;">&darr;</div>
-        </div>
     </div>
     
     <div class="container">
@@ -219,8 +216,17 @@
             <hr style="margin: 25px 0 15px 0; border: 0; border-top: 1px solid #eee;">
 
             <h3 style="margin-top: 0;">Action</h3>
-            <button id="apply-A">Apply Adjacency Matrix A</button>
-            <button id="reset-v" style="background-color: #6c757d;">Reset to Initial Basis Vector</button>
+            <button id="apply-A" class="has-tooltip" data-title="Multiply the current state by the adjacency matrix A">Apply Adjacency Matrix A</button>
+            <button id="reset-v" class="has-tooltip" data-title="Revert back to the initial pure basis vector" style="background-color: #6c757d;">Reset to Initial Basis Vector</button>
+
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button id="info-btn" class="has-tooltip" data-title="Learn about this visualization" style="background-color: #007bff; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
+                    &#8505; About this Page
+                </button>
+                <button id="download-all-btn" class="has-tooltip" data-title="Download A & E_i^* matrices for all graphs (.zip, ~645KB)" style="background-color: #28a745; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
+                    &darr; Download All Matrices
+                </button>
+            </div>
 
             <details style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                 <summary style="cursor: pointer; font-size: 14px; font-weight: bold; color: #555; user-select: none;">Animation Settings</summary>
