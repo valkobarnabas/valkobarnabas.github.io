@@ -19,13 +19,15 @@
         .header-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; flex: 0 0 auto; width: 100%; }
         h1 { margin: 0; font-size: 24px; text-align: center; }
         /* custom css tooltips */
+        /* custom css tooltips */
         .has-tooltip { position: relative; }
         .has-tooltip::after {
             content: attr(data-title);
             position: absolute;
-            top: 120%; 
-            left: 50%;
-            transform: translateX(-50%);
+            top: 100%; 
+            left: 0;
+            width: 100%;
+            box-sizing: border-box;
             background-color: #222;
             color: #fff;
             padding: 8px 12px;
@@ -33,15 +35,12 @@
             font-size: 13px;
             font-weight: normal;
             font-family: -apple-system, sans-serif;
-            white-space: normal;
-            width: max-content;
-            max-width: 220px;
             text-align: center;
             opacity: 0;
             visibility: hidden;
             transition: all 0.2s ease;
             pointer-events: none;
-            z-index: 10000;
+            z-index: 100000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.15);
             line-height: 1.4;
         }
@@ -50,39 +49,42 @@
         .has-tooltip::before {
             content: '';
             position: absolute;
-            top: 120%;
+            top: 100%;
             left: 50%;
-            transform: translate(-50%, -100%);
+            margin-left: -6px; /* perfectly centers the 12px wide triangle */
             border: 6px solid transparent;
             border-bottom-color: #222;
             opacity: 0;
             visibility: hidden;
             transition: all 0.2s ease;
             pointer-events: none;
-            z-index: 10000;
+            z-index: 100000;
         }
 
         /* hover animation trigger */
         .has-tooltip:hover {
-            z-index: 100; /* Elevates the stacking context to prevent lower buttons from hiding the tooltip */
+            z-index: 1000; /* Elevates the hovered button above all others */
         }
-        .has-tooltip:hover::after,
+        .has-tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+            top: calc(100% + 10px); /* slides down slightly */
+        }
         .has-tooltip:hover::before {
             opacity: 1;
             visibility: visible;
-            top: calc(100% + 12px); /* slides the tooltip down slightly upon hovering */
+            top: calc(100% - 2px);
         }
 
-        /* Modifier for tooltips near the right edge to prevent horizontal scrollbars */
+        /* Modifiers to make split-button tooltips dynamically span the full container width */
+        .has-tooltip.tooltip-left::after {
+            left: 0;
+            width: calc(200% + 10px);
+        }
         .has-tooltip.tooltip-right::after {
             left: auto;
-            right: -5px; /* Snaps the tooltip to the right edge instead of centering */
-            transform: none;
-        }
-        .has-tooltip.tooltip-right::before {
-            left: auto;
-            right: 35px; /* Adjusts the triangle so it still points directly at the button */
-            transform: translate(0, -100%);
+            right: 0;
+            width: calc(200% + 10px);
         }
 
         /* main layout containers */
@@ -91,11 +93,10 @@
         /* left sidebar controls */
         .controls { flex: 0 0 340px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow-y: auto; }
         select, button { padding: 10px; margin: 10px 0; width: 100%; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; box-sizing: border-box; }
-        button { background-color: #c5050c; color: white; border: none; cursor: pointer; font-weight: bold; transition: filter 0.2s, background 0.2s; margin-top: 15px; }
         
-        /* unified hover filter applies cleanly to all button colors */
-        button:hover:not(:disabled) { filter: brightness(0.85); }
-        button:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; filter: none; }
+        /* Button hover logic changed from filter to inset box-shadow to prevent stacking context bugs! */
+        button { background-color: #c5050c; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s, box-shadow 0.2s; margin-top: 15px; }
+        button:hover:not(:disabled) { box-shadow: inset 0 0 0 100px rgba(0,0,0,0.15); }
         button:disabled { background-color: #e0e0e0; color: #888; cursor: not-allowed; }
         select:disabled { background-color: #f5f5f5; cursor: not-allowed; }
         
@@ -230,12 +231,11 @@
 
             <hr style="margin: 25px 0 15px 0; border: 0; border-top: 1px solid #eee;">
 
-            <h3 style="margin-top: 0;">Action</h3>
             <button id="apply-A" class="has-tooltip" data-title="Multiply the current state by the adjacency matrix A">Apply Adjacency Matrix A</button>
             <button id="reset-v" class="has-tooltip" data-title="Revert back to the initial pure basis vector" style="background-color: #6c757d;">Reset to Initial Basis Vector</button>
 
             <div style="display: flex; gap: 10px; margin-top: 5px;">
-                <button id="info-btn" class="has-tooltip" data-title="Learn about this visualization" style="background-color: #007bff; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
+                <button id="info-btn" class="has-tooltip tooltip-left" data-title="Learn about this visualization" style="background-color: #007bff; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
                     &#8505; About this Page
                 </button>
                 <button id="download-all-btn" class="has-tooltip tooltip-right" data-title="Download A & E_i^* matrices for all graphs (.zip, ~645KB)" style="background-color: #28a745; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
