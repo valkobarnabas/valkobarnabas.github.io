@@ -682,7 +682,7 @@
                    .style("top", Math.max(10, y) + "px");
         }
 
-        // fetch primary json data and bind initial dom interactions
+       // fetch primary json data and bind initial dom interactions
         d3.json("t_modules.json").then(data => {
             globalData = data;
             populateDropdown("graph-select", Object.keys(data), 'graph');
@@ -705,6 +705,10 @@
             });
             
             updateGraphOptions();
+        }).catch(error => {
+            // NEW: This will tell you exactly why it is failing!
+            console.error("CRITICAL ERROR: Failed to load or parse t_modules.json", error);
+            alert("Error loading the graph data. Please press F12 to check the console for details.");
         });
 
         // dynamically populates select options based on current configuration
