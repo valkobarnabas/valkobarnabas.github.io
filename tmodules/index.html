@@ -230,7 +230,7 @@
             <div class="legend-container" id="legend-container"></div>
             
             <div class="checkbox-container" style="margin-top: 10px; margin-bottom: 0px;">
-                <input type="checkbox" id="hover-toggle" checked>
+                <input type="checkbox" id="hover-toggle">
                 <label for="hover-toggle" style="font-size: 12px; color: #555;">Allow basis vector overlay upon hover</label>
             </div>
 
@@ -291,7 +291,7 @@
                             Download \(\{E_i^*\}_0^D\) (.zip)
                         </button>
                     </div>
-                    <div id="overlay-status-box" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 12px; color: #555;">
+                    <div id="overlay-status-box" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 12px; color: #555; display: none;">
                         <strong>Overlay:</strong> <br> <span style="color: #777; font-style: italic; font-size: 8px;">None (Hover over a vector in Configuration)</span>
                     </div>
                 </div>
@@ -565,9 +565,6 @@
             if(window.MathJax) MathJax.typesetPromise([modal]);
         });
 
-        // Automatically trigger the modal shortly after load
-        setTimeout(() => infoBtn.click(), 126);
-
         closeBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
@@ -711,6 +708,14 @@
                 document.getElementById("anim-settings").style.opacity = this.checked ? "1" : "0.5";
                 document.getElementById("speed-select").disabled = !this.checked;
                 document.getElementById("pause-select").disabled = !this.checked;
+            });
+
+            // bind hover toggle to the status box visibility
+            document.getElementById("hover-toggle").addEventListener("change", function() {
+                const overlayBox = document.getElementById("overlay-status-box");
+                if (overlayBox) {
+                    overlayBox.style.display = this.checked ? "block" : "none";
+                }
             });
             
             // svgs use a relative viewbox, so it scales natively!
@@ -980,7 +985,6 @@
             if (window.lastTableGraph !== currentGraph) {
                 // Populate the right-side Subconstituent Table
                 let tableHTML = `
-                    <div style="font-size: 12px; color: #555; text-align: center; margin-bottom: 6px; font-style: italic;">Click to overlay subconstituents</div>
                     <table>
                         <thead>
                             <tr>
@@ -1002,8 +1006,11 @@
                 }
                 tableHTML += `</tbody></table>`;
                 
+                // Add the instructional subtitle to the bottom
+                tableHTML += `<div style="font-size: 11px; color: #555; text-align: center; margin-top: 8px; margin-bottom: 4px; font-style: italic;">Click a row to overlay \\(\\Gamma_i=\\Gamma_i(x)\\)</div>`;
+                
                 // clear highlights button attached below table
-                tableHTML += `<button id="reset-highlights-btn" style="margin-top: 10px; width: 100%; padding: 6px; font-size: 13px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display: none; transition: background 0.2s;">Reset Highlights</button>`;
+                tableHTML += `<button id="reset-highlights-btn" style="margin-top: 6px; width: 100%; padding: 6px; font-size: 13px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display: none; transition: background 0.2s;">Reset Highlights</button>`;
                 
                 document.getElementById("subconstituent-table").innerHTML = tableHTML;
                 if (window.MathJax) MathJax.typesetPromise([document.getElementById("subconstituent-table")]);
@@ -1500,40 +1507,10 @@
                 .attr("class", "node-label main-label")
                 .attr("y", 0);
 
-            // Inject the specific B2 pedagogical marker pointing down to vertex x
-            if (currentGraph === "Tutte's 12-cage (x in B2)") {
-                const xNode = nodes.find(n => n.id === 0);
-                if (xNode) {
-                    const b2LabelGroup = textLayer.append("g")
-                        .attr("class", "b2-special-label")
-                        .attr("transform", `translate(${xNode.x},${xNode.y})`);
-                    
-                    // The line drawn downwards towards the node
-                    b2LabelGroup.append("line")
-                        .attr("x1", 0)
-                        .attr("y1", -rBase - 30)
-                        .attr("x2", 0)
-                        .attr("y2", -rBase - 5)
-                        .attr("stroke", "#c5050c")
-                        .attr("stroke-width", 1.5)
-                        .attr("marker-end", "url(#arrowhead)");
-                    
-                    // The text sitting right above the line using native unicode symbols
-                    b2LabelGroup.append("text")
-                        .attr("x", 0)
-                        .attr("y", -rBase - 35)
-                        .attr("text-anchor", "middle")
-                        .attr("font-size", "9px")
-                        .attr("fill", "#c5050c")
-                        .attr("font-weight", "bold")
-                        .text("Vertex 1 in the x ∈ B₁ case");
-                }
-            }
-
             nodes.forEach(n => {
                 updateNodeVisuals(n.id, currentCoeffs, rBase, true);
             });
-
+            
             updateMathDisplay(currentCoeffs);
             updateActionMatrixDisplay();
 
