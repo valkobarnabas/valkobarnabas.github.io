@@ -1182,8 +1182,6 @@
                     if(document.getElementById("apply-A").disabled) return; 
                     if(!document.getElementById("hover-toggle").checked) return; // Abort if toggle is off
                     
-                    const idx = +d3.select(this).attr("data-index"); 
-                    
                     const idx = +d3.select(this).attr("data-index");
                     const vec = basisVectors[idx];
                     
@@ -1327,8 +1325,6 @@
                 .append("path")
                 .attr("d", "M 0,-5 L 10,0 L 0,5")
                 .attr("fill", "#c5050c");
-
-            svg.append("g").selectAll("line")
 
             // compile and render edge relations beneath target paths
             svg.append("g").selectAll("line")
