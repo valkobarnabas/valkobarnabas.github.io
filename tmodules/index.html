@@ -228,6 +228,11 @@
 
             <label style="display: block; margin-top: 10px;">Select Starting Basis Vector:</label>
             <div class="legend-container" id="legend-container"></div>
+            
+            <div class="checkbox-container" style="margin-top: 10px; margin-bottom: 0px;">
+                <input type="checkbox" id="hover-toggle" checked>
+                <label for="hover-toggle" style="font-size: 12px; color: #555;">Allow basis vector overlay upon hover</label>
+            </div>
 
             <hr style="margin: 25px 0 15px 0; border: 0; border-top: 1px solid #eee;">
 
@@ -239,7 +244,7 @@
                 <button id="info-btn" class="has-tooltip tooltip-left" data-title="Learn about this visualization" style="background-color: #007bff; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
                     &#8505; About this Page
                 </button>
-                <button id="download-all-btn" class="has-tooltip tooltip-right" data-title="Download A & E_i^* matrices for all graphs (.zip, ~645KB)" style="background-color: #28a745; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
+                <button id="download-all-btn" class="has-tooltip tooltip-right" data-title="Download A & E_i^* matrices for all graphs (.zip, ~893KB)" style="background-color: #28a745; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
                     &darr; Download All
                 </button>
             </div>
@@ -362,6 +367,8 @@
                 orthogonal direct sum of irreducible \(T\)-modules, and it is this 
                 decomposition that the paper derives for each of the 13 
                 graphs.</p>
+                <p>
+                Note that as discussed in the paper, all 13 graphs, save for Tutte's 12-cage, are distance-transitive, so the choice of \(x\) is unimportant. For the Tutte's 12-cage, derivations for both choices of \(x\) up to isomorphism are shown (these are the cases \(x \in B_1\) and \(x \in B_2\), where \(B_1,B_2\) are the two bipartite halves that partition vertex set \(X\)).</p>
             </div>
         </details>
 
@@ -971,7 +978,9 @@
             // dynamic html templating for the subset groupings table
             // FIX: Only rebuild the table DOM if the graph has changed to stop the flicker
             if (window.lastTableGraph !== currentGraph) {
+                // Populate the right-side Subconstituent Table
                 let tableHTML = `
+                    <div style="font-size: 12px; color: #555; text-align: center; margin-bottom: 6px; font-style: italic;">Click to overlay subconstituents</div>
                     <table>
                         <thead>
                             <tr>
@@ -1171,6 +1180,9 @@
             d3.select("#legend-container").selectAll(".legend-item")
                 .on("mouseenter", function(event) {
                     if(document.getElementById("apply-A").disabled) return; 
+                    if(!document.getElementById("hover-toggle").checked) return; // Abort if toggle is off
+                    
+                    const idx = +d3.select(this).attr("data-index"); 
                     
                     const idx = +d3.select(this).attr("data-index");
                     const vec = basisVectors[idx];
@@ -1301,6 +1313,22 @@
                 .attr("height", "100%")
                 .attr("viewBox", `${minX - padX} ${minY - padY} ${dx + padX * 2} ${dy + padY * 2}`)
                 .attr("preserveAspectRatio", "xMidYMid meet");
+
+            // Define the red arrowhead marker for specific annotations
+            svg.append("defs").append("marker")
+                .attr("id", "arrowhead")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 8)
+                .attr("refY", 0)
+                .attr("orient", "auto")
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("xoverflow", "visible")
+                .append("path")
+                .attr("d", "M 0,-5 L 10,0 L 0,5")
+                .attr("fill", "#c5050c");
+
+            svg.append("g").selectAll("line")
 
             // compile and render edge relations beneath target paths
             svg.append("g").selectAll("line")
@@ -1475,6 +1503,36 @@
             textGroups.append("text")
                 .attr("class", "node-label main-label")
                 .attr("y", 0);
+
+            // Inject the specific B2 pedagogical marker pointing down to vertex x
+            if (currentGraph === "Tutte's 12-cage (x in B2)") {
+                const xNode = nodes.find(n => n.id === 0);
+                if (xNode) {
+                    const b2LabelGroup = textLayer.append("g")
+                        .attr("class", "b2-special-label")
+                        .attr("transform", `translate(${xNode.x},${xNode.y})`);
+                    
+                    // The line drawn downwards towards the node
+                    b2LabelGroup.append("line")
+                        .attr("x1", 0)
+                        .attr("y1", -rBase - 30)
+                        .attr("x2", 0)
+                        .attr("y2", -rBase - 5)
+                        .attr("stroke", "#c5050c")
+                        .attr("stroke-width", 1.5)
+                        .attr("marker-end", "url(#arrowhead)");
+                    
+                    // The text sitting right above the line using native unicode symbols
+                    b2LabelGroup.append("text")
+                        .attr("x", 0)
+                        .attr("y", -rBase - 35)
+                        .attr("text-anchor", "middle")
+                        .attr("font-size", "9px")
+                        .attr("fill", "#c5050c")
+                        .attr("font-weight", "bold")
+                        .text("Vertex 1 in the x ∈ B₁ case");
+                }
+            }
 
             nodes.forEach(n => {
                 updateNodeVisuals(n.id, currentCoeffs, rBase, true);
