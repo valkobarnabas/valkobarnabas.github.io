@@ -458,7 +458,9 @@
             if (type === 'graph') {
                 if (val === 'K4') return '\\(K_4\\)';
                 if (val === 'K3,3') return '\\(K_{3,3}\\)';
-                return val; // unformatted text fallback
+                if (val === "Tutte's 12-cage (x in B1)") return "Tutte's 12-cage, \\(x \\in B_1\\)";
+                if (val === "Tutte's 12-cage (x in B2)") return "Tutte's 12-cage, \\(x \\in B_2\\)";
+                return val; // "Foster Graph" stays plain text
             }
             if (type === 'module') {
                 return '\\(' + val.replace(/W(\d+)([a-z]+)?/i, function(match, num, letter) {
@@ -1120,13 +1122,25 @@
             .on("mouseenter", function() { d3.select(this).style("background", "#5a6268"); })
             .on("mouseleave", function() { d3.select(this).style("background", "#6c757d"); });
 
-            // initialize structural title card definitions
+            // setup top-left graph info
             const titleMap = {
                 "K4": "\\(K_4\\)",
                 "K3,3": "\\(K_{3,3}\\)"
             };
-            const displayTitle = titleMap[currentGraph] || currentGraph;
-            document.getElementById("graph-info-title").innerHTML = displayTitle;
+            
+            let displayTitle = titleMap[currentGraph] || currentGraph;
+            let subtitleHtml = "";
+            
+            // intercept the 12-cage to extract the base vertex into a clean subtitle
+            if (currentGraph === "Tutte's 12-cage (x in B1)") {
+                displayTitle = "Tutte's 12-cage";
+                subtitleHtml = `<div style="font-size: 16px; font-weight: normal; color: #444; margin-top: 2px; margin-bottom: 4px;">\\(x \\in B_1\\)</div>`;
+            } else if (currentGraph === "Tutte's 12-cage (x in B2)") {
+                displayTitle = "Tutte's 12-cage";
+                subtitleHtml = `<div style="font-size: 16px; font-weight: normal; color: #444; margin-top: 2px; margin-bottom: 4px;">\\(x \\in B_2\\)</div>`;
+            }
+            
+            document.getElementById("graph-info-title").innerHTML = displayTitle + subtitleHtml;
             document.getElementById("graph-info-vertices").innerText = `${globalData[currentGraph].vertices} Vertices`;
             if (window.MathJax) MathJax.typesetPromise([document.getElementById("graph-info-title")]);
 
