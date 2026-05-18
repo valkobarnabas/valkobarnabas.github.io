@@ -1187,7 +1187,6 @@
             d3.select("#legend-container").selectAll(".legend-item")
                 .on("mouseenter", function(event) {
                     if(document.getElementById("apply-A").disabled) return; 
-                    if(!document.getElementById("hover-toggle").checked) return; // Abort if toggle is off
                     
                     const idx = +d3.select(this).attr("data-index");
                     const vec = basisVectors[idx];
@@ -1223,6 +1222,9 @@
                             positionTooltip(tooltip, event); 
                         });
                     }
+
+                    // Abort the graph overlay coloring if the toggle is unchecked!
+                    if(!document.getElementById("hover-toggle").checked) return;
 
                     // Contextual blending overlay
                     let tempCoeffs = new Array(basisVectors.length).fill(0);
