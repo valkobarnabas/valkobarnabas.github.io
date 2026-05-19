@@ -368,7 +368,7 @@
                 decomposition that the paper derives for each of the 13 
                 graphs.</p>
                 <p>
-                Note that as discussed in the paper, all 13 graphs, save for Tutte's 12-cage, are distance-transitive, so the choice of \(x\) is unimportant. For the Tutte's 12-cage, derivations for both choices of \(x\) up to isomorphism are shown (these are the cases \(x \in B_1\) and \(x \in B_2\), where \(B_1,B_2\) are the two bipartite halves that partition vertex set \(X\)).</p>
+                Note that as discussed in the paper, all 13 graphs, save for Tutte's 12-cage, are distance-transitive, so the choice of \(x\) is unimportant. For the Tutte's 12-cage, derivations for both choices of \(x\) up to isomorphism are shown (these are the cases \(x \in X^+\) and \(x \in X^-\), where \(X^+,X^-\) are the two bipartite halves that partition vertex set \(X\)).</p>
             </div>
         </details>
 
@@ -465,8 +465,8 @@
             if (type === 'graph') {
                 if (val === 'K4') return '\\(K_4\\)';
                 if (val === 'K3,3') return '\\(K_{3,3}\\)';
-                if (val === "Tutte's 12-cage (x in B1)") return "<span>Tutte's 12-cage, \\(x \\in B_1\\)</span>";
-                if (val === "Tutte's 12-cage (x in B2)") return "<span>Tutte's 12-cage, \\(x \\in B_2\\)</span>";
+                if (val === "Tutte's 12-cage (x in B1)") return "<span>Tutte's 12-cage, \\(x \\in X^+\\)</span>";
+                if (val === "Tutte's 12-cage (x in B2)") return "<span>Tutte's 12-cage, \\(x \\in X^-\\)</span>";
                 return val; // "Foster Graph" stays plain text
             }
             if (type === 'module') {
@@ -1150,10 +1150,10 @@
             // intercept the 12-cage to extract the base vertex into a clean subtitle
             if (currentGraph === "Tutte's 12-cage (x in B1)") {
                 displayTitle = "Tutte's 12-cage";
-                subtitleHtml = `<div style="font-size: 16px; font-weight: normal; color: #444; margin-top: 2px; margin-bottom: 4px;">\\(x \\in B_1\\)</div>`;
+                subtitleHtml = `<div style="font-size: 16px; font-weight: normal; color: #444; margin-top: 2px; margin-bottom: 4px;">\\(x \\in X^+\\)</div>`;
             } else if (currentGraph === "Tutte's 12-cage (x in B2)") {
                 displayTitle = "Tutte's 12-cage";
-                subtitleHtml = `<div style="font-size: 16px; font-weight: normal; color: #444; margin-top: 2px; margin-bottom: 4px;">\\(x \\in B_2\\)</div>`;
+                subtitleHtml = `<div style="font-size: 16px; font-weight: normal; color: #444; margin-top: 2px; margin-bottom: 4px;">\\(x \\in X^-\\)</div>`;
             }
             
             document.getElementById("graph-info-title").innerHTML = displayTitle + subtitleHtml;
