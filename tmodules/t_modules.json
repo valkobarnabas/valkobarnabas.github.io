@@ -3395,7 +3395,7 @@
       }
     }
   },
-  "Tutte's 12-cage (x in B2)": {
+  "Tutte's 12-cage (x in X-)": {
     "vertices": 126,
     "nodes": [
     { "x": -0.04985, "y": 0.99876 },
