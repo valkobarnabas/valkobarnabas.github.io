@@ -328,18 +328,18 @@
         <details class="info-section" open>
             <summary style="color: #555;">1. About</summary>
             <div class="details-content">
-                <p>This site is supplementary material for <em>"The Terwilliger algebra for the distance-regular graphs with valency three,"</em> a paper developed as a part of a project of the Madison Experimental Mathematics 
-                Laboratory (MXM) at the University of Wisconsin–Madison. The graduate 
-                mentor for the project was Jimmy Vineyard, with undergraduate 
+                <p>This site is supplementary material for <em>"The Terwilliger algebra for the distance-regular graphs with valency three,"</em> a paper developed as a part of a project for the Madison Experimental Mathematics 
+                Laboratory (MXM) at the University of Wisconsin–Madison during the academic year 2025/26. The project was headed by Professor Paul Terwilliger, with undergraduate 
                 contributors Kevin Kauflin, Barnabás Valkó, 
-                and Hanyi Wu, under the supervision of Professor Paul Terwilliger.</p>
-                <p>It is known that there are exactly 13 distance-regular graphs 
+                and Hanyi Wu. The graduate mentor for the project was Jimmy Vineyard.</p>
+                <p>The goal of the project follows. It is known by a classical theorem that there are exactly 13 distance-regular graphs 
                 of valency three. The paper gives, for each, an orthogonal 
                 direct-sum decomposition of the standard module \(V = 
                 \mathbb{C}^X\) into irreducible \(T\)-modules, with an explicit pure
-                basis for each module. This visualization 
-                is designed to make those decompositions visually clear; for any 
-                selected graph and module, you can interactively verify closure 
+                basis for each module. With these decompositions, we can calculate \(\dim T\) for each graph.</p>
+                <p>This visualization 
+                is intended to make those decompositions visually clear; for any 
+                selected graph and module, the user can interactively verify closure 
                 under the adjacency matrix.</p>
             </div>
         </details>
@@ -367,7 +367,7 @@
                 decomposition that the paper derives for each of the 13 
                 graphs.</p>
                 <p>
-                Note that as discussed in the paper, all 13 graphs, save for Tutte's 12-cage, are distance-transitive, so the choice of \(x\) is unimportant. For the Tutte's 12-cage, derivations for both choices of \(x\) up to isomorphism are shown (these are the cases \(x \in X^+\) and \(x \in X^-\), where \(X^+,X^-\) are the two bipartite halves that partition vertex set \(X\)).</p>
+                All 13 graphs, save for Tutte's 12-cage, are distance-transitive, so the choice of \(x\) is unimportant. For the Tutte's 12-cage, derivations for both choices of \(x\) up to isomorphism are shown (these are the cases \(x \in X^+\) and \(x \in X^-\), where \(X^+,X^-\) are the two bipartite halves that partition vertex set \(X\)).</p>
             </div>
         </details>
 
@@ -375,7 +375,7 @@
             <summary style="color: #555;">3. How does the visualization work?</summary>
             <div class="details-content">
                 <p>Select a graph and a \(T\)-module, then choose an initial 
-                basis vector \(\mathbf{v}_i\). Clicking "Apply \(A\)" updates 
+                basis vector \(\mathbf{v}_i\). Clicking "Apply Adjacency Matrix \(A\)" updates 
                 each vertex's value to the sum of its neighbors' current 
                 values: exactly the action of the adjacency matrix. The 
                 visualization shows that the result stays within the span of 
@@ -397,29 +397,29 @@
         <details class="info-section">
             <summary style="color: #555;">4. What interactive features are available?</summary>
             <div class="details-content">
-                <p><strong>Color Mapping:</strong> Each basis vector is 
+                <p><strong>Color Mapping.</strong> Each basis vector is 
                 assigned a distinct color, used consistently across the graph, 
                 the current linear combination display, and the matrix. 
                 Vertices with contributions from multiple basis vectors split 
                 into multiple colors. <em>Note that this coloring is unrelated to 
                 the subconstituent coloring used in the paper.</em></p>
-                <p><strong>Graph Tooltips:</strong> Hover over any vertex to 
+                <p><strong>Graph Tooltips.</strong> Hover over any vertex to 
                 see its current total value, a history of incoming 
                 contributions, and a breakdown by basis vector.</p>
-                <p><strong>Subconstituent Highlights:</strong> Click or hover 
+                <p><strong>Subconstituent Highlights.</strong> Click or hover 
                 a row in the \(\Gamma_i\) table to highlight that 
                 subconstituent on the graph. Clear with "Reset Highlights."</p>
-                <p><strong>Action of \(A\):</strong> The matrix of \(A\) in 
+                <p><strong>Matrix representing \(A\).</strong> The matrix of \(A\) in 
                 the selected basis is shown bottom right; the column for 
                 \(A\mathbf{v}_i\) is highlighted when that vector is acted 
                 on.</p>
-                <p><strong>Animation Controls:</strong> Use "Animation 
+                <p><strong>Animation Controls.</strong> Use "Animation 
                 Settings" to adjust or disable transition animations.</p>
-                <p><strong>Data Downloads:</strong> Use the buttons in the 
+                <p><strong>Data Downloads.</strong> Use the buttons in the 
                 top left of the graph viewport to download \(A\) as a text 
                 file, or the dual primitive idempotents \(\{E_i^*\}_{i=0}^D\) 
-                as a ZIP. Click the green download button in the top right to 
-                download all matrices for all 13 graphs at once (~645KB).</p>
+                as a .zip file. Click the green download button in the top right to 
+                download all matrices for all 13 graphs at once (~893KB).</p>
             </div>
         </details>
 
@@ -427,7 +427,7 @@
             This website is designed and maintained by <span 
             class="creator-name"><a href="https://github.com/valkobarnabas" 
             style="color: #c5050c;">Barnabás Valkó</a></span> 
-            (UW-Madison Mathematics and Statistics, B.S. 2027).
+            (UW–Madison Mathematics and Statistics, B.S. 2027).
         </div>
     </div>
 </div>
@@ -464,8 +464,8 @@
             if (type === 'graph') {
                 if (val === 'K4') return '\\(K_4\\)';
                 if (val === 'K3,3') return '\\(K_{3,3}\\)';
-                if (val === "Tutte's 12-cage (x in B1)") return "<span>Tutte's 12-cage, \\(x \\in X^+\\)</span>";
-                if (val === "Tutte's 12-cage (x in B2)") return "<span>Tutte's 12-cage, \\(x \\in X^-\\)</span>";
+                if (val === "Tutte's 12-cage (x in X+)") return "<span>Tutte's 12-cage, \\(x \\in X^+\\)</span>";
+                if (val === "Tutte's 12-cage (x in X-)") return "<span>Tutte's 12-cage, \\(x \\in X^-\\)</span>";
                 return val; // "Foster Graph" stays plain text
             }
             if (type === 'module') {
@@ -635,14 +635,14 @@
                 "Desargues Graph": {
                     "W1a": ["\\nu", "A\\nu", "E_3^*A^2\\nu", "E_4^*A^3\\nu"], "W1b": ["\\nu", "A\\nu", "E_3^*A^2\\nu", "E_4^*A^3\\nu"]
                 },
-                "Tutte's 12-cage (x in B1)": {
+                "Tutte's 12-cage (x in X+)": {
                     "W1a": ["\\nu", "A\\nu", "E_3^*A^2\\nu", "E_4^*A^3\\nu", "E_5^*A^4\\nu"], "W1b": ["\\nu", "A\\nu", "E_3^*A^2\\nu", "E_4^*A^3\\nu", "E_5^*A^4\\nu"],
                     "W2a": ["\\nu", "A\\nu", "E_4^*A^2\\nu", "E_5^*A^3\\nu", "E_6^*A^4\\nu"], "W2b": ["\\nu", "A\\nu", "E_4^*A^2\\nu", "E_5^*A^3\\nu", "E_6^*A^4\\nu"], "W2c": ["\\nu", "A\\nu", "E_4^*A^2\\nu", "E_5^*A^3\\nu", "E_6^*A^4\\nu"],
                     "W3a": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3b": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3c": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3d": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3e": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3f": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"],
                     "W4d": ["\\nu", "A\\nu", "E_6^*A^2\\nu"], "W4e": ["\\nu", "A\\nu", "E_6^*A^2\\nu"], "W4f": ["\\nu", "A\\nu", "E_6^*A^2\\nu"],
                     "W4g": ["\\nu", "A\\nu", "E_6^*A^2\\nu", "E_5^*A^3\\nu - 4A\\nu",  "E_6^*A^4\\nu - 6E_6^*A^2\\nu"], "W4h": ["\\nu", "A\\nu", "E_6^*A^2\\nu", "E_5^*A^3\\nu - 4A\\nu", "E_6^*A^4\\nu - 6E_6^*A^2\\nu"], "W4i": ["\\nu", "A\\nu", "E_6^*A^2\\nu", "E_5^*A^3\\nu - 4A\\nu", "E_6^*A^4\\nu - 6E_6^*A^2\\nu"], "W4j": ["\\nu", "A\\nu", "E_6^*A^2\\nu", "E_5^*A^3\\nu - 4A\\nu", "E_6^*A^4\\nu - 6E_6^*A^2\\nu"], "W4k": ["\\nu", "A\\nu", "E_6^*A^2\\nu", "E_5^*A^3\\nu - 4A\\nu", "E_6^*A^4\\nu - 6E_6^*A^2\\nu"], "W4l": ["\\nu", "A\\nu", "E_6^*A^2\\nu", "E_5^*A^3\\nu - 4A\\nu", "E_6^*A^4\\nu - 6E_6^*A^2\\nu"]
                 },
-                "Tutte's 12-cage (x in B2)": {
+                "Tutte's 12-cage (x in X-)": {
                     "W1a": ["\\nu", "A\\nu", "E_3^*A^2\\nu", "E_4^*A^3\\nu", "E_5^*A^4\\nu"], "W1b": ["\\nu", "A\\nu", "E_3^*A^2\\nu", "E_4^*A^3\\nu", "E_5^*A^4\\nu"],
                     "W2a": ["\\nu", "A\\nu", "E_4^*A^2\\nu", "E_5^*A^3\\nu", "E_6^*A^4\\nu"], "W2b": ["\\nu", "A\\nu", "E_4^*A^2\\nu", "E_5^*A^3\\nu", "E_6^*A^4\\nu"], "W2c": ["\\nu", "A\\nu", "E_4^*A^2\\nu", "E_5^*A^3\\nu", "E_6^*A^4\\nu"],
                     "W3a": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3b": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3c": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3d": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3e": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"], "W3f": ["\\nu", "A\\nu", "E_5^*A^2\\nu", "E_6^*A^3\\nu", "E_5^*A^4\\nu - 6E_5^*A^2\\nu"],
@@ -799,7 +799,7 @@
             bgGroup.selectAll(".node-bg").remove();
 
             // adjust scaling constraints for massive datasets
-            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in B1)", "Tutte's 12-cage (x in B2)"].includes(currentGraph);
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in X+)", "Tutte's 12-cage (x in X-)"].includes(currentGraph);
             const fSize = isLargeGraph ? rBase * 1.2 : rBase * 0.85;
 
             // default state for zeroed elements
@@ -1147,10 +1147,10 @@
             let subtitleHtml = "";
             
             // intercept the 12-cage to extract the base vertex into a clean subtitle
-            if (currentGraph === "Tutte's 12-cage (x in B1)") {
+            if (currentGraph === "Tutte's 12-cage (x in X+)") {
                 displayTitle = "Tutte's 12-cage";
                 subtitleHtml = `<div style="font-size: 16px; font-weight: normal; color: #444; margin-top: 2px; margin-bottom: 4px;">\\(x \\in X^+\\)</div>`;
-            } else if (currentGraph === "Tutte's 12-cage (x in B2)") {
+            } else if (currentGraph === "Tutte's 12-cage (x in X-)") {
                 displayTitle = "Tutte's 12-cage";
                 subtitleHtml = `<div style="font-size: 16px; font-weight: normal; color: #444; margin-top: 2px; margin-bottom: 4px;">\\(x \\in X^-\\)</div>`;
             }
@@ -1297,7 +1297,7 @@
             let rBase = (maxDim / Math.sqrt(nodes.length)) * 0.22; 
             let padFactor = 0.2;
             
-            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in B1)", "Tutte's 12-cage (x in B2)"].includes(currentGraph);
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in X+)", "Tutte's 12-cage (x in X-)"].includes(currentGraph);
             const isSmallGraph = ["K4", "K3,3"].includes(currentGraph);
 
             if (isLargeGraph) {
@@ -1602,7 +1602,7 @@
                 return;
             }
 
-            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in B1)", "Tutte's 12-cage (x in B2)"].includes(currentGraph);
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in X+)", "Tutte's 12-cage (x in X-)"].includes(currentGraph);
             const labelScale = isLargeGraph ? 1.5 : 0.55;
 
             const rBase = globalRBase;
@@ -1798,7 +1798,7 @@
             const matrixEl = document.getElementById("matrix-info-display");
             const matrixContainer = document.getElementById("matrix-info");
             
-            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in B1)", "Tutte's 12-cage (x in B2)"].includes(currentGraph);
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in X+)", "Tutte's 12-cage (x in X-)"].includes(currentGraph);
             const dim = basisVectors.length;
             
             let fontSize = "14px";
