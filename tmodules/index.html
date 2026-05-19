@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=1400">
     <title>Irreducible T-modules for Distance-Regular Graphs with Valency Three</title>
     <link rel="icon" type="image/png" href="mxm.png">
     
@@ -415,11 +415,50 @@
                 on.</p>
                 <p><strong>Animation Controls.</strong> Use "Animation 
                 Settings" to adjust or disable transition animations.</p>
-                <p><strong>Data Downloads.</strong> Use the buttons in the 
+                <p style="margin-bottom: 8px;"><strong>Data Downloads:</strong> Use the buttons in the 
                 top left of the graph viewport to download \(A\) as a text 
                 file, or the dual primitive idempotents \(\{E_i^*\}_{i=0}^D\) 
-                as a .zip file. Click the green download button in the top right to 
-                download all matrices for all 13 graphs at once (~893KB).</p>
+                as a ZIP. Click the green download button in the top right to 
+                download all matrices for all 13 graphs at once (~645KB).</p>
+                
+                <details style="margin-top: 10px; border: 1px solid #ddd; border-radius: 4px; padding: 6px 12px; background: #fbfbfb;">
+                    <summary style="cursor: pointer; font-size: 13.5px; font-weight: bold; color: #555; outline: none; user-select: none;">How to use the downloaded matrices</summary>
+                    <div style="margin-top: 12px; font-size: 13px;">
+                        <p style="margin-bottom: 10px; color: #444;">Here is how you can load the matrices into your preferred software to verify the basis vector transformations. For example, to load the Adjacency matrix of the Coxeter Graph and multiply it by a vector \(\nu\):</p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            
+                            <div style="flex: 1; min-width: 200px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #eee; box-shadow: inset 0 0 5px rgba(0,0,0,0.02);">
+                                <strong style="display: block; margin-bottom: 6px; color: #111; font-size: 12px;">R</strong>
+                                <pre style="margin: 0; font-family: monospace; font-size: 11.5px; white-space: pre-wrap; color: #c5050c; line-height: 1.4;">w &lt;- rep(0, 28)
+w[2:4] &lt;- c(1, -1, 0)
+A &lt;- as.matrix(read.table("Coxeter_Graph_A.txt"))
+nu &lt;- matrix(w, nrow=28, ncol=1)
+A %*% nu</pre>
+                            </div>
+                            
+                            <div style="flex: 1; min-width: 200px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #eee; box-shadow: inset 0 0 5px rgba(0,0,0,0.02);">
+                                <strong style="display: block; margin-bottom: 6px; color: #111; font-size: 12px;">Python (NumPy)</strong>
+                                <pre style="margin: 0; font-family: monospace; font-size: 11.5px; white-space: pre-wrap; color: #007bff; line-height: 1.4;">import numpy as np
+w = np.zeros(28)
+w[1:4] = [1, -1, 0] # 0-indexed
+A = np.loadtxt("Coxeter_Graph_A.txt")
+nu = w.reshape(28, 1)
+A @ nu</pre>
+                            </div>
+                            
+                            <div style="flex: 1; min-width: 200px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #eee; box-shadow: inset 0 0 5px rgba(0,0,0,0.02);">
+                                <strong style="display: block; margin-bottom: 6px; color: #111; font-size: 12px;">Mathematica</strong>
+                                <pre style="margin: 0; font-family: monospace; font-size: 11.5px; white-space: pre-wrap; color: #28a745; line-height: 1.4;">w = ConstantArray[0, 28];
+w[[2;;4]] = {1, -1, 0};
+A = Import["Coxeter_Graph_A.txt", "Table"];
+nu = Transpose[{w}];
+A . nu</pre>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </details>
+
             </div>
         </details>
 
