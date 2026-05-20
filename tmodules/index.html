@@ -1437,7 +1437,7 @@ A * nu</pre>
                     // assemble breakdown info dynamically
                     let basisHtml = "";
                     if (activeContribs.length === 0) {
-                        basisHtml = `<div style="color: #888; font-size: 13px; font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px;">No active non-zero basis components</div>`;
+                        basisHtml = `<div style="color: #888; font-size: 13px; font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px;">No active nonzero basis components</div>`;
                     } else {
                         basisHtml = `<div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px; text-align: left;">
                             <strong style="font-size: 13px;">Basis Vector Breakdown:</strong>
@@ -1461,7 +1461,7 @@ A * nu</pre>
                     let pastHtml = "";
                     let pastContribs = pastNeighborContributions[d.id];
                     if (!pastContribs || pastContribs.length === 0 || applyCount === 0) {
-                        pastHtml = `<div style="color: #888; font-size: 13px; font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px;">No past neighbor contributions</div>`;
+                        pastHtml = `<div style="color: #888; font-size: 13px; font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 8px;">No past nonzero neighbor contributions</div>`;
                     } else {
                         let total = 0;
                         let rowsHtml = "";
