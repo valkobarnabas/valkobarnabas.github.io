@@ -511,6 +511,12 @@ A * nu</pre>
         // floating point math tolerance to prevent visualization artifacts
         const ZERO_TOLERANCE = 1e-8;
 
+        // globally formats numbers to keep exact fractions but trim long floating point errors
+        function cleanNum(val) {
+            if (Math.abs(val) < ZERO_TOLERANCE) return 0;
+            return Math.round(val * 10000) / 10000;
+        }
+
         // format internal keys into proper latex strings based on type
         function formatLatexLabel(type, val) {
             if (type === 'graph') {
@@ -838,7 +844,7 @@ A * nu</pre>
             let activeContribs = [];
             let totalVal = 0;
             for (let j = 0; j < basisVectors.length; j++) {
-                let val = Math.round(coeffs[j] * basisVectors[j][nodeId]);
+                let val = cleanNum(coeffs[j] * basisVectors[j][nodeId]);
                 if (Math.abs(val) > 0) {
                     activeContribs.push({
                         color: customColors[j % customColors.length],
@@ -847,6 +853,7 @@ A * nu</pre>
                     totalVal += val;
                 }
             }
+            totalVal = cleanNum(totalVal);
 
             bgGroup.selectAll(".node-bg").remove();
 
@@ -994,7 +1001,7 @@ A * nu</pre>
                     nextV[tId] += v_c[sId];
                 });
                 let nextVMat = math.matrix(nextV);
-                let colCoeffs = math.multiply(projMatrix, nextVMat).toArray().map(val => Math.abs(val) < ZERO_TOLERANCE ? 0 : Math.round(val));
+                let colCoeffs = math.multiply(projMatrix, nextVMat).toArray().map(val => cleanNum(val));
                 actionMatrix.push(colCoeffs);
             }
 
@@ -1251,7 +1258,7 @@ A * nu</pre>
                     }
                     if (targetDist === -1) targetDist = 0; 
 
-                    let essential = subconstituents[targetDist].map(nodeIdx => Math.round(vec[nodeIdx]));
+                    let essential = subconstituents[targetDist].map(nodeIdx => cleanNum(vec[nodeIdx]));
                     
                     let tex = `\\begin{bmatrix} ${essential.join(" & ")} \\end{bmatrix}`;
                     
@@ -1284,7 +1291,7 @@ A * nu</pre>
                     
                     nodes.forEach(n => {
                         d3.select(`#text-group-${n.id} .main-label`).attr("fill", "#111");
-                        let hoverVal = Math.round(basisVectors[idx][n.id]);
+                        let hoverVal = cleanNum(basisVectors[idx][n.id]);
                         if (Math.abs(hoverVal) > 0) {
                             updateNodeVisuals(n.id, tempCoeffs, globalRBase, true);
                         } else {
@@ -1295,7 +1302,7 @@ A * nu</pre>
                     if (typeof window.applyHighlights === "function") window.applyHighlights();
 
                     nodes.forEach(n => {
-                        let hoverVal = Math.round(basisVectors[idx][n.id]);
+                        let hoverVal = cleanNum(basisVectors[idx][n.id]);
                         if (Math.abs(hoverVal) === 0) { // Only dim nodes NOT in the hovered vector
                             d3.select(`#node-group-${n.id}`).style("opacity", 0.25);
                             d3.select(`#text-group-${n.id}`).style("opacity", 0.25);
@@ -1420,12 +1427,12 @@ A * nu</pre>
                 .on("mouseenter", function(event, d) {
                     if(document.getElementById("apply-A").disabled) return; 
 
-                    let val = Math.round(nodeValues[d.id]);
+                    let val = cleanNum(nodeValues[d.id]);
                     let nodeName = d.id === 0 ? "x" : d.id;
 
                     let activeContribs = [];
                     for (let j = 0; j < basisVectors.length; j++) {
-                        let contribVal = Math.round(currentCoeffs[j] * basisVectors[j][d.id]);
+                        let contribVal = cleanNum(currentCoeffs[j] * basisVectors[j][d.id]);
                         // extract explicit algebraic definitions per non-zero basis factor
                         if (Math.abs(contribVal) > 0) {
                             activeContribs.push({
@@ -1433,7 +1440,7 @@ A * nu</pre>
                                 val: contribVal,
                                 color: customColors[j % customColors.length],
                                 tex: getBasisLabel(currentGraph, currentModule, j),
-                                coeff: Math.round(currentCoeffs[j])
+                                coeff: cleanNum(currentCoeffs[j])
                             });
                         }
                     }
@@ -1470,7 +1477,7 @@ A * nu</pre>
                         let total = 0;
                         let rowsHtml = "";
                         pastContribs.forEach(c => {
-                            let val = Math.round(c.val);
+                            let val = cleanNum(c.val);
                             total += val;
                             let vName = c.from === 0 ? "x" : c.from;
                             rowsHtml += `<tr>
@@ -1493,7 +1500,7 @@ A * nu</pre>
                                         ${rowsHtml}
                                         <tr style="border-top: 1px solid #bbb;">
                                             <td style="padding: 4px 15px; text-align: center;"><strong>Total</strong></td>
-                                            <td style="padding: 4px 15px; text-align: center;"><strong>${total}</strong></td>
+                                            <td style="padding: 4px 15px; text-align: center;"><strong>${cleanNum(total)}</strong></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -1687,7 +1694,7 @@ A * nu</pre>
                     pGroup.append("text")
                         .attr("class", "node-label")
                         .attr("font-size", `${particleFontSize}px`)
-                        .text(Math.round(valS));
+                        .text(cleanNum(valS));
 
                     pGroup.transition()
                         .duration(flowDuration)
@@ -1709,7 +1716,7 @@ A * nu</pre>
                     pGroup.append("text")
                         .attr("class", "node-label")
                         .attr("font-size", `${particleFontSize}px`)
-                        .text(Math.round(valT));
+                        .text(cleanNum(valT));
 
                     pGroup.transition()
                         .duration(flowDuration)
@@ -1740,7 +1747,7 @@ A * nu</pre>
                             let sum = 0;
                             
                             incoming.forEach((val, idx) => {
-                                let v = Math.round(val);
+                                let v = cleanNum(val);
                                 if (idx === 0) sumStr += v;
                                 else if (v >= 0) sumStr += " + " + v;
                                 else sumStr += " - " + Math.abs(v);
@@ -1748,7 +1755,7 @@ A * nu</pre>
                             });
                             
                             if (incoming.length > 1) {
-                                sumStr += " = " + Math.round(sum);
+                                sumStr += " = " + cleanNum(sum);
                             }
                             
                             // adjust sizing variables specifically tuned for mathematical summation renders
@@ -1782,7 +1789,7 @@ A * nu</pre>
             let first = true;
             
             for (let j = 0; j < coeffs.length; j++) {
-                let val = Math.round(coeffs[j]);
+                let val = cleanNum(coeffs[j]);
                 
                 if (Math.abs(val) > 0) {
                     let colorHex = customColors[j % customColors.length];
