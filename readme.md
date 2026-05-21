@@ -8,8 +8,8 @@ Source code for [valkobarnabas.github.io](https://valkobarnabas.github.io), the 
 * `/tmodules/index.html`, `/fightsongs/index.html`, `/terwilliger/index.html`: Project subpages.
 
 ## Featured Work
-* **The Geometry of College Fight Songs** Winner of Bucky's Data Viz Challenge and UW-Madison representative at the BTAA Data Viz Challenge 2026.
-* **Primary Defender Break Score** Honorable Mention (Top ~5/277) submission to the NFL Big Data Bowl 2026.
+* **The Geometry of College Fight Songs:** Winner of Bucky's Data Viz Challenge and UW-Madison representative at the BTAA Data Viz Challenge 2026.
+* **Primary Defender Break Score:** Honorable Mention (Top ~5/277) submission to the NFL Big Data Bowl 2026.
 * **Terwilliger Algebras & T-Modules:** Interactive mathematical visualizations supporting research at the Madison Experimental Mathematics (MXM) Lab.
 * *More coming soon!*
 
