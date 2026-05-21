@@ -5,6 +5,7 @@ Source code for [valkobarnabas.github.io](https://valkobarnabas.github.io), the 
 ## Site Structure
 * `index.html`: Main landing page and featured project gallery.
 * `cv.html`: Digital curriculum vitae.
+* `/tmodules/index.html`, `/fightsongs/index.html`, `/terwilliger/index.html`: Project subpages.
 
 ## Featured Work
 * **The Geometry of College Fight Songs** Winner of Bucky's Data Viz Challenge and UW-Madison representative at the BTAA Data Viz Challenge 2026.
@@ -13,9 +14,9 @@ Source code for [valkobarnabas.github.io](https://valkobarnabas.github.io), the 
 * *More coming soon!*
 
 ## Technical Details
-* Built with pure HTML and CSS for optimal performance.
-* Automatically deployed via GitHub Pages.
+* Built with pure HTML and CSS.
+* Hosted GitHub Pages.
 
 ## Contact
-* Email: [bvalko@wisc.edu](mailto:bvalko@wisc.edu)
+* Email: [bvalko(at)wisc(dot)edu](mailto:bvalko@wisc.edu)
 * LinkedIn: [barnabas-valko](https://linkedin.com/in/barnabas-valko)
