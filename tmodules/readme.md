@@ -39,14 +39,14 @@ The `t_modules.json` dataset contains pre-calculated vertex, edge, layout, and $
 13. Foster Graph
 
 ## Project Link
-This webpage can be viewed live at [valkobarnabas.github.io](valkobarnabas.github.io).
+This webpage can be viewed live at [valkobarnabas.github.io/tmodules](valkobarnabas.github.io/tmodules).
 
 ## Technologies Used
 HTML/CSS/Vanilla JS: Core structure and styling.
 
 D3.js (v7.9): SVG graph rendering, node/link physics, and interactive animations.
 
-MathJax (v3): Dynamic LaTeX equation rendering for vectors and matrices.
+MathJax (v3): LaTeX equation rendering for vectors and matrices.
 
 math.js (v11.8): Linear algebra and matrix operations under the hood.
 
@@ -56,3 +56,5 @@ JSZip (v3.10): Client-side generation of .zip files for matrix downloads.
 This project was headed by Professor Paul Terwilliger, with undergraduate contributors Kevin Kauflin, Barnabás Valkó, and Hanyi Wu. The graduate mentor for the project was Jimmy Vineyard.
 
 This website and the data user herein was designed and derived by Barnabás Valkó (UW–Madison Mathematics and Statistics, B.S. 2027). Please feel free to address feedback to [bvalko(at)wisc(dot)edu](mailto:bvalko@wisc.edu).
+
+Many of the calculations in this paper were performed using the R programming language. The graph layouts were generated using R along with data from Wikipedia.
