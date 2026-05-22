@@ -1352,10 +1352,24 @@ A * nu</pre>
                 const isSelected = (key === startVectorKey) ? " selected" : "";
                 
                 let diagnosisIcon = "";
+                let boxAttrs = "";
+                
                 if (window.diagnosisMode) {
-                    if (index === 0) { // Verify seed vector against main.tex
+                    // 1. Math Check: Applies to ALL vectors. Natively verifies the label against the graph's matrices.
+                    let computed = parseAndEvaluate(labelTex, basisVectors[0], nodes.length, dists, globalAdj);
+                    if (computed) {
+                        let isEqual = vectorsProportional(computed, basisVectors[index]);
+                        diagnosisIcon = isEqual ? ` <span style="color:#28a745; margin-left:6px;" title="Mathematically verified relative to initial basis element">&#10004;</span>` : ` <span style="color:#c5050c; margin-left:6px; font-weight:bold;" title="Failed relative verification">&#10008;</span>`;
+                    } else if (labelTex.match(/^v_/)) {
+                        diagnosisIcon = ""; // Hide for generic labels where calculation is impossible
+                    } else {
+                        diagnosisIcon = ` <span style="color:#ffc107; margin-left:6px; font-weight:bold;" title="Could not parse algebraic expression">?</span>`;
+                    }
+
+                    // 2. Paper Check: Applies only to the seed vector. Verifies the array against the uploaded main.tex.
+                    if (index === 0 && window.paperData) {
                         let formattedModKey = currentModule.replace(/W(\d+)([a-z]+)?/i, function(match, num, letter) { return letter ? `W${num}${letter}` : `W${num}`; });
-                        if (window.paperData && window.paperData.vectors[currentGraph] && window.paperData.vectors[currentGraph][formattedModKey]) {
+                        if (window.paperData.vectors[currentGraph] && window.paperData.vectors[currentGraph][formattedModKey]) {
                             let paperVec = window.paperData.vectors[currentGraph][formattedModKey];
                             let targetDist = -1;
                             for(let i=0; i<basisVectors[0].length; i++) {
@@ -1365,25 +1379,19 @@ A * nu</pre>
                             let essential = subconstituents[targetDist].map(nodeIdx => cleanNum(basisVectors[0][nodeIdx]));
 
                             let isEqual = vectorsProportional(essential, paperVec);
-                            diagnosisIcon = isEqual ? ` <span style="color:#28a745; margin-left:6px;" title="Matches main.tex seed vector">&#10004;</span>` : ` <span style="color:#c5050c; margin-left:6px; font-weight:bold;" title="Does NOT match main.tex">&#10008;</span>`;
+                            if (isEqual) {
+                                boxAttrs = `style="background-color: #d4edda; border-color: #c3e6cb;" title="Seed vector array matches main.tex!"`; // Green
+                            } else {
+                                boxAttrs = `style="background-color: #f8d7da; border-color: #f5c6cb;" title="Seed vector array DOES NOT match main.tex"`; // Red
+                            }
                         } else {
-                            diagnosisIcon = ` <span style="color:#6c757d; margin-left:6px;" title="No paper data loaded (Upload main.tex)">-</span>`;
-                        }
-                    } else { // Verify derived vector against algebraic formula
-                        let computed = parseAndEvaluate(labelTex, basisVectors[0], nodes.length, dists, globalAdj);
-                        if (computed) {
-                            let isEqual = vectorsProportional(computed, basisVectors[index]);
-                            diagnosisIcon = isEqual ? ` <span style="color:#28a745; margin-left:6px;" title="Mathematically verified relative to ν">&#10004;</span>` : ` <span style="color:#c5050c; margin-left:6px; font-weight:bold;" title="Failed relative verification">&#10008;</span>`;
-                        } else if (labelTex.match(/^v_/)) {
-                            diagnosisIcon = ""; 
-                        } else {
-                            diagnosisIcon = ` <span style="color:#ffc107; margin-left:6px; font-weight:bold;" title="Could not parse algebraic expression">?</span>`;
+                            boxAttrs = `style="background-color: #fff3cd; border-color: #ffeeba;" title="Seed vector not found in main.tex"`; // Yellow
                         }
                     }
                 }
 
                 legendContainer.innerHTML += `
-                    <div class="legend-item${isSelected}" data-index="${index}" onclick="selectVectorFromLegend('${key}')">
+                    <div class="legend-item${isSelected}" data-index="${index}" onclick="selectVectorFromLegend('${key}')" ${boxAttrs}>
                         <span class="legend-color" style="background-color: ${color};"></span>
                         \\(\\mathbf{v}_{${index + 1}} = ${labelTex}\\)${diagnosisIcon}
                     </div>`;
