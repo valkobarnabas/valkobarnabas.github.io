@@ -236,9 +236,11 @@
             <hr style="margin: 25px 0 15px 0; border: 0; border-top: 1px solid #eee;">
 
             <h3 style="margin-top: 0;">Actions</h3>
-            <button id="apply-A" class="has-tooltip" data-title="Sum the values of the current neighbors of each vertex, to apply A">Apply Adjacency Matrix \(A\)</button>
+            <button id="apply-A" class="has-tooltip" data-title="Sum the values of the current neighbors of each vertex, to apply A">Apply Adjacency Matrix A</button>
             <button id="reset-v" class="has-tooltip" data-title="Revert back to the initial pure basis vector" style="background-color: #6c757d;">Reset to Initial Basis Vector</button>
+            <button id="ortho-btn" class="has-tooltip" data-title="Check orthogonality across modules" style="background-color: #17a2b8; display: none; margin-top: 5px;">Check Orthogonality (Diagnosis)</button>
 
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
             <div style="display: flex; gap: 10px; margin-top: 5px;">
                 <button id="info-btn" class="has-tooltip tooltip-left" data-title="Learn about this visualization" style="background-color: #007bff; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
                     &#8505; About this Page
@@ -484,6 +486,25 @@ A * nu</pre>
     </div>
 </div>
 
+    <div class="modal-overlay" id="ortho-modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <button class="modal-close" id="close-ortho-modal">&times;</button>
+            <h2 style="color: #111;">Orthogonality Diagnosis</h2>
+            <div style="display:flex; gap:15px; margin-bottom: 20px; align-items: flex-end;">
+                <div style="flex:1;">
+                    <label style="font-size:13px; font-weight:bold;">Graph:</label>
+                    <select id="ortho-graph-select" style="margin:5px 0 0 0; padding: 8px;"></select>
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:13px; font-weight:bold;">Subconstituent:</label>
+                    <select id="ortho-dist-select" style="margin:5px 0 0 0; padding: 8px;"></select>
+                </div>
+                <button id="run-ortho-check" style="margin:0; padding:10px 20px; background-color:#28a745;">Run Check</button>
+            </div>
+            <div id="ortho-results" style="overflow-x: auto; font-size: 13px; max-height: 400px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
     <script>
         // global state trackers for the application
         let globalData = {};
@@ -505,98 +526,93 @@ A * nu</pre>
         let hoveredSubconstituent = -1; // tracks temporary mouse hover selections
         let globalDists = []; // caches calculated distances
         let globalSubconstituents = {}; // caches calculated subconstituents
-        let globalAdj = []; // caches graph connectivity for diagnostic logic
-        window.diagnosisMode = false;
         
-        // --- Diagnosis Evaluators ---
-        function vectorsEqual(v1, v2) {
+        let globalAdj = []; // caches for diagnosis
+        window.diagnosisMode = false;
+
+        function vectorsProportional(v1, v2) {
+            let ratio = null;
+            let max1 = Math.max(...v1.map(Math.abs));
+            let max2 = Math.max(...v2.map(Math.abs));
+            if (max1 < 1e-4 && max2 < 1e-4) return true; 
+            if (max1 < 1e-4 || max2 < 1e-4) return false;
+
             for(let i=0; i<v1.length; i++) {
-                if (Math.abs(v1[i] - v2[i]) > 1e-4) return false;
+                if (Math.abs(v1[i]) < 1e-4 && Math.abs(v2[i]) < 1e-4) continue;
+                if (Math.abs(v1[i]) < 1e-4 || Math.abs(v2[i]) < 1e-4) return false;
+                let currentRatio = v1[i] / v2[i];
+                if (ratio === null) ratio = currentRatio;
+                else if (Math.abs(currentRatio - ratio) > 1e-3) return false;
             }
             return true;
         }
 
-        // Translates LaTeX basis definitions into simulated graph operations
-        function parseAndEvaluate(tex, nu, N) {
-            function mult(c, v) { return v.map(x => c * x); }
-            function add(v1, v2) { return v1.map((x,i) => x + v2[i]); }
-            function applyA(v, times=1) {
-                let res = [...v];
-                for(let k=0; k<times; k++) {
-                    let next = new Array(N).fill(0);
-                    for(let i=0; i<N; i++) {
-                        if(res[i]===0) continue;
-                        globalAdj[i].forEach(nb => next[nb] += res[i]);
-                    }
-                    res = next;
-                }
-                return res;
-            }
-            function applyE(dist, v) {
+        // parses algebraic expressions on the graph to verify mathematical truth
+        function parseAndEvaluate(tex, nu, N, dists, adj) {
+            let eMatch = tex.match(/^e_\{(\d+)\}\^\*$/);
+            if (eMatch) {
+                let d = parseInt(eMatch[1]);
                 let res = new Array(N).fill(0);
-                if(globalSubconstituents[dist]) {
-                    globalSubconstituents[dist].forEach(idx => res[idx] = v[idx]);
-                }
+                for(let j=0; j<N; j++) { if (dists[j] === d) res[j] = 1; }
                 return res;
-            }
-            function evalTerm(term) {
-                let sign = 1;
-                if (term.startsWith('-')) { sign = -1; term = term.substring(1); }
-                else if (term.startsWith('+')) { term = term.substring(1); }
-                
-                let coeff = 1;
-                let coeffMatch = term.match(/^(\d+)/);
-                if (coeffMatch) {
-                    coeff = parseInt(coeffMatch[1]);
-                    term = term.substring(coeffMatch[1].length);
-                }
-                coeff *= sign;
-                
-                let eDist = null;
-                let eMatch = term.match(/^E_(\d+)\^\*/);
-                if (eMatch) {
-                    eDist = parseInt(eMatch[1]);
-                    term = term.substring(eMatch[0].length);
-                }
-                
-                let aTimes = 0;
-                if (term.startsWith("A^")) {
-                    let aMatch = term.match(/^A\^(\d+)/);
-                    aTimes = parseInt(aMatch[1]);
-                    term = term.substring(aMatch[0].length);
-                } else if (term.startsWith("A")) {
-                    aTimes = 1;
-                    term = term.substring(1);
-                }
-                
-                if (term === "\\nu" || term === "v_1") {
-                    let v = nu;
-                    if (aTimes > 0) v = applyA(v, aTimes);
-                    if (eDist !== null) v = applyE(eDist, v);
-                    return mult(coeff, v);
-                }
-                return null;
             }
 
             let str = tex.replace(/\s+/g, '');
-            if (str === "E_6^*A(E_5^*A^6\\nu-10E_5^*A^4\\nu-E_5^*A^3\\nu)") {
-                let innerSum = new Array(N).fill(0);
-                ["E_5^*A^6\\nu", "-10E_5^*A^4\\nu", "-E_5^*A^3\\nu"].forEach(t => { 
-                    innerSum = add(innerSum, evalTerm(t)); 
-                });
-                return applyE(6, applyA(innerSum, 1));
+            if (str.includes("E_6^*A(E_5^*A^6\\nu-10E_5^*A^4\\nu-E_5^*A^3\\nu)")) {
+                let inner = parseAndEvaluate("E_5^*A^6\\nu-10E_5^*A^4\\nu-E_5^*A^3\\nu", nu, N, dists, adj);
+                if (!inner) return null;
+                return parseAndEvaluate("E_6^*A\\nu", inner, N, dists, adj);
             }
 
-            let terms = str.replace(/-/g, '+-').split('+').filter(t => t.length > 0);
-            let result = new Array(N).fill(0);
-            for (let t of terms) {
-                let res = evalTerm(t);
-                if (!res) return null; // Unrecognized algebra structure
-                result = add(result, res);
+            str = str.replace(/-/g, '+-');
+            let terms = str.split('+').filter(t => t.length > 0);
+            let res = new Array(N).fill(0);
+
+            for(let t of terms) {
+                let sign = 1;
+                if (t.startsWith('-')) { sign = -1; t = t.substring(1); }
+
+                let coeff = 1;
+                let coeffMatch = t.match(/^(\d+)/);
+                if (coeffMatch) {
+                    coeff = parseInt(coeffMatch[1]);
+                    t = t.substring(coeffMatch[1].length);
+                }
+
+                let eDist = null;
+                let eMatchRegex = t.match(/^E_(\d+)\^\*/);
+                if (eMatchRegex) {
+                    eDist = parseInt(eMatchRegex[1]);
+                    t = t.substring(eMatchRegex[0].length);
+                }
+
+                let aTimes = 0;
+                if (t.startsWith('A^')) {
+                    let aMatch = t.match(/^A\^(\d+)/);
+                    if(aMatch) { aTimes = parseInt(aMatch[1]); t = t.substring(aMatch[0].length); }
+                } else if (t.startsWith('A')) {
+                    aTimes = 1;
+                    t = t.substring(1);
+                }
+
+                if (t !== "\\nu" && t !== "v_1") return null;
+
+                let v = [...nu];
+                for(let i=0; i<aTimes; i++) {
+                    let nextV = new Array(N).fill(0);
+                    for(let j=0; j<N; j++) {
+                        if(v[j] !== 0) adj[j].forEach(nb => nextV[nb] += v[j]);
+                    }
+                    v = nextV;
+                }
+                if (eDist !== null) {
+                    for(let j=0; j<N; j++) { if(dists[j] !== eDist) v[j] = 0; }
+                }
+                for(let j=0; j<N; j++) { res[j] += sign * coeff * v[j]; }
             }
-            return result;
+            return res;
         }
-
+        
         // distinct color palette for basis vector identification; uses metro transit colors :)
         const customColors = ["rgb(238,47,36)", "rgb(49,50,101)","rgb(141,187,0)", "rgb(56,169,209)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        
         // floating point math tolerance to prevent visualization artifacts
@@ -1107,8 +1123,7 @@ A * nu</pre>
                 adj[s].push(t);
                 adj[t].push(s);
             });
-            globalAdj = adj; // Store globally for the mathematical diagnosis parser
-            
+            globalAdj = adj; // cached for diagnosis verification algorithms
             while(queue.length > 0) {
                 let curr = queue.shift();
                 adj[curr].forEach(neighbor => {
@@ -1328,23 +1343,17 @@ A * nu</pre>
                 
                 let diagnosisIcon = "";
                 if (window.diagnosisMode) {
-                    if (labelTex.match(/^e_\{(\d+)\}\^\*$/)) {
-                        let dist = parseInt(labelTex.match(/^e_\{(\d+)\}\^\*$/)[1]);
-                        let computed = new Array(nodes.length).fill(0);
-                        if (globalSubconstituents[dist]) globalSubconstituents[dist].forEach(i => computed[i] = 1);
-                        let isEqual = vectorsEqual(computed, basisVectors[index]);
-                        diagnosisIcon = isEqual ? ` <span style="color:#28a745; margin-left:6px;" title="Mathematically verified">&#10004;</span>` : ` <span style="color:#c5050c; margin-left:6px;" title="Failed verification">&#10008;</span>`;
-                    } else if (labelTex.includes("\\nu") || labelTex === "v_1") {
-                        let computed = parseAndEvaluate(labelTex, basisVectors[0], nodes.length);
-                        if (computed) {
-                            let isEqual = vectorsEqual(computed, basisVectors[index]);
-                            diagnosisIcon = isEqual ? ` <span style="color:#28a745; margin-left:6px;" title="Mathematically verified relative to ν">&#10004;</span>` : ` <span style="color:#c5050c; margin-left:6px;" title="Failed relative verification">&#10008;</span>`;
-                        } else {
-                            diagnosisIcon = ` <span style="color:#ffc107; margin-left:6px; font-weight:bold;" title="Could not parse algebraic expression">?</span>`;
-                        }
+                    let computed = parseAndEvaluate(labelTex, basisVectors[0], nodes.length, dists, globalAdj);
+                    if (computed) {
+                        let isEqual = vectorsProportional(computed, basisVectors[index]);
+                        diagnosisIcon = isEqual ? ` <span style="color:#28a745; margin-left:6px;" title="Mathematically verified relative to initial basis element">&#10004;</span>` : ` <span style="color:#c5050c; margin-left:6px; font-weight:bold;" title="Failed relative verification">&#10008;</span>`;
+                    } else if (labelTex.match(/^v_\{/)) {
+                        diagnosisIcon = ""; // Hide for generic labels where calculation is impossible
+                    } else {
+                        diagnosisIcon = ` <span style="color:#ffc107; margin-left:6px; font-weight:bold;" title="Could not parse algebraic expression">?</span>`;
                     }
                 }
-                
+
                 legendContainer.innerHTML += `
                     <div class="legend-item${isSelected}" data-index="${index}" onclick="selectVectorFromLegend('${key}')">
                         <span class="legend-color" style="background-color: ${color};"></span>
@@ -1966,30 +1975,7 @@ A * nu</pre>
                 tableRows += "</tr>";
             }
             
-            const matrixEl = document.getElementById("matrix-info-display");
-            const matrixContainer = document.getElementById("matrix-info");
-            
-            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in X+)", "Tutte's 12-cage (x in X-)"].includes(currentGraph);
-            const dim = basisVectors.length;
-            
-            let fontSize = "14px";
-            let padding = "12px 18px";
-            let overflow = "auto";
-            
-            // tweak layout scales without heavy mathjax reflow operations
-            if (dim >= 11) {
-                fontSize = "7px";
-                padding = "5px 8px";
-                overflow = "hidden";
-            } else if (isLargeGraph) {
-                fontSize = "10px";
-                padding = "8px 12px";
-                overflow = "hidden";
-            }
-            
-            matrixContainer.style.overflow = overflow;
-            matrixContainer.style.padding = padding;
-            
+            // calculate module eigenvalues utilizing numeric.js
             let eigText = "";
             if (window.numeric && actionMatrix.length > 0) {
                 try {
@@ -2004,13 +1990,11 @@ A * nu</pre>
                                 let im = Math.round(eig.lambda.y[i] * 1000) / 1000;
                                 if (Math.abs(im) > 0) return `${r}${im > 0 ? '+' : ''}${im}i`;
                             }
-                            // Attempt to parse clean rational fractions for elegance!
+                            // Convert cleanly to fractions if possible
                             if (r !== Math.round(r)) {
                                 try {
                                     let f = math.fraction(r);
-                                    if (f.d > 1 && f.d <= 15 && Math.abs(f.n/f.d - val) < 1e-4) {
-                                        return `${f.n}/${f.d}`;
-                                    }
+                                    if (f.d > 1 && f.d <= 15 && Math.abs(f.n/f.d - val) < 1e-4) return `${f.n}/${f.d}`;
                                 } catch(e) {}
                             }
                             return r;
@@ -2020,12 +2004,28 @@ A * nu</pre>
                             <strong>Eigenvalues:</strong><br> <span style="font-style: italic;">${formattedEvals.join(", ")}</span>
                         </div>`;
                     }
-                } catch (e) {
-                    console.log("Eigenvalue calculation failed:", e);
-                }
+                } catch (e) { console.log(e); }
+            }
+
+            const matrixEl = document.getElementById("matrix-info-display");
+            const matrixContainer = document.getElementById("matrix-info");
+            
+            const isLargeGraph = ["Foster Graph", "Biggs-Smith", "Biggs-Smith Graph", "Tutte's 12-cage (x in X+)", "Tutte's 12-cage (x in X-)"].includes(currentGraph);
+            const dim = basisVectors.length;
+            
+            let fontSize = "14px";
+            let padding = "12px 18px";
+            let overflow = "auto";
+            
+            if (dim >= 11) {
+                fontSize = "7px"; padding = "5px 8px"; overflow = "hidden";
+            } else if (isLargeGraph) {
+                fontSize = "10px"; padding = "8px 12px"; overflow = "hidden";
             }
             
-            // render the finalized structure string
+            matrixContainer.style.overflow = overflow;
+            matrixContainer.style.padding = padding;
+            
             matrixEl.innerHTML = `
                 <div style="display: inline-flex; flex-direction: column; align-items: center; font-family: 'Times New Roman', Times, serif; font-size: ${fontSize};">
                     <div style="display: flex; align-items: center;">
@@ -2043,39 +2043,173 @@ A * nu</pre>
         
         // global event listeners managing input routines
         document.addEventListener('keydown', function(event) {
-            // lock shortcuts while custom dropdown is actively selected to prevent misfires
             if (document.activeElement.tagName === 'SELECT') {
                 if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
                 return; 
             }
 
-            // check if the system is currently locked by an animation
             const isAnimating = document.getElementById("apply-A").disabled;
 
-            // Use " " for the space bar, and prevent it from scrolling the page
             if (event.key === 'Enter' || event.key === ' ' || event.key.toLowerCase() === 'a') {
                 if (event.key === ' ') event.preventDefault(); 
-                
-                if (!isAnimating) {
-                    document.getElementById("apply-A").click();
-                }
+                if (!isAnimating) document.getElementById("apply-A").click();
             } else if (event.key.toLowerCase() === 'd') {
-                // Toggles Diagnosis verification mode dynamically
                 window.diagnosisMode = !window.diagnosisMode;
+                document.getElementById("ortho-btn").style.display = window.diagnosisMode ? "block" : "none";
                 if (nodes && nodes.length > 0) renderGraph();
             } else if (event.key.toLowerCase() === 'f') {
-                
-                // prevent entering or exiting fullscreen while math is being calculated
-                if (isAnimating) return;
-
+                if (isAnimating) return; 
                 if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(err => {
-                        console.log(`error attempting to enable full-screen mode: ${err.message}`);
-                    });
+                    document.documentElement.requestFullscreen().catch(err => console.log(err.message));
                 } else {
                     document.exitFullscreen();
                 }
             }
+        });
+
+        // --- Orthogonality Cross-Module Checking Logic ---
+        const orthoModal = document.getElementById('ortho-modal');
+        const orthoGraphSelect = document.getElementById('ortho-graph-select');
+        const orthoDistSelect = document.getElementById('ortho-dist-select');
+
+        document.getElementById('ortho-btn').addEventListener('click', () => {
+            orthoModal.style.display = 'flex';
+            setTimeout(() => orthoModal.style.opacity = '1', 10);
+            
+            orthoGraphSelect.innerHTML = "";
+            Object.keys(globalData).forEach(g => orthoGraphSelect.appendChild(new Option(g, g)));
+            orthoGraphSelect.value = currentGraph || Object.keys(globalData)[0];
+            updateOrthoDists();
+        });
+
+        document.getElementById('close-ortho-modal').addEventListener('click', () => {
+            orthoModal.style.opacity = '0';
+            setTimeout(() => orthoModal.style.display = 'none', 200);
+        });
+        
+        orthoGraphSelect.addEventListener('change', updateOrthoDists);
+
+        function updateOrthoDists() {
+            let g = orthoGraphSelect.value;
+            let N = globalData[g].vertices;
+            let edges = globalData[g].edges;
+            let adj = Array.from({length: N}, () => []);
+            edges.forEach(l => {
+                let s = typeof l.source === 'object' ? l.source.id : l.source;
+                let t = typeof l.target === 'object' ? l.target.id : l.target;
+                adj[s].push(t);
+                adj[t].push(s);
+            });
+            let dists = new Array(N).fill(-1);
+            dists[0] = 0;
+            let queue = [0];
+            let maxD = 0;
+            while(queue.length > 0) {
+                let curr = queue.shift();
+                adj[curr].forEach(nb => {
+                    if(dists[nb] === -1) {
+                        dists[nb] = dists[curr] + 1;
+                        maxD = Math.max(maxD, dists[nb]);
+                        queue.push(nb);
+                    }
+                });
+            }
+            orthoDistSelect.innerHTML = "";
+            for(let d=0; d<=maxD; d++) orthoDistSelect.appendChild(new Option(`Distance ${d} (Γ_${d})`, d));
+            document.getElementById('ortho-results').innerHTML = ""; 
+        }
+
+        document.getElementById('run-ortho-check').addEventListener('click', () => {
+            let g = orthoGraphSelect.value;
+            let dist = parseInt(orthoDistSelect.value);
+            let N = globalData[g].vertices;
+            let edges = globalData[g].edges;
+            let adj = Array.from({length: N}, () => []);
+            edges.forEach(l => {
+                let s = typeof l.source === 'object' ? l.source.id : l.source;
+                let t = typeof l.target === 'object' ? l.target.id : l.target;
+                adj[s].push(t);
+                adj[t].push(s);
+            });
+            let dists = new Array(N).fill(-1);
+            dists[0] = 0;
+            let queue = [0];
+            while(queue.length > 0) {
+                let curr = queue.shift();
+                adj[curr].forEach(nb => {
+                    if(dists[nb] === -1) { dists[nb] = dists[curr] + 1; queue.push(nb); }
+                });
+            }
+
+            // Extract all vectors restricted to this specific subconstituent
+            let collected = [];
+            let mods = globalData[g].modules;
+            for (let mName in mods) {
+                let basis = mods[mName].basis;
+                let keys = Object.keys(basis);
+                for(let k=0; k<keys.length; k++) {
+                    let vName = keys[k];
+                    let vData = basis[vName];
+                    let isSupported = false;
+                    for(let i=0; i<N; i++) {
+                        if(Math.abs(vData[i]) > 1e-4) {
+                            if (dists[i] === dist) isSupported = true;
+                            break; 
+                        }
+                    }
+                    if (isSupported) collected.push({ mod: mName, vec: vName, data: vData });
+                }
+            }
+
+            if (collected.length === 0) {
+                document.getElementById('ortho-results').innerHTML = "<p>No vectors exist in this subconstituent.</p>";
+                return;
+            }
+
+            // Draw a cross-validation table
+            let html = `<table style="border-collapse: collapse; width: 100%; text-align: center; margin-top: 10px;"><tr><th style="border:1px solid #ccc; padding:5px; background: #eee;"></th>`;
+            collected.forEach(c => {
+                html += `<th style="border:1px solid #ccc; padding:5px; writing-mode: vertical-rl; transform: rotate(180deg); background: #eee; font-size: 11px;">${c.mod} ${c.vec}</th>`;
+            });
+            html += `</tr>`;
+
+            let warnings = [];
+
+            for(let i=0; i<collected.length; i++) {
+                html += `<tr><th style="border:1px solid #ccc; padding:5px; white-space: nowrap; background: #eee; font-size: 11px;">${collected[i].mod} ${collected[i].vec}</th>`;
+                for(let j=0; j<collected.length; j++) {
+                    let v1 = collected[i];
+                    let v2 = collected[j];
+                    let dot = 0;
+                    for(let k=0; k<N; k++) dot += v1.data[k] * v2.data[k];
+                    
+                    let isSameMod = (v1.mod === v2.mod);
+                    let isOrthogonal = Math.abs(dot) < 1e-4;
+                    let color = "#fff";
+                    
+                    if (!isSameMod && !isOrthogonal) color = "#f8d7da"; // Red (cross-module fail)
+                    else if (!isSameMod && isOrthogonal) color = "#d4edda"; // Green (cross-module success)
+                    else if (isSameMod) color = "#f8f9fa"; // Neutral
+
+                    if (i !== j && vectorsProportional(v1.data, v2.data)) {
+                        color = "#ffeeba"; // Yellow warning
+                        if (i < j) warnings.push(`${v1.mod} ${v1.vec} is mathematically identical to ${v2.mod} ${v2.vec}`);
+                    }
+
+                    html += `<td style="border:1px solid #ccc; padding:5px; background-color: ${color};">${(Math.round(dot*1000)/1000)}</td>`;
+                }
+                html += `</tr>`;
+            }
+            html += `</table>`;
+
+            if (warnings.length > 0) {
+                html = `<div style="margin-bottom: 15px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; color: #856404;">
+                    <strong>Warnings:</strong><ul style="margin:5px 0 0 0; padding-left: 20px;">
+                    ${warnings.map(w => `<li>${w}</li>`).join("")}
+                    </ul></div>` + html;
+            }
+
+            document.getElementById('ortho-results').innerHTML = html;
         });
 
         // compiles target configuration matrix data and forces a browser download
