@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <style>
@@ -504,7 +505,98 @@ A * nu</pre>
         let hoveredSubconstituent = -1; // tracks temporary mouse hover selections
         let globalDists = []; // caches calculated distances
         let globalSubconstituents = {}; // caches calculated subconstituents
+        let globalAdj = []; // caches graph connectivity for diagnostic logic
+        window.diagnosisMode = false;
         
+        // --- Diagnosis Evaluators ---
+        function vectorsEqual(v1, v2) {
+            for(let i=0; i<v1.length; i++) {
+                if (Math.abs(v1[i] - v2[i]) > 1e-4) return false;
+            }
+            return true;
+        }
+
+        // Translates LaTeX basis definitions into simulated graph operations
+        function parseAndEvaluate(tex, nu, N) {
+            function mult(c, v) { return v.map(x => c * x); }
+            function add(v1, v2) { return v1.map((x,i) => x + v2[i]); }
+            function applyA(v, times=1) {
+                let res = [...v];
+                for(let k=0; k<times; k++) {
+                    let next = new Array(N).fill(0);
+                    for(let i=0; i<N; i++) {
+                        if(res[i]===0) continue;
+                        globalAdj[i].forEach(nb => next[nb] += res[i]);
+                    }
+                    res = next;
+                }
+                return res;
+            }
+            function applyE(dist, v) {
+                let res = new Array(N).fill(0);
+                if(globalSubconstituents[dist]) {
+                    globalSubconstituents[dist].forEach(idx => res[idx] = v[idx]);
+                }
+                return res;
+            }
+            function evalTerm(term) {
+                let sign = 1;
+                if (term.startsWith('-')) { sign = -1; term = term.substring(1); }
+                else if (term.startsWith('+')) { term = term.substring(1); }
+                
+                let coeff = 1;
+                let coeffMatch = term.match(/^(\d+)/);
+                if (coeffMatch) {
+                    coeff = parseInt(coeffMatch[1]);
+                    term = term.substring(coeffMatch[1].length);
+                }
+                coeff *= sign;
+                
+                let eDist = null;
+                let eMatch = term.match(/^E_(\d+)\^\*/);
+                if (eMatch) {
+                    eDist = parseInt(eMatch[1]);
+                    term = term.substring(eMatch[0].length);
+                }
+                
+                let aTimes = 0;
+                if (term.startsWith("A^")) {
+                    let aMatch = term.match(/^A\^(\d+)/);
+                    aTimes = parseInt(aMatch[1]);
+                    term = term.substring(aMatch[0].length);
+                } else if (term.startsWith("A")) {
+                    aTimes = 1;
+                    term = term.substring(1);
+                }
+                
+                if (term === "\\nu" || term === "v_1") {
+                    let v = nu;
+                    if (aTimes > 0) v = applyA(v, aTimes);
+                    if (eDist !== null) v = applyE(eDist, v);
+                    return mult(coeff, v);
+                }
+                return null;
+            }
+
+            let str = tex.replace(/\s+/g, '');
+            if (str === "E_6^*A(E_5^*A^6\\nu-10E_5^*A^4\\nu-E_5^*A^3\\nu)") {
+                let innerSum = new Array(N).fill(0);
+                ["E_5^*A^6\\nu", "-10E_5^*A^4\\nu", "-E_5^*A^3\\nu"].forEach(t => { 
+                    innerSum = add(innerSum, evalTerm(t)); 
+                });
+                return applyE(6, applyA(innerSum, 1));
+            }
+
+            let terms = str.replace(/-/g, '+-').split('+').filter(t => t.length > 0);
+            let result = new Array(N).fill(0);
+            for (let t of terms) {
+                let res = evalTerm(t);
+                if (!res) return null; // Unrecognized algebra structure
+                result = add(result, res);
+            }
+            return result;
+        }
+
         // distinct color palette for basis vector identification; uses metro transit colors :)
         const customColors = ["rgb(238,47,36)", "rgb(49,50,101)","rgb(141,187,0)", "rgb(56,169,209)", "rgb(249,13,160)", "rgb(247,209,83)", "rgb(218,83,252)", "rgb(40,115,182)", "rgb(40,93,40)", "rgb(246,173,255)", "rgb(143,199,137)", "rgb(138,35,139)", "rgb(81,243,16)",];        
         // floating point math tolerance to prevent visualization artifacts
@@ -1015,6 +1107,8 @@ A * nu</pre>
                 adj[s].push(t);
                 adj[t].push(s);
             });
+            globalAdj = adj; // Store globally for the mathematical diagnosis parser
+            
             while(queue.length > 0) {
                 let curr = queue.shift();
                 adj[curr].forEach(neighbor => {
@@ -1232,10 +1326,29 @@ A * nu</pre>
                 const labelTex = getBasisLabel(currentGraph, currentModule, index);
                 const isSelected = (key === startVectorKey) ? " selected" : "";
                 
+                let diagnosisIcon = "";
+                if (window.diagnosisMode) {
+                    if (labelTex.match(/^e_\{(\d+)\}\^\*$/)) {
+                        let dist = parseInt(labelTex.match(/^e_\{(\d+)\}\^\*$/)[1]);
+                        let computed = new Array(nodes.length).fill(0);
+                        if (globalSubconstituents[dist]) globalSubconstituents[dist].forEach(i => computed[i] = 1);
+                        let isEqual = vectorsEqual(computed, basisVectors[index]);
+                        diagnosisIcon = isEqual ? ` <span style="color:#28a745; margin-left:6px;" title="Mathematically verified">&#10004;</span>` : ` <span style="color:#c5050c; margin-left:6px;" title="Failed verification">&#10008;</span>`;
+                    } else if (labelTex.includes("\\nu") || labelTex === "v_1") {
+                        let computed = parseAndEvaluate(labelTex, basisVectors[0], nodes.length);
+                        if (computed) {
+                            let isEqual = vectorsEqual(computed, basisVectors[index]);
+                            diagnosisIcon = isEqual ? ` <span style="color:#28a745; margin-left:6px;" title="Mathematically verified relative to ν">&#10004;</span>` : ` <span style="color:#c5050c; margin-left:6px;" title="Failed relative verification">&#10008;</span>`;
+                        } else {
+                            diagnosisIcon = ` <span style="color:#ffc107; margin-left:6px; font-weight:bold;" title="Could not parse algebraic expression">?</span>`;
+                        }
+                    }
+                }
+                
                 legendContainer.innerHTML += `
                     <div class="legend-item${isSelected}" data-index="${index}" onclick="selectVectorFromLegend('${key}')">
                         <span class="legend-color" style="background-color: ${color};"></span>
-                        \\(\\mathbf{v}_{${index + 1}} = ${labelTex}\\)
+                        \\(\\mathbf{v}_{${index + 1}} = ${labelTex}\\)${diagnosisIcon}
                     </div>`;
             });
             if (window.MathJax) MathJax.typesetPromise([legendContainer]);
@@ -1877,15 +1990,53 @@ A * nu</pre>
             matrixContainer.style.overflow = overflow;
             matrixContainer.style.padding = padding;
             
+            let eigText = "";
+            if (window.numeric && actionMatrix.length > 0) {
+                try {
+                    let eig = numeric.eig(actionMatrix);
+                    if (eig && eig.lambda && eig.lambda.x) {
+                        let evals = eig.lambda.x;
+                        let hasImag = eig.lambda.y && eig.lambda.y.some(y => Math.abs(y) > 1e-4);
+                        
+                        let formattedEvals = evals.map((val, i) => {
+                            let r = Math.round(val * 1000) / 1000;
+                            if (hasImag) {
+                                let im = Math.round(eig.lambda.y[i] * 1000) / 1000;
+                                if (Math.abs(im) > 0) return `${r}${im > 0 ? '+' : ''}${im}i`;
+                            }
+                            // Attempt to parse clean rational fractions for elegance!
+                            if (r !== Math.round(r)) {
+                                try {
+                                    let f = math.fraction(r);
+                                    if (f.d > 1 && f.d <= 15 && Math.abs(f.n/f.d - val) < 1e-4) {
+                                        return `${f.n}/${f.d}`;
+                                    }
+                                } catch(e) {}
+                            }
+                            return r;
+                        }).sort((a,b) => parseFloat(b) - parseFloat(a));
+                        
+                        eigText = `<div style="margin-top: 10px; font-size: 13px; color: #333; border-top: 1px solid #ddd; padding-top: 6px; width: 100%; text-align: center;">
+                            <strong>Eigenvalues:</strong><br> <span style="font-style: italic;">${formattedEvals.join(", ")}</span>
+                        </div>`;
+                    }
+                } catch (e) {
+                    console.log("Eigenvalue calculation failed:", e);
+                }
+            }
+            
             // render the finalized structure string
             matrixEl.innerHTML = `
-                <div style="display: inline-flex; align-items: center; font-family: 'Times New Roman', Times, serif; font-size: ${fontSize};">
-                    <div style="margin-right: 8px;">A:</div>
-                    <div style="border-left: 1.5px solid #111; border-right: 1.5px solid #111; border-radius: 2px; padding: 0 4px;">
-                        <table style="border-collapse: collapse; text-align: center; margin: 0; font-style: normal;">
-                            ${tableRows}
-                        </table>
+                <div style="display: inline-flex; flex-direction: column; align-items: center; font-family: 'Times New Roman', Times, serif; font-size: ${fontSize};">
+                    <div style="display: flex; align-items: center;">
+                        <div style="margin-right: 8px;">A:</div>
+                        <div style="border-left: 1.5px solid #111; border-right: 1.5px solid #111; border-radius: 2px; padding: 0 4px;">
+                            <table style="border-collapse: collapse; text-align: center; margin: 0; font-style: normal;">
+                                ${tableRows}
+                            </table>
+                        </div>
                     </div>
+                    ${eigText}
                 </div>
             `;
         }
@@ -1908,10 +2059,14 @@ A * nu</pre>
                 if (!isAnimating) {
                     document.getElementById("apply-A").click();
                 }
+            } else if (event.key.toLowerCase() === 'd') {
+                // Toggles Diagnosis verification mode dynamically
+                window.diagnosisMode = !window.diagnosisMode;
+                if (nodes && nodes.length > 0) renderGraph();
             } else if (event.key.toLowerCase() === 'f') {
                 
                 // prevent entering or exiting fullscreen while math is being calculated
-                if (isAnimating) return; 
+                if (isAnimating) return;
 
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen().catch(err => {
