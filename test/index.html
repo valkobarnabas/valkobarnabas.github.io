@@ -241,7 +241,6 @@
             <button id="ortho-btn" class="has-tooltip" data-title="Check orthogonality across modules" style="background-color: #17a2b8; display: none; margin-top: 5px;">Check Orthogonality (Diagnosis)</button>
 
             <div style="display: flex; gap: 10px; margin-top: 5px;">
-            <div style="display: flex; gap: 10px; margin-top: 5px;">
                 <button id="info-btn" class="has-tooltip tooltip-left" data-title="Learn about this visualization" style="background-color: #007bff; margin-top: 0; flex: 1; padding: 12px; font-size: 15px;">
                     &#8505; About this Page
                 </button>
@@ -1347,7 +1346,7 @@ A * nu</pre>
                     if (computed) {
                         let isEqual = vectorsProportional(computed, basisVectors[index]);
                         diagnosisIcon = isEqual ? ` <span style="color:#28a745; margin-left:6px;" title="Mathematically verified relative to initial basis element">&#10004;</span>` : ` <span style="color:#c5050c; margin-left:6px; font-weight:bold;" title="Failed relative verification">&#10008;</span>`;
-                    } else if (labelTex.match(/^v_\{/)) {
+                    } else if (labelTex.match(/^v_/)) {
                         diagnosisIcon = ""; // Hide for generic labels where calculation is impossible
                     } else {
                         diagnosisIcon = ` <span style="color:#ffc107; margin-left:6px; font-weight:bold;" title="Could not parse algebraic expression">?</span>`;
@@ -1981,24 +1980,29 @@ A * nu</pre>
                 try {
                     let eig = numeric.eig(actionMatrix);
                     if (eig && eig.lambda && eig.lambda.x) {
-                        let evals = eig.lambda.x;
                         let hasImag = eig.lambda.y && eig.lambda.y.some(y => Math.abs(y) > 1e-4);
                         
-                        let formattedEvals = evals.map((val, i) => {
-                            let r = Math.round(val * 1000) / 1000;
-                            if (hasImag) {
-                                let im = Math.round(eig.lambda.y[i] * 1000) / 1000;
-                                if (Math.abs(im) > 0) return `${r}${im > 0 ? '+' : ''}${im}i`;
+                        // Sort numerically first to avoid parseFloat errors on fractions/imaginary strings
+                        let evalsData = eig.lambda.x.map((val, i) => ({
+                            r: val,
+                            i: hasImag ? eig.lambda.y[i] : 0
+                        })).sort((a, b) => b.r - a.r);
+
+                        let formattedEvals = evalsData.map(ev => {
+                            let r = Math.round(ev.r * 1000) / 1000;
+                            if (hasImag && Math.abs(ev.i) > 1e-4) {
+                                let im = Math.round(ev.i * 1000) / 1000;
+                                return `${r}${im > 0 ? '+' : ''}${im}i`;
                             }
                             // Convert cleanly to fractions if possible
                             if (r !== Math.round(r)) {
                                 try {
                                     let f = math.fraction(r);
-                                    if (f.d > 1 && f.d <= 15 && Math.abs(f.n/f.d - val) < 1e-4) return `${f.n}/${f.d}`;
+                                    if (f.d > 1 && f.d <= 15 && Math.abs(f.n/f.d - ev.r) < 1e-4) return `${f.n}/${f.d}`;
                                 } catch(e) {}
                             }
                             return r;
-                        }).sort((a,b) => parseFloat(b) - parseFloat(a));
+                        });
                         
                         eigText = `<div style="margin-top: 10px; font-size: 13px; color: #333; border-top: 1px solid #ddd; padding-top: 6px; width: 100%; text-align: center;">
                             <strong>Eigenvalues:</strong><br> <span style="font-style: italic;">${formattedEvals.join(", ")}</span>
