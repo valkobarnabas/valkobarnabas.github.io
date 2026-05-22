@@ -2076,11 +2076,43 @@ A * nu</pre>
             matrixContainer.style.overflow = overflow;
             matrixContainer.style.padding = padding;
             
+            let matrixStyle = `border-left: 1.5px solid #111; border-right: 1.5px solid #111; border-radius: 2px; padding: 0 4px; transition: all 0.3s;`;
+            let matrixTitle = "";
+
+            if (window.diagnosisMode && window.paperData && window.paperData.matrices && window.paperData.matrices[currentGraph]) {
+                let paperMats = window.paperData.matrices[currentGraph];
+                if (paperMats.length > 0 && actionMatrix.length > 0) {
+                    let isMatch = false;
+                    for (let pm of paperMats) {
+                        if (pm.length === actionMatrix.length && pm[0].length === actionMatrix[0].length) {
+                            let match = true;
+                            for (let i = 0; i < pm.length; i++) {
+                                for (let j = 0; j < pm[i].length; j++) {
+                                    if (Math.abs(pm[i][j] - actionMatrix[i][j]) > 1e-4) match = false;
+                                }
+                            }
+                            if (match) { isMatch = true; break; }
+                        }
+                    }
+                    
+                    if (isMatch) {
+                        matrixStyle += " background-color: #d4edda; border-color: #28a745;";
+                        matrixTitle = ` title="Matrix matches main.tex!"`;
+                    } else {
+                        matrixStyle += " background-color: #f8d7da; border-color: #c5050c;";
+                        matrixTitle = ` title="Matrix DOES NOT match main.tex"`;
+                    }
+                } else {
+                    matrixStyle += " background-color: #fff3cd; border-color: #ffc107;";
+                    matrixTitle = ` title="No matrices found in main.tex for this graph"`;
+                }
+            }
+            
             matrixEl.innerHTML = `
                 <div style="display: inline-flex; flex-direction: column; align-items: center; font-family: 'Times New Roman', Times, serif; font-size: ${fontSize};">
                     <div style="display: flex; align-items: center;">
                         <div style="margin-right: 8px;">A:</div>
-                        <div style="border-left: 1.5px solid #111; border-right: 1.5px solid #111; border-radius: 2px; padding: 0 4px;">
+                        <div style="${matrixStyle}"${matrixTitle}>
                             <table style="border-collapse: collapse; text-align: center; margin: 0; font-style: normal;">
                                 ${tableRows}
                             </table>
@@ -2152,17 +2184,15 @@ A * nu</pre>
             let reader = new FileReader();
             reader.onload = function(evt) {
                 let text = evt.target.result;
-                window.paperData = { tables: {}, vectors: {} };
+                window.paperData = { tables: {}, vectors: {}, matrices: {} };
 
-                let sections = text.split(/\\section\{/);
+                let sections = text.split(/\\section(?:\[.*?\])?\{/);
                 sections.forEach(sec => {
-                    let titleMatch = sec.match(/^(?:\\texorpdfstring\{.*?\}\{)?(.*?)(?:\})?\}/);
-                    if (!titleMatch) return;
-                    let rawTitle = titleMatch[1];
+                    let rawTitle = sec.substring(0, 150); // Bypass texorpdfstring brackets safely
                     let graphKey = null;
 
-                    if (rawTitle.includes("K_4")) graphKey = "K4";
-                    else if (rawTitle.includes("K_{3,3}")) graphKey = "K3,3";
+                    if (rawTitle.includes("K_4") || rawTitle.includes("{K4}")) graphKey = "K4";
+                    else if (rawTitle.includes("K_{3,3}") || rawTitle.includes("{K3,3}")) graphKey = "K3,3";
                     else if (rawTitle.includes("Petersen")) graphKey = "Petersen Graph";
                     else if (rawTitle.includes("3-cube")) graphKey = "3-cube";
                     else if (rawTitle.includes("Heawood")) graphKey = "Heawood Graph";
@@ -2171,8 +2201,8 @@ A * nu</pre>
                     else if (rawTitle.includes("8-cage")) graphKey = "Tutte's 8-cage";
                     else if (rawTitle.includes("Dodecahedron")) graphKey = "Dodecahedron";
                     else if (rawTitle.includes("Desargues")) graphKey = "Desargues Graph";
-                    else if (rawTitle.includes("12-cage") && rawTitle.includes("X^+")) graphKey = "Tutte's 12-cage (x in X+)";
-                    else if (rawTitle.includes("12-cage") && rawTitle.includes("X^-")) graphKey = "Tutte's 12-cage (x in X-)";
+                    else if (rawTitle.includes("12-cage") && (rawTitle.includes("X^+") || rawTitle.includes("X+"))) graphKey = "Tutte's 12-cage (x in B1)";
+                    else if (rawTitle.includes("12-cage") && (rawTitle.includes("X^-") || rawTitle.includes("X-"))) graphKey = "Tutte's 12-cage (x in B2)";
                     else if (rawTitle.includes("Biggs-Smith")) graphKey = "Biggs-Smith Graph";
                     else if (rawTitle.includes("Foster")) graphKey = "Foster Graph";
 
@@ -2207,6 +2237,26 @@ A * nu</pre>
                         let vecStr = vMatch[2];
                         let vecArr = vecStr.split('&').map(s => parseFloat(s.trim()));
                         window.paperData.vectors[graphKey][modName] = vecArr;
+                    }
+
+                    // Parse Matrices
+                    window.paperData.matrices[graphKey] = [];
+                    let matrixRegex = /\\begin\{bmatrix\}([\s\S]*?)\\end\{bmatrix\}/g;
+                    let mMatch;
+                    while ((mMatch = matrixRegex.exec(sec)) !== null) {
+                        let mStr = mMatch[1];
+                        let rows = mStr.split('\\\\').map(r => r.trim()).filter(r => r.length > 0);
+                        let mArr = [];
+                        rows.forEach(r => {
+                            let cells = r.split('&').map(c => {
+                                let match = c.match(/-?\d+(\.\d+)?/);
+                                return match ? parseFloat(match[0]) : 0;
+                            });
+                            if (cells.length > 0 && cells.some(c => !isNaN(c))) {
+                                mArr.push(cells);
+                            }
+                        });
+                        if (mArr.length > 0) window.paperData.matrices[graphKey].push(mArr);
                     }
                 });
 
