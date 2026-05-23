@@ -308,18 +308,22 @@
                     <div id="matrix-info-title">Action of \(A\) on Basis</div>
                     <div id="matrix-info-display"></div>
                 </div>
-            
-            <div id="math-output">
+            </div> </div> <div style="width: 100%; max-width: 1400px; display: flex; flex-direction: column; flex-shrink: 0; margin-top: 15px; padding-bottom: 5px;">
+            <div id="math-output" style="margin-top: 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                     <strong style="margin: 0;">Current Linear Combination</strong>
-                    <button id="download-vec-btn" class="has-tooltip tooltip-left" data-title="Download current vector (.txt)" style="width: 26px; height: 26px; font-size: 16px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
-                        &darr;
+                    <button id="download-vec-btn" class="has-tooltip tooltip-left" data-title="Download current vector (.txt)" style="height: 28px; padding: 0 12px; font-size: 13px; font-weight: bold; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
+                        &darr; Download Vector
                     </button>
                 </div>
-                <div id="equation-display">Placeholder text. Should not be visible after data loads (contact the author if it is). </div>
+                <div id="equation-display" style="overflow-x: auto; padding-bottom: 2px;">Placeholder text. Should not be visible after data loads (contact the author if it is). </div>
+            </div>
+            
+            <div id="paper-table-wrapper" style="display: none; padding: 15px 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 15px;">
+                <strong style="display:block; text-align:center; font-size:16px; margin-bottom:10px;">Paper Summary Table</strong>
+                <div id="paper-table-display" style="overflow-x: auto;"></div>
             </div>
         </div>
-    </div>
     
     <div id="vector-tooltip" class="tooltip"></div>
     <div id="node-tooltip" class="tooltip" style="flex-direction: column;"></div>
